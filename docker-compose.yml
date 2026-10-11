@@ -1,0 +1,18 @@
+services:
+  harness:
+    build: .
+    image: blender-harness:latest
+    platform: linux/amd64
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - claude-home:/home/ubuntu/.claude   # keeps Claude Code login/settings between runs
+    ports:
+      - "8000:8000"                        # web app: make serve
+    environment:
+      - ANTHROPIC_API_KEY                  # optional; otherwise log in with `claude`
+    stdin_open: true
+    tty: true
+
+volumes:
+  claude-home:

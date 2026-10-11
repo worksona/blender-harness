@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Worlds</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <section id="gallery" hidden>
+    <header>
+      <h1>Worlds</h1>
+      <p>Built in Blender, generated from code in <code>worlds/</code>.</p>
+    </header>
+    <div id="grid"></div>
+  </section>
+
+  <section id="viewer" hidden>
+    <canvas id="canvas"></canvas>
+    <div class="hud top">
+      <a href="#/" class="btn" title="All worlds (Esc)">&larr; Worlds</a>
+      <div class="title"><h2 id="w-title"></h2><p id="w-desc"></p></div>
+      <div class="actions">
+        <button class="btn" id="b-prev" title="Previous world ([)">&lsaquo;</button>
+        <button class="btn" id="b-next" title="Next world (])">&rsaquo;</button>
+        <button class="btn" id="b-spin" title="Auto-rotate (R)">Spin</button>
+        <button class="btn" id="b-reset" title="Reset view (0)">Reset</button>
+      </div>
+    </div>
+    <div class="hud bottom" id="w-stats"></div>
+    <div id="loading">Loading…</div>
+  </section>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

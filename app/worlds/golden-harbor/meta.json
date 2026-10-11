@@ -1,0 +1,152 @@
+{
+  "slug": "golden-harbor",
+  "title": "Golden Harbor",
+  "description": "Low sun over a rolling sea: sailboats and buoys ride the swell past a lighthouse islet.",
+  "tags": [
+    "ocean",
+    "sunset",
+    "showcase"
+  ],
+  "seed": 11,
+  "glb": "worlds/golden-harbor/world.glb",
+  "preview": "worlds/golden-harbor/preview.jpg",
+  "viewer": {
+    "camera": {
+      "position": [
+        -8,
+        7,
+        55
+      ],
+      "target": [
+        10,
+        4,
+        -80
+      ],
+      "fov": 39.76
+    },
+    "sun": {
+      "direction": [
+        0.2064,
+        0.1219,
+        -0.9709
+      ],
+      "color": "#ffb27a",
+      "strength": 3.2
+    },
+    "sky": {
+      "color": "#4f78ad",
+      "ground": "#3a3f4a",
+      "strength": 0.75
+    },
+    "fog": {
+      "color": "#f0b48c",
+      "near": 200,
+      "far": 1400
+    },
+    "bounds": {
+      "min": [
+        -51.6059,
+        -3.7216,
+        -215.0
+      ],
+      "max": [
+        105.0,
+        30.3153,
+        -11.3
+      ]
+    },
+    "ocean": {
+      "level": 0,
+      "color": "#06324a",
+      "shallow": "#2fa39b",
+      "foam": 0.55,
+      "clarity": 0.9,
+      "waves": [
+        {
+          "wavelength": 48.0,
+          "steepness": 0.195,
+          "direction": [
+            0.342,
+            -0.9397
+          ]
+        },
+        {
+          "wavelength": 30.24,
+          "steepness": 0.15,
+          "direction": [
+            0.6947,
+            -0.7193
+          ]
+        },
+        {
+          "wavelength": 19.68,
+          "steepness": 0.12,
+          "direction": [
+            -0.225,
+            -0.9744
+          ]
+        },
+        {
+          "wavelength": 12.96,
+          "steepness": 0.09,
+          "direction": [
+            0.9455,
+            -0.3256
+          ]
+        },
+        {
+          "wavelength": 8.64,
+          "steepness": 0.075,
+          "direction": [
+            0.1045,
+            -0.9945
+          ]
+        },
+        {
+          "wavelength": 5.76,
+          "steepness": 0.0525,
+          "direction": [
+            0.9994,
+            0.0349
+          ]
+        },
+        {
+          "wavelength": 3.84,
+          "steepness": 0.0375,
+          "direction": [
+            -0.6157,
+            -0.788
+          ]
+        },
+        {
+          "wavelength": 2.4,
+          "steepness": 0.03,
+          "direction": [
+            0.6018,
+            -0.7986
+          ]
+        }
+      ]
+    },
+    "exposure": 1.05
+  },
+  "stats": {
+    "objects": 22,
+    "unique_meshes": 20,
+    "triangles_drawn": 19366,
+    "triangles_stored": 19294,
+    "materials": 19,
+    "bounds_min": [
+      -51.61,
+      11.3,
+      -3.72
+    ],
+    "bounds_max": [
+      105.0,
+      215.0,
+      30.32
+    ],
+    "glb_bytes": 1062724
+  },
+  "built_with": "5.2.2 LTS"
+}

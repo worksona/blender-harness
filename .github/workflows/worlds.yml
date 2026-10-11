@@ -1,0 +1,65 @@
+# Rebuild every world from source with headless Blender and publish the app to GitHub Pages.
+# Enable Pages once: Settings → Pages → Source: GitHub Actions.
+name: worlds
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worlds-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BLENDER_VERSION: 5.2.2
+  BLENDER_PREFIX: /home/runner/.local/opt/blender
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Blender
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BLENDER_PREFIX }}
+          key: blender-${{ env.BLENDER_VERSION }}-linux-x64
+
+      - name: Install Blender
+        run: scripts/setup.sh
+
+      - name: Doctor
+        run: scripts/bl tools/doctor.py
+
+      - name: Build all worlds
+        run: scripts/bl tools/build_world.py --all --samples 16
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: worlds
+          path: app/worlds
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: app
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

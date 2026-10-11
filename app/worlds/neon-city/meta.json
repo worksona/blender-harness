@@ -1,0 +1,80 @@
+{
+  "slug": "neon-city",
+  "title": "Neon City",
+  "description": "A night-time grid of towers with glowing window bands and lit streets.",
+  "tags": [
+    "urban",
+    "sci-fi",
+    "night"
+  ],
+  "seed": 42,
+  "glb": "worlds/neon-city/world.glb",
+  "preview": "worlds/neon-city/preview.jpg",
+  "viewer": {
+    "camera": {
+      "position": [
+        190,
+        130,
+        210
+      ],
+      "target": [
+        0,
+        20,
+        0
+      ],
+      "fov": 37.3
+    },
+    "sun": {
+      "direction": [
+        -0.7849,
+        0.4226,
+        -0.4532
+      ],
+      "color": "#8fa6ff",
+      "strength": 0.25
+    },
+    "sky": {
+      "color": "#0b0f24",
+      "ground": "#141022",
+      "strength": 0.6
+    },
+    "fog": {
+      "color": "#121633",
+      "near": 120,
+      "far": 520
+    },
+    "bounds": {
+      "min": [
+        -112.1039,
+        0.0,
+        -108.0
+      ],
+      "max": [
+        113.1,
+        124.3827,
+        108.0
+      ]
+    },
+    "ocean": null,
+    "bloom": 0.45
+  },
+  "stats": {
+    "objects": 560,
+    "unique_meshes": 449,
+    "triangles_drawn": 9094,
+    "triangles_stored": 5542,
+    "materials": 11,
+    "bounds_min": [
+      -112.1,
+      -108.0,
+      0.0
+    ],
+    "bounds_max": [
+      113.1,
+      108.0,
+      124.38
+    ],
+    "glb_bytes": 516908
+  },
+  "built_with": "5.2.2 LTS"
+}

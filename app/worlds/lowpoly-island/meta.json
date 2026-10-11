@@ -1,0 +1,151 @@
+{
+  "slug": "lowpoly-island",
+  "title": "Low-Poly Island",
+  "description": "A faceted island with pine forests, boulders and a lighthouse on the point.",
+  "tags": [
+    "nature",
+    "stylized",
+    "day"
+  ],
+  "seed": 7,
+  "glb": "worlds/lowpoly-island/world.glb",
+  "preview": "worlds/lowpoly-island/preview.jpg",
+  "viewer": {
+    "camera": {
+      "position": [
+        150,
+        85,
+        150
+      ],
+      "target": [
+        0,
+        4,
+        0
+      ],
+      "fov": 35.12
+    },
+    "sun": {
+      "direction": [
+        -0.5065,
+        0.6157,
+        0.6037
+      ],
+      "color": "#fff1d6",
+      "strength": 4.5
+    },
+    "sky": {
+      "color": "#9ccbf0",
+      "ground": "#5d7d4a",
+      "strength": 0.9
+    },
+    "fog": {
+      "color": "#bcdcf2",
+      "near": 180,
+      "far": 700
+    },
+    "bounds": {
+      "min": [
+        -110.0,
+        -5.5964,
+        -110.0
+      ],
+      "max": [
+        110.0,
+        23.5878,
+        110.0
+      ]
+    },
+    "ocean": {
+      "level": 0.0,
+      "color": "#0d4f78",
+      "shallow": "#3fc2c0",
+      "foam": 0.7,
+      "clarity": 1.4,
+      "waves": [
+        {
+          "wavelength": 22.0,
+          "steepness": 0.117,
+          "direction": [
+            -0.342,
+            0.9397
+          ]
+        },
+        {
+          "wavelength": 13.86,
+          "steepness": 0.09,
+          "direction": [
+            -0.6947,
+            0.7193
+          ]
+        },
+        {
+          "wavelength": 9.02,
+          "steepness": 0.072,
+          "direction": [
+            0.225,
+            0.9744
+          ]
+        },
+        {
+          "wavelength": 5.94,
+          "steepness": 0.054,
+          "direction": [
+            -0.9455,
+            0.3256
+          ]
+        },
+        {
+          "wavelength": 3.96,
+          "steepness": 0.045,
+          "direction": [
+            -0.1045,
+            0.9945
+          ]
+        },
+        {
+          "wavelength": 2.64,
+          "steepness": 0.0315,
+          "direction": [
+            -0.9994,
+            -0.0349
+          ]
+        },
+        {
+          "wavelength": 1.76,
+          "steepness": 0.0225,
+          "direction": [
+            0.6157,
+            0.788
+          ]
+        },
+        {
+          "wavelength": 1.1,
+          "steepness": 0.018,
+          "direction": [
+            -0.6018,
+            0.7986
+          ]
+        }
+      ]
+    }
+  },
+  "stats": {
+    "objects": 336,
+    "unique_meshes": 8,
+    "triangles_drawn": 37194,
+    "triangles_stored": 24418,
+    "materials": 11,
+    "bounds_min": [
+      -110.0,
+      -110.0,
+      -5.6
+    ],
+    "bounds_max": [
+      110.0,
+      110.0,
+      23.59
+    ],
+    "glb_bytes": 1405056
+  },
+  "built_with": "5.2.2 LTS"
+}

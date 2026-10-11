@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Run a Python script with Blender headless, whichever way Blender is installed:
+#   1. a Blender binary ($BLENDER, `blender` on PATH, /opt/blender, ~/.local/opt/blender, macOS app)
+#   2. the `bpy` PyPI module in the venv scripts/setup.sh creates
+#
+#   scripts/bl tools/build_world.py my-world --top
+#   scripts/bl --which        # print what would be used
+set -euo pipefail
+
+BPY_VENV="${BPY_VENV:-$HOME/.local/share/blender-harness/bpy-venv}"
+
+find_blender() {
+  local c
+  for c in "${BLENDER:-}" "$(command -v blender 2>/dev/null || true)" \
+           "${BLENDER_PREFIX:-/opt/blender}/blender" /opt/blender/blender "$HOME/.local/opt/blender/blender" \
+           /Applications/Blender.app/Contents/MacOS/Blender; do
+    [[ -n "$c" && -x "$c" ]] && { echo "$c"; return 0; }
+  done
+  return 1
+}
+
+if BIN="$(find_blender)"; then
+  MODE=binary
+elif [[ -x "$BPY_VENV/bin/python" ]]; then
+  MODE=bpy BIN="$BPY_VENV/bin/python"
+else
+  echo "bl: no Blender found. Run scripts/setup.sh first." >&2
+  exit 127
+fi
+
+if [[ "${1:-}" == "--which" ]]; then
+  echo "$MODE $BIN"
+  exit 0
+fi
+
+[[ $# -ge 1 ]] || { echo "usage: scripts/bl <script.py> [args...]" >&2; exit 2; }
+script="$1"; shift
+
+if [[ "$MODE" == binary ]]; then
+  exec "$BIN" --background --factory-startup --python-exit-code 1 --python "$script" -- "$@"
+else
+  exec "$BIN" "$script" "$@"
+fi

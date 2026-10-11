@@ -1,0 +1,37 @@
+{
+  "worlds": [
+    {
+      "slug": "golden-harbor",
+      "title": "Golden Harbor",
+      "description": "Low sun over a rolling sea: sailboats and buoys ride the swell past a lighthouse islet.",
+      "tags": [
+        "ocean",
+        "sunset",
+        "showcase"
+      ],
+      "preview": "worlds/golden-harbor/preview.jpg"
+    },
+    {
+      "slug": "lowpoly-island",
+      "title": "Low-Poly Island",
+      "description": "A faceted island with pine forests, boulders and a lighthouse on the point.",
+      "tags": [
+        "nature",
+        "stylized",
+        "day"
+      ],
+      "preview": "worlds/lowpoly-island/preview.jpg"
+    },
+    {
+      "slug": "neon-city",
+      "title": "Neon City",
+      "description": "A night-time grid of towers with glowing window bands and lit streets.",
+      "tags": [
+        "urban",
+        "sci-fi",
+        "night"
+      ],
+      "preview": "worlds/neon-city/preview.jpg"
+    }
+  ]
+}
