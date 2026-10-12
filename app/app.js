@@ -8,6 +8,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { createSkyDome } from './sky.js';
 import { Floaters, Ocean } from './ocean.js';
 import { Lamps, Plumes } from './effects.js';
@@ -102,7 +103,29 @@ const viewer = (() => {
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0, 0.35, 1.0);
   composer.addPass(bloom);
+  // Photographic grade from the world's META["grade"]: per-channel gains and saturation, applied
+  // in scene-linear before tone mapping, exactly like the Blender render's compositor.
+  const grade = new ShaderPass({
+    uniforms: { tDiffuse: { value: null }, uGains: { value: new THREE.Vector3(1, 1, 1) },
+      uSat: { value: 1 } },
+    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform sampler2D tDiffuse; uniform vec3 uGains; uniform float uSat;
+      varying vec2 vUv;
+      void main() {
+        vec4 c = texture2D(tDiffuse, vUv);
+        vec3 col = c.rgb * uGains;
+        float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+        gl_FragColor = vec4(max(mix(vec3(lum), col, uSat), 0.0), c.a);
+      }`,
+  });
+  composer.addPass(grade);
   composer.addPass(new OutputPass());
+
+  function applyGrade(g) {
+    grade.uniforms.uGains.value.set(...(g?.gains ?? [1, 1, 1]));
+    grade.uniforms.uSat.value = g?.saturation ?? 1;
+    grade.enabled = !!g;
+  }
 
   // Large worlds are Draco-compressed by the build; the decoder is only fetched when needed.
   const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
@@ -172,6 +195,7 @@ const viewer = (() => {
     lighting.setWorld({ meta, root: current.root, ocean, lamps, plumes });
     lightPanel.load(params);
 
+    applyGrade(v.grade);
     bloom.strength = v.bloom ?? 0;
     bloom.enabled = bloom.strength > 0;
     // "agx" (default, filmic) or "neutral" (keeps saturated colors; good for photo-matched worlds).

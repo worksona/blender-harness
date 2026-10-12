@@ -84,10 +84,14 @@ export class Lighting {
     if (this.dirty) { this.dirty = false; this.apply(); }
     if (!this.physical || !this.scene.fog) return;
     // Haze takes the colour of the sky near the horizon in the direction you're looking.
+    // ...blended with the average horizon all round, as aerial haze gathers light from the
+    // whole sky (harness/atmosphere.py haze_color does the same).
     camera.getWorldDirection(this._v);
     const h = Math.hypot(this._v.x, this._v.z) || 1;
     const c = sampleSky(this.skyData, SKY_W, SKY_H, [this._v.x / h, 0.03, this._v.z / h]);
-    this.scene.fog.color.setRGB(c[0] * SKY_SCALE, c[1] * SKY_SCALE, c[2] * SKY_SCALE);
+    const a = this.horizonAvg;
+    this.scene.fog.color.setRGB((c[0] + a[0]) * 0.5 * SKY_SCALE, (c[1] + a[1]) * 0.5 * SKY_SCALE,
+      (c[2] + a[2]) * 0.5 * SKY_SCALE);
   }
 
   apply() {
@@ -127,6 +131,11 @@ export class Lighting {
     // Bake the sky for this sun and haze; it lights the dome, the ocean and every material.
     this.skyData.set(bakeSky(L.sunDir, p.haze, SKY_W, SKY_H));
     for (let i = 0; i < this.skyData.length; i++) this.skyHalf[i] = THREE.DataUtils.toHalfFloat(this.skyData[i]);
+    this.horizonAvg = [0, 0, 0];
+    for (let k = 0; k < 8; k++) {
+      const s = sampleSky(this.skyData, SKY_W, SKY_H, [Math.cos(k * Math.PI / 4), 0.03, Math.sin(k * Math.PI / 4)]);
+      for (let c = 0; c < 3; c++) this.horizonAvg[c] += s[c] / 8;
+    }
     this.skyTex.needsUpdate = true;
     this.envRT?.dispose();
     this.envRT = this.pmrem.fromEquirectangular(this.skyTex);

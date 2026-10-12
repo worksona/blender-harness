@@ -9,9 +9,6 @@ from mathutils import Vector
 from .core import STATE, bounds, rgb
 
 
-SKY_FOG_GAIN = 0.35  # horizon-colour estimate -> scene-referred haze brightness
-
-
 def to_gltf(v):
     """Blender Z-up (x, y, z) -> glTF/three.js Y-up (x, z, -y)."""
     return [round(v[0], 4), round(v[2], 4), round(-v[1], 4)]
@@ -93,12 +90,12 @@ def _sky_gradient():
     nt.links.new(tint.outputs["Result"], nt.nodes["Background"].inputs["Color"])
 
 
-def _compositor(glare=0.0, haze=None):
+def _compositor(glare=0.0, haze=None, grade=None):
     """Post effects via the Blender 5 node-group compositor.
     glare: bloom on bright lights. haze: (rgb, near, far) distance haze from the mist pass,
     matching the viewer's fog (used by atmosphere())."""
     scene = bpy.context.scene
-    if glare <= 0 and not haze:
+    if glare <= 0 and not haze and not grade:
         scene.compositing_node_group = None
         return
     ng = bpy.data.node_groups.get("_Post") or bpy.data.node_groups.new("_Post", "CompositorNodeTree")
@@ -142,16 +139,35 @@ def _compositor(glare=0.0, haze=None):
         g.inputs["Size"].default_value = 0.7
         ng.links.new(image, g.inputs["Image"])
         image = g.outputs["Image"]
+    if grade and grade.get("gains"):  # per-channel colour balance (identical in the viewer)
+        gains = ng.nodes.new("ShaderNodeMix")
+        gains.data_type = "RGBA"
+        gains.blend_type = "MULTIPLY"
+        gains.inputs["Factor"].default_value = 1.0
+        gains.inputs["B"].default_value = (*grade["gains"], 1.0)
+        ng.links.new(image, gains.inputs["A"])
+        image = gains.outputs["Result"]
+    if grade and grade.get("saturation", 1.0) != 1.0:
+        # Saturation only: the compositor runs before exposure, so a contrast curve here would
+        # pivot on the wrong grey and crush dim (dusk, night) scenes to black.
+        cc = ng.nodes.new("CompositorNodeColorCorrection")
+        cc.inputs[2].default_value = grade["saturation"]   # master saturation
+        ng.links.new(image, cc.inputs["Image"])
+        image = cc.outputs["Image"]
     out = ng.nodes.new("NodeGroupOutput")
     ng.links.new(image, out.inputs[0])
     scene.compositing_node_group = ng
 
 
-def render(path, resolution=(1280, 720), samples=24, camera=None, look="None", view="AgX", glare=0.0):
+def render(path, resolution=(1280, 720), samples=24, camera=None, look="None", view="AgX", glare=0.0,
+           grade=None):
     """Cycles CPU render (works headless with no GPU). Writes JPEG unless path ends in .png.
     view: "AgX" (filmic, soft highlights) or "Standard" (camera-like, saturated, for photo matching).
     look: an AgX look such as "AgX - Punchy".
-    glare: bloom strength around bright lights (0 = off); good for night scenes."""
+    glare: bloom strength around bright lights (0 = off); good for night scenes.
+    grade: {"gains": [r, g, b], "saturation": s} photographic colour grade: per-channel colour
+           balance (e.g. [0.75, 1, 1] for a cool teal look) and saturation. Applied in
+           scene-linear in the compositor; the viewer applies exactly the same grade."""
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
     scene.cycles.device = "CPU"
@@ -167,12 +183,15 @@ def render(path, resolution=(1280, 720), samples=24, camera=None, look="None", v
     scene.view_settings.exposure = atmo["ev"] if atmo else 0.0
     haze = None
     if atmo:
+        # Haze takes the colour of the sky near the horizon in the view direction (the same
+        # sky model the viewer uses), in scene-linear units like the rest of the image.
+        from mathutils import Vector
+        from .atmosphere import haze_color
+        cam = scene.camera
+        view = cam.matrix_world.to_quaternion() @ Vector((0, 0, -1))
         fog = STATE["fog"]
-        h = fog["color"].lstrip("#")
-        # The mist pass runs before exposure is applied; pre-divide so haze matches the sky.
-        col = tuple((int(h[i:i + 2], 16) / 255) ** 2.2 * SKY_FOG_GAIN / 2 ** atmo["ev"] for i in (0, 2, 4))
-        haze = (col, fog["near"], fog["far"])
-    _compositor(glare, haze)
+        haze = (haze_color(tuple(view)), fog["near"], fog["far"])
+    _compositor(glare, haze, grade)
     is_png = path.lower().endswith(".png")
     scene.render.image_settings.file_format = "PNG" if is_png else "JPEG"
     if not is_png:

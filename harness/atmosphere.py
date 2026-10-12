@@ -58,6 +58,90 @@ def sun_transmittance(elevation, haze):
     return tuple(math.exp(-airmass * (r + a)) for r, a in zip(rayleigh, aerosol))
 
 
+# ---------------------------------------------------------------- sky radiance (port of app/atmosphere.js)
+# Same single-scattering model the viewer bakes into its sky texture; used here for the colour of
+# the distance haze so it matches the sky behind it. Directions are Z-up (Blender).
+
+_R_EARTH, _R_ATMO, _H_R, _H_M = 6360e3, 6420e3, 8000.0, 1200.0
+_BETA_R = (5.802e-6, 13.558e-6, 33.1e-6)
+_BETA_O = (3.0e-6, 2.6e-6, 0.2e-6)
+_SUN_INTENSITY = 300.0
+
+
+def _ozone(h):
+    return max(0.0, 1.0 - abs(h - 25000.0) / 15000.0)
+
+
+def _ray_sphere(o, d, r):
+    b = o[0] * d[0] + o[1] * d[1] + o[2] * d[2]
+    c = o[0] ** 2 + o[1] ** 2 + o[2] ** 2 - r * r
+    disc = b * b - c
+    if disc < 0:
+        return -1.0, -1.0
+    s = math.sqrt(disc)
+    return -b - s, -b + s
+
+
+def sky_radiance(direction, sun_dir, haze, steps=16, light_steps=8):
+    """Scene-referred sky radiance (before SKY_SCALE) along a Z-up unit direction."""
+    o = (0.0, 0.0, _R_EARTH + 50.0)
+    t_max = _ray_sphere(o, direction, _R_ATMO)[1]
+    g = _ray_sphere(o, direction, _R_EARTH)
+    if g[0] > 0:
+        t_max = min(t_max, g[0])
+    beta_m = 3.996e-6 * (1 + haze * 9)
+    ds = t_max / steps
+    od_r = od_m = od_o = 0.0
+    sum_r, sum_m = [0.0] * 3, [0.0] * 3
+    for i in range(steps):
+        t = (i + 0.5) * ds
+        p = tuple(o[k] + direction[k] * t for k in range(3))
+        h = math.sqrt(sum(c * c for c in p)) - _R_EARTH
+        d_r, d_m = math.exp(-h / _H_R) * ds, math.exp(-h / _H_M) * ds
+        od_r += d_r
+        od_m += d_m
+        od_o += _ozone(h) * ds
+        if _ray_sphere(p, sun_dir, _R_EARTH)[0] > 0:
+            continue  # in the Earth's shadow
+        lt = _ray_sphere(p, sun_dir, _R_ATMO)[1]
+        lds = lt / light_steps
+        l_r = l_m = l_o = 0.0
+        for j in range(light_steps):
+            q = tuple(p[k] + sun_dir[k] * (j + 0.5) * lds for k in range(3))
+            lh = math.sqrt(sum(c * c for c in q)) - _R_EARTH
+            l_r += math.exp(-lh / _H_R) * lds
+            l_m += math.exp(-lh / _H_M) * lds
+            l_o += _ozone(lh) * lds
+        for c in range(3):
+            tau = _BETA_R[c] * (od_r + l_r) + _BETA_O[c] * (od_o + l_o) + beta_m * 1.1 * (od_m + l_m)
+            att = math.exp(-tau)
+            sum_r[c] += att * d_r
+            sum_m[c] += att * d_m
+    mu = sum(direction[k] * sun_dir[k] for k in range(3))
+    phase_r = 3 / (16 * math.pi) * (1 + mu * mu)
+    gm = 0.76
+    phase_m = 3 / (8 * math.pi) * ((1 - gm * gm) * (1 + mu * mu)) / ((2 + gm * gm) * (1 + gm * gm - 2 * gm * mu) ** 1.5)
+    return tuple(_SUN_INTENSITY * (sum_r[c] * _BETA_R[c] * phase_r + sum_m[c] * beta_m * phase_m) for c in range(3))
+
+
+def haze_color(view_dir):
+    """Scene-linear haze colour when looking along `view_dir` (Z-up). Aerial haze gathers light
+    from the whole sky, so it blends the horizon straight ahead with the average horizon all the
+    way round (app/lighting.js does the same)."""
+    atmo = STATE["atmosphere"]
+    el, az = math.radians(atmo["elevation"]), math.radians(atmo["azimuth"])
+    sun = (math.sin(az) * math.cos(el), math.cos(az) * math.cos(el), math.sin(el))
+
+    def horizon(a):
+        return sky_radiance((math.sin(a) * 0.9995, math.cos(a) * 0.9995, 0.03), sun, atmo["haze"], 12, 6)
+
+    ahead = horizon(math.atan2(view_dir[0], view_dir[1]))
+    ring = [horizon(k * math.pi / 4) for k in range(8)]
+    avg = tuple(sum(r[c] for r in ring) / 8 for c in range(3))
+    return tuple((0.5 * ahead[c] + 0.5 * avg[c] + n) * SKY_SCALE
+                 for c, n in enumerate((0.0006, 0.0012, 0.0028)))
+
+
 def _lerp_table(x, table):
     if x <= table[0][0]:
         return table[0][1]

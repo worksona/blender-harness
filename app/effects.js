@@ -187,7 +187,7 @@ export class Plumes {
         base.set(p.base, i * 3);
         shape.set([p.height, p.radius, k / PER_PLUME + (p.seed ?? 0) * 0.137, Math.min(1, p.density * 2.5)], i * 4);
         drift.set([p.drift[0], p.drift[1], p.rise ?? 4], i * 3);
-        c.set(p.low); low.set([c.r, c.g, c.b], i * 3);
+        c.set(p.low).multiplyScalar(p.glow ?? 1); low.set([c.r, c.g, c.b], i * 3);
         c.set(p.high); high.set([c.r, c.g, c.b], i * 3);
       }
     }
@@ -270,7 +270,9 @@ export class Plumes {
     const u = this.uniforms;
     u.uAuthored.value = ambient ? 0 : 1;
     if (ambient) {
-      u.uAmbient.value.setRGB(...ambient);
+      // Steam scatters the whole sky: mostly its brightness, only a hint of its colour.
+      const lum = 0.2126 * ambient[0] + 0.7152 * ambient[1] + 0.0722 * ambient[2];
+      u.uAmbient.value.setRGB(...ambient.map((c) => lum * 0.8 + c * 0.2));
       u.uSunCol.value.setRGB(...sunColor);
       u.uGlowAmt.value = glow;
     }

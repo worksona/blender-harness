@@ -30,6 +30,7 @@ def ocean(level=0.0, waves="moderate", wind=45.0, color="#0a3550", shallow="#2a9
     foam:    0..1 whitecaps and shoreline foam in the viewer.
     clarity: how far you can see into the water (1 = clear tropical, 0.3 = murky).
     size:    extent of the rendered ocean in the Blender preview (viewer ocean is endless).
+    render_detail: FFT ocean resolution in the Blender preview; 0 = flat water (distant bays).
     center:  (x, y) the Blender ocean patch is centered on, e.g. out in the bay in front of the camera.
     """
     longest, steepness, blender_scale = PRESETS[waves]
@@ -50,6 +51,19 @@ def ocean(level=0.0, waves="moderate", wind=45.0, color="#0a3550", shallow="#2a9
     me.materials.append(water)
     _place(obj, (0, 0, level), (0, 0, 0), (1, 1, 1), None)
 
+    if render_detail <= 0:
+        # Flat water for distant bays: reflects the sky cleanly and costs nothing to render.
+        # (The viewer still animates its waves.)
+        half = size / 2
+        # Distant water is never a perfect mirror: ripples blur in the sky above the horizon.
+        flat = material("ocean_water_flat", color, roughness=0.22)
+        me.materials[0] = flat
+        me.from_pydata([(-half, -half, 0), (half, -half, 0), (half, half, 0), (-half, half, 0)], [],
+                       [(0, 1, 2, 3)])
+        obj.location.x += center[0]
+        obj.location.y += center[1]
+        STATE["ocean"] = _ocean_state(level, color, shallow, foam, clarity, gerstner)
+        return obj
     tile = 200
     mod = obj.modifiers.new("Ocean", "OCEAN")
     mod.geometry_mode = "GENERATE"
@@ -67,15 +81,13 @@ def ocean(level=0.0, waves="moderate", wind=45.0, color="#0a3550", shallow="#2a9
     obj.location.x += center[0] - tile * mod.repeat_x / 2
     obj.location.y += center[1] - tile * mod.repeat_y / 2
 
-    STATE["ocean"] = {
-        "level": level,
-        "color": hex_of(color),
-        "shallow": hex_of(shallow),
-        "foam": foam,
-        "clarity": clarity,
-        "waves": gerstner,
-    }
+    STATE["ocean"] = _ocean_state(level, color, shallow, foam, clarity, gerstner)
     return obj
+
+
+def _ocean_state(level, color, shallow, foam, clarity, waves):
+    return {"level": level, "color": hex_of(color), "shallow": hex_of(shallow), "foam": foam,
+            "clarity": clarity, "waves": waves}
 
 
 def bob(obj, amount=1.0, draft=0.0):

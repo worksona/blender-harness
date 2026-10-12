@@ -70,7 +70,8 @@ def build(slug, args):
         tag = "-".join(f"{k}{str(v).replace(':', '')}" for k, v in EXPLORE.items())
         path = output.render(os.path.join(BUILD, slug, f"{tag}.jpg"), res,
                              args.samples or rcfg.get("samples", 24), look=rcfg.get("look", "None"),
-                             view=rcfg.get("view", "AgX"), glare=rcfg.get("glare", 0.0))
+                             view=rcfg.get("view", "AgX"), glare=rcfg.get("glare", 0.0),
+                             grade=meta.get("grade"))
         atmo = STATE.get("atmosphere") or {}
         print(f"[world] {slug} at {EXPLORE}: sun {atmo.get('elevation')} deg, EV {atmo.get('ev')}, "
               f"lamps {atmo.get('lamp_level')} -> {os.path.relpath(path, ROOT)}")
@@ -102,7 +103,7 @@ def build(slug, args):
     if not args.no_render:
         renders.append(output.render(os.path.join(out, "preview.jpg"), res, samples,
                                      look=rcfg.get("look", "None"), view=rcfg.get("view", "AgX"),
-                                     glare=rcfg.get("glare", 0.0)))
+                                     glare=rcfg.get("glare", 0.0), grade=meta.get("grade")))
         if args.top:
             renders.append(output.render(os.path.join(BUILD, slug, "top.jpg"), (1024, 1024),
                                          max(8, samples // 2), camera=output.top_camera()))
@@ -124,7 +125,10 @@ def build(slug, args):
         "seed": meta.get("seed", 1),
         "glb": f"worlds/{slug}/world.glb",
         "preview": f"worlds/{slug}/preview.jpg",
-        "viewer": {**output.viewer_meta(), **meta.get("viewer", {})},
+        # META["viewer"]["grade"] can soften the grade for the real-time viewer, whose lighting is
+        # already a little more saturated than the path-traced render.
+        "viewer": {**output.viewer_meta(), **meta.get("viewer", {}),
+                   "grade": meta.get("viewer", {}).get("grade", meta.get("grade"))},
         "stats": st,
         "built_with": __import__("bpy").app.version_string,
     }

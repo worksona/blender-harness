@@ -27,10 +27,12 @@ META = {
     "description": "A coastal refinery at blue hour from a drone: thousands of lights, steam plumes "
                    "lit from below, tanks, stacks and the bay beyond.",
     "tags": ["industrial", "night", "photo-matched", "aerial"],
-    "draft": True,   # work in progress: renders too slowly for --all / CI so far
+    "draft": True,   # ~3 min locally, ~15 min on a 2-CPU CI runner: build it on demand
     "seed": 31,
-    "render": {"res": "1440x1078", "samples": 24, "glare": 0.45, "look": "AgX - Punchy"},
-    "viewer": {"bloom": 0.45},
+    "render": {"res": "1440x1078", "samples": 24, "glare": 0.25, "look": "AgX - Punchy"},
+    # The photo's teal-and-orange look: a cool white balance and punchier colour.
+    "grade": {"gains": [0.64, 1.0, 1.08], "saturation": 1.7},
+    "viewer": {"bloom": 0.45, "grade": {"gains": [0.8, 1.0, 1.02], "saturation": 1.2}},
 }
 
 GROUND = 2.0
@@ -169,7 +171,7 @@ def build(ctx):
     terrain("Land", size=12000, resolution=220, height=height, center=(0, 4500), backdrop=True,
             bands=[(-1.5, seabed), (0.8, shore), (14, ground), (999, hills)])
     ocean(level=0, waves="calm", wind=80, color="#12303f", shallow="#244a5a", foam=0.08, clarity=0.4,
-          size=4200, render_detail=8, center=(0, 4600))
+          size=9000, render_detail=0, center=(0, 6000))
     water = material("bay_far", "#1a3546", roughness=0.06)
     plane("BayFar", size=40000, location=(0, 0, -0.15), material=water, backdrop=True)
 
@@ -204,7 +206,7 @@ def build(ctx):
         for gy in range(-70, 71, 28):
             x, y = park(gx, gy)
             civil.rod((x, y, GROUND), (x, y, GROUND + 16), 0.2, M["steel"], 6)
-            lamp((x, y, GROUND + 16.2), "led" if (gx // 25 + gy // 28) % 3 == 0 else "warm", 26000,
+            lamp((x, y, GROUND + 16.2), "led" if (gx // 25 + gy // 28) % 5 == 0 else "sodium", 26000,
                  bulb=0.6, pool_z=GROUND)
     occ.add(PARK_C.x - 130, PARK_C.y - 110, PARK_C.x + 130, PARK_C.y + 110, 0)
     # Long sheds between the car park and the road, edge-lit.
@@ -297,7 +299,7 @@ def build(ctx):
         for zz in range(12, int(h), 9):  # platform lights up the column
             a_ = rng.uniform(0, math.tau)
             lamp((x + (r + 1.2) * math.cos(a_), y + (r + 1.2) * math.sin(a_), PAD + zz + 1.2),
-                 rng.choice(("sodium", "sodium", "warm", "led")), 3600, bulb=0.3)
+                 rng.choice(("sodium", "sodium", "warm", "led")), 900, bulb=0.22)
     frames = [(-240, 860, -190, 890, 4), (-90, 940, -40, 975, 5), (80, 900, 140, 935, 4),
               (180, 1080, 230, 1110, 3), (-260, 1100, -210, 1140, 4), (-60, 1150, 0, 1190, 5),
               (260, 1250, 310, 1290, 3), (-200, 1300, -150, 1330, 4)]
@@ -308,7 +310,7 @@ def build(ctx):
         for z in lv:
             for (lx, ly) in ((x0, y0), (x1, y0), (x0, y1), (x1, y1), ((x0 + x1) / 2, y0)):
                 if rng.random() < 0.8:
-                    lamp((lx, ly, PAD + z + 2.5), rng.choice(("sodium", "warm", "led")), 2500, bulb=0.3)
+                    lamp((lx, ly, PAD + z + 2.5), rng.choice(("sodium", "warm", "led")), 700, bulb=0.22)
     for (x, y) in ((-10, 880), (180, 870), (-300, 950), (300, 1180)):
         ind.fired_heater(core, M, x, y, w=30, d=12, h=18, stacks=2)
         occ.add(x - 17, y - 8, x + 17, y + 8)
@@ -325,7 +327,7 @@ def build(ctx):
         for _ in range(rng.choice((1, 1, 2))):
             p = obj.location
             lamp((p.x + rng.uniform(-5, 5), p.y + rng.uniform(-5, 5), PAD + rng.uniform(3, 20)),
-                 rng.choice(("sodium", "sodium", "warm", "led")), 1200, bulb=0.3,
+                 rng.choice(("sodium", "sodium", "warm", "led")), 350, bulb=0.18,
                  pool_z=PAD if rng.random() < 0.3 else None)
     print(f"[dusk] infill lamps: {len(STATE['lamps']) - before}, total lamps: {len(STATE['lamps'])}")
 
@@ -334,7 +336,7 @@ def build(ctx):
                                   (-150, 885, 26, 80, 4.5, 3), (120, 1050, 30, 70, 4, 6),
                                   (225, 955, 22, 60, 4, 7), (60, 1210, 50, 95, 5, 9),
                                   (-335, 725, 12, 42, 3, 10)):
-        plume((x, y, PAD + z), height=h, radius=r, drift=(0.5, 0.18), seed=seed)
+        plume((x, y, PAD + z), height=h, radius=r, drift=(0.5, 0.18), seed=seed, density=0.2, glow=5.0)
 
     # ---- far shore lights ------------------------------------------------------------------------
     for i in range(160):
@@ -345,8 +347,9 @@ def build(ctx):
 
     # ---- time of day -----------------------------------------------------------------------------
     # Late-June evening on the Swedish west coast: the sun has just set (3.4 deg below the horizon),
-    # just right of the view, as in the photo. Scene +Y points northwest.
-    atmosphere(time="21:40", latitude=58.3, day=172, north=303, haze=0.35, lamps=0.55, exposure=-0.8)
+    # off to the right of the view, as in the photo. Scene +Y points west-northwest.
+    atmosphere(time="21:05", latitude=58.3, day=172, north=286, haze=0.2, visibility=11000,
+               lamps=0.3, exposure=0.2)
     pitch = math.radians(8.9)
     camera((0, 0, 130), (0, 1000, 130 - 1000 * math.tan(pitch)), lens=24)
 

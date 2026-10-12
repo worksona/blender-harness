@@ -38,7 +38,8 @@ def apply_lamp_level(level, gain=1.0):
             mat.node_tree.nodes["Principled BSDF"].inputs["Emission Strength"].default_value = BULB_GLOW * level
     # Steam glows from the plant lights below it, so its self-light follows the lamps too.
     for mat in _STEAM_MATS:
-        mat.node_tree.nodes["SteamGlow"].outputs[0].default_value = STEAM_GLOW * level * gain / 0.0015
+        mat.node_tree.nodes["SteamGlow"].outputs[0].default_value = (
+            STEAM_GLOW * mat.get("glow", 1.0) * level * gain / 0.0015)
 
 
 def _bulb(color_hex, radius):
@@ -104,7 +105,7 @@ _STEAM_MATS = []
 WIDEN = 5.5   # how much wider a plume is at the top than at its source, in source radii
 
 
-def _steam_material(name, height, radius, drift, density):
+def _steam_material(name, height, radius, drift, density, glow=1.0):
     """Volume material for one plume. The plume's shape lives in the shader: density falls off
     with distance from the drifting centre-line (radius widening with height), fades in at the
     source and out at the top, and is broken up by noise. The mesh is just a container, so each
@@ -170,10 +171,11 @@ def _steam_material(name, height, radius, drift, density):
     vol.inputs["Emission Color"].default_value = (1.0, 0.72, 0.45, 1)
     # Emission isn't scaled by density in the Principled Volume, so scale it here; otherwise
     # the whole (invisible) container glows. "SteamGlow" is set by apply_lamp_level().
-    glow = N("ShaderNodeValue")
-    glow.name = "SteamGlow"
-    glow.outputs[0].default_value = 0.08
-    L(math("MULTIPLY", math("DIVIDE", dens, density), glow.outputs[0]), vol.inputs["Emission Strength"])
+    level = N("ShaderNodeValue")
+    level.name = "SteamGlow"
+    level.outputs[0].default_value = 0.08
+    mat["glow"] = glow
+    L(math("MULTIPLY", math("DIVIDE", dens, density), level.outputs[0]), vol.inputs["Emission Strength"])
     L(dens, vol.inputs["Density"])
     out = N("ShaderNodeOutputMaterial")
     L(vol.outputs["Volume"], out.inputs["Volume"])
@@ -181,15 +183,16 @@ def _steam_material(name, height, radius, drift, density):
 
 
 def plume(base, height=100.0, radius=6.0, drift=(0.5, 0.15), density=0.35, rise=4.0,
-          low="#ffd7a8", high="#9aaabb", seed=0, name="Plume"):
+          low="#ffd7a8", high="#9aaabb", seed=0, glow=1.0, name="Plume"):
     """Steam plume rising from `base` (x, y, z).
 
     drift:  horizontal travel per meter of rise (x, y), i.e. the wind.
     rise:   rise speed in m/s in the viewer animation.
+    glow:   how strongly the plant's lights glow up into the steam at night (1 = default).
     low/high: colour near the source (usually lit by the plant) and up high (sky-lit).
     """
     bx, by, bz = base
-    mat = _steam_material(f"{name}_{seed}", height, radius, drift, density)
+    mat = _steam_material(f"{name}_{seed}", height, radius, drift, density, glow)
     # Container: a closed tapered tube that follows the drifting plume, a bit wider than it.
     mb = MeshBuilder(name)
     bm, idx = mb.bm, mb._mat_index(mat)
@@ -214,7 +217,7 @@ def plume(base, height=100.0, radius=6.0, drift=(0.5, 0.15), density=0.35, rise=
     STATE.setdefault("plumes", []).append({
         "base": [round(bx, 2), round(by, 2), round(bz, 2)], "height": height, "radius": radius,
         "drift": [drift[0], drift[1]], "density": density, "rise": rise,
-        "low": hex_of(low), "high": hex_of(high), "seed": seed,
+        "low": hex_of(low), "high": hex_of(high), "seed": seed, "glow": glow,
     })
     return obj
 
