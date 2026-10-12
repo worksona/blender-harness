@@ -46,6 +46,7 @@
     th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
     .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .limits li { margin-bottom: 4px; }
+    .live { margin: -16px 0 28px; font-size: 14px; color: var(--muted); }
     .script-box { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 10px 0; }
     .script-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px;
       padding: 8px 12px; background: rgba(255, 255, 255, 0.04); border-bottom: 1px solid var(--line); font-size: 13px; }
@@ -70,6 +71,7 @@
 <div class="guide">
   <nav class="toc" aria-label="Contents">
     <a class="back" href="index.html#/">&larr; Worlds gallery</a>
+    <a href="https://worksona-blender-worlds.netlify.app" target="_blank" rel="noopener">Live site &#8599;</a>
     <a href="#what">What it is</a>
     <a href="#start">Getting started</a>
     <a href="#setup-script">Cloud setup script</a>
@@ -87,6 +89,9 @@
     <p class="lede">You describe a 3D world, or hand over a photo, and Claude builds it in headless Blender,
       checks the renders, and publishes it to this app as an explorable scene. It runs in a Claude Code
       cloud session, in Docker, or on your own machine.</p>
+    <p class="live">Live site: <a href="https://worksona-blender-worlds.netlify.app" target="_blank"
+      rel="noopener">worksona-blender-worlds.netlify.app</a>. Every world, in your browser. It updates
+      automatically on every push to <code>main</code>.</p>
 
     <h2 id="what">What it is</h2>
     <p>Every world is one Python file, <code>worlds/&lt;name&gt;/world.py</code>, written against a small
@@ -241,10 +246,12 @@ on the road. About 600 m across. High-ish 3/4 camera.</pre>
           <h3>Presenting and sharing</h3>
           <p>Every world gets a gallery card, an orbitable scene and a high-resolution preview render. Links keep
             the lighting state (for example <code>#/w/refinery-dusk?t=21.2</code>), so you can send someone the
-            exact view. CI can publish the whole app to GitHub Pages. Renders can be produced at any time of day
-            for decks and reports.</p>
+            exact view. The app is live on Netlify at
+            <a href="https://worksona-blender-worlds.netlify.app" target="_blank" rel="noopener">worksona-blender-worlds.netlify.app</a>
+            and redeploys automatically on every push to <code>main</code>. Renders can be produced at any time of
+            day for decks and reports.</p>
           <p class="ask">"Give me 1920×1080 hero renders of every world at golden hour."</p>
-          <p class="uses-tags">See: this app · <code>META["render"]</code> · GitHub Pages (opt-in)</p>
+          <p class="uses-tags">See: the live site · <code>META["render"]</code> · Netlify auto-deploy</p>
         </div>
       </article>
     </div>
