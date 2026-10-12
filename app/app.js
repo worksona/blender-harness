@@ -8,8 +8,10 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { createSkyDome, skyUniforms } from './sky.js';
+import { createSkyDome } from './sky.js';
 import { Floaters, Ocean } from './ocean.js';
+import { Lamps, Plumes } from './effects.js';
+import { Lighting } from './lighting.js';
 
 const $ = (id) => document.getElementById(id);
 let worlds = [];
@@ -23,10 +25,10 @@ async function main() {
 }
 
 function route() {
-  const m = location.hash.match(/^#\/w\/([\w-]+)/);
+  const m = location.hash.match(/^#\/w\/([\w-]+)(?:\?(.*))?/);
   $('gallery').hidden = !!m;
   $('viewer').hidden = !m;
-  if (m) viewer.open(m[1]);
+  if (m) viewer.open(m[1], new URLSearchParams(m[2] || ''));
   else viewer.close();
 }
 
@@ -87,8 +89,14 @@ const viewer = (() => {
     depthTexture: new THREE.DepthTexture(1, 1),
   });
   const clock = new THREE.Clock();
+  const lighting = new Lighting({
+    renderer, scene, sun, hemi,
+    onSunDir: (d) => { shadowFit.dir.set(...d).normalize(); shadowFit.radius = 0; },
+  });
   let ocean = null;
   let floaters = null;
+  let lamps = null;
+  let plumes = null;
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
@@ -140,6 +148,10 @@ const viewer = (() => {
     if (current) fitShadow();
     skyDome.position.copy(camera.position);
     const t = clock.getElapsedTime();
+    lightPanel.tick();
+    lighting.update(camera);
+    plumes?.update(t);
+    lamps?.update(controls.target);
     if (ocean) {
       floaters?.update(t);
       ocean.update(t, camera, prepass);
@@ -152,32 +164,18 @@ const viewer = (() => {
     composer.render();
   }
 
-  function applyMeta(meta) {
+  function applyMeta(meta, params) {
     const v = meta.viewer;
-    const fogColor = new THREE.Color(v.fog.color);
-    scene.fog = new THREE.Fog(fogColor, v.fog.near, v.fog.far);
-    skyUniforms.uSkyTop.value.set(v.sky.color);
-    skyUniforms.uSkyHorizon.value.copy(fogColor);
-    skyUniforms.uSunDir.value.set(...v.sun.direction).normalize();
-    skyUniforms.uSunColor.value.set(v.sun.color);
-    skyUniforms.uSunStrength.value = v.sun.strength;
-
-    hemi.color.set(v.sky.color);
-    hemi.groundColor.set(v.sky.ground);
-    hemi.intensity = 1.4 * v.sky.strength;
-    sun.color.set(v.sun.color);
-    sun.intensity = 0.75 * v.sun.strength;
-
     const min = new THREE.Vector3(...v.bounds.min), max = new THREE.Vector3(...v.bounds.max);
     shadowFit.worldRadius = Math.max(max.clone().sub(min).length() / 2, 1);
-    shadowFit.dir.set(...v.sun.direction).normalize();
     shadowFit.radius = 0;
+    lighting.setWorld({ meta, root: current.root, ocean, lamps, plumes });
+    lightPanel.load(params);
 
     bloom.strength = v.bloom ?? 0;
     bloom.enabled = bloom.strength > 0;
     // "agx" (default, filmic) or "neutral" (keeps saturated colors; good for photo-matched worlds).
     renderer.toneMapping = v.tone === 'neutral' ? THREE.NeutralToneMapping : THREE.AgXToneMapping;
-    renderer.toneMappingExposure = v.exposure ?? 1;
     resetView();
   }
 
@@ -191,10 +189,10 @@ const viewer = (() => {
     controls.update();
   }
 
-  async function open(slug) {
+  async function open(slug, params = new URLSearchParams()) {
     resize();
     if (!running) { running = true; frame(); }
-    if (current?.slug === slug) return;
+    if (current?.slug === slug) { lightPanel.load(params); return; }
     const token = ++loadToken;
     $('loading').hidden = false;
     $('loading').textContent = 'Loading…';
@@ -206,6 +204,10 @@ const viewer = (() => {
       if (token !== loadToken) return;
       if (current) { scene.remove(current.root); dispose(current.root); }
       if (ocean) { scene.remove(ocean.mesh); dispose(ocean.mesh); ocean = floaters = null; }
+      if (lamps) { scene.remove(lamps.group); dispose(lamps.group); lamps = null; }
+      if (plumes) { scene.remove(plumes.mesh); dispose(plumes.mesh); plumes = null; }
+      if (meta.viewer.lamps?.length) { lamps = new Lamps(meta.viewer.lamps); scene.add(lamps.group); }
+      if (meta.viewer.plumes?.length) { plumes = new Plumes(meta.viewer.plumes); scene.add(plumes.mesh); }
       if (meta.viewer.ocean) {
         const v = meta.viewer;
         ocean = new Ocean(v.ocean, { sunStrength: v.sun.strength, sunElevation: v.sun.direction[1],
@@ -222,7 +224,7 @@ const viewer = (() => {
       });
       scene.add(gltf.scene);
       current = { slug, root: gltf.scene, meta };
-      applyMeta(meta);
+      applyMeta(meta, params);
       $('w-title').textContent = meta.title;
       $('w-desc').textContent = meta.description;
       $('w-stats').textContent =
@@ -285,6 +287,96 @@ const viewer = (() => {
     location.hash = `#/w/${worlds[(i + delta + worlds.length) % worlds.length].slug}`;
   }
 
+  // ---- light panel: time of day and atmosphere -------------------------------------------
+  const lightPanel = (() => {
+    const el = (id) => $(id);
+    let playing = false, lastT = 0, urlTimer = 0;
+    const fmt = (h) => `${String(Math.floor(h) % 24).padStart(2, '0')}:${String(Math.floor((h % 1) * 60)).padStart(2, '0')}`;
+    // Visibility slider: 0..100 -> 300 m .. 80 km (log), 100 = automatic from haze.
+    const visFrom = (v) => (v >= 100 ? undefined : Math.round(300 * (80000 / 300) ** (v / 99)));
+    const visTo = (m) => (m === undefined ? 100 : Math.round(99 * Math.log(m / 300) / Math.log(80000 / 300)));
+
+    function show() {
+      const p = lighting.params;
+      const physical = !!p;
+      const q = p || lighting.fromAuthored();
+      el('lp-time').value = q.time;
+      el('lp-clock').textContent = fmt(q.time);
+      el('lp-season').value = String([355, 80, 172, 266].reduce((a, b) => (Math.abs(b - q.day) < Math.abs(a - q.day) ? b : a)));
+      el('lp-lat').value = q.latitude;
+      el('lp-lat-out').textContent = `${q.latitude}°`;
+      el('lp-haze').value = q.haze;
+      el('lp-haze-out').textContent = (+q.haze).toFixed(2);
+      el('lp-vis').value = visTo(p?.visibility);
+      el('lp-vis-out').textContent = p?.visibility ? `${(p.visibility / 1000).toFixed(p.visibility < 10000 ? 1 : 0)} km` : 'auto';
+      el('lp-ev').value = q.exposure ?? 0;
+      el('lp-ev-out').textContent = `${(q.exposure ?? 0) >= 0 ? '+' : ''}${(+(q.exposure ?? 0)).toFixed(1)} EV`;
+      el('lp-lamps').value = typeof q.lamps === 'string' ? q.lamps : 'auto';
+      el('lp-status').textContent = physical ? lighting.describe()
+        : 'This world has hand-set lighting. Move any control to switch to the physical sky.';
+      el('lp-play').textContent = playing ? '❚❚' : '▶';
+    }
+
+    function change(partial) {
+      lighting.set(partial);
+      lighting.apply();
+      lighting.dirty = false;
+      show();
+      clearTimeout(urlTimer);
+      urlTimer = setTimeout(writeUrl, 300);
+    }
+
+    function writeUrl() {
+      if (!current || !lighting.params) return;
+      const p = lighting.params;
+      const q = new URLSearchParams({ t: (+p.time).toFixed(2), haze: (+p.haze).toFixed(2), lat: p.latitude,
+        day: p.day, ev: (+p.exposure).toFixed(1), lamps: p.lamps });
+      if (p.visibility) q.set('vis', p.visibility);
+      if (p.north) q.set('north', (+p.north).toFixed(1));
+      history.replaceState(null, '', `#/w/${current.slug}?${q}`);
+    }
+
+    el('lp-time').addEventListener('input', (e) => change({ time: +e.target.value }));
+    el('lp-season').addEventListener('change', (e) => change({ day: +e.target.value }));
+    el('lp-lat').addEventListener('input', (e) => change({ latitude: +e.target.value }));
+    el('lp-haze').addEventListener('input', (e) => change({ haze: +e.target.value }));
+    el('lp-vis').addEventListener('input', (e) => change({ visibility: visFrom(+e.target.value) }));
+    el('lp-ev').addEventListener('input', (e) => change({ exposure: +e.target.value }));
+    el('lp-lamps').addEventListener('change', (e) => change({ lamps: e.target.value }));
+    el('lp-reset').addEventListener('click', () => {
+      lighting.reset(); lighting.apply(); lighting.dirty = false; playing = false; show();
+      if (current) history.replaceState(null, '', `#/w/${current.slug}`);
+    });
+    el('lp-play').addEventListener('click', () => { playing = !playing; lastT = performance.now(); show(); });
+    el('light-panel').addEventListener('submit', (e) => e.preventDefault());
+
+    return {
+      /** Apply lighting parameters from the URL (or the world's defaults when there are none). */
+      load(params) {
+        const n = (k) => (params.has(k) ? +params.get(k) : undefined);
+        const partial = Object.fromEntries(Object.entries({
+          time: n('t'), haze: n('haze'), latitude: n('lat'), day: n('day'), exposure: n('ev'),
+          visibility: n('vis'), north: n('north'), lamps: params.get('lamps') ?? undefined,
+        }).filter(([, v]) => v !== undefined && !Number.isNaN(v)));
+        if (Object.keys(partial).length) { lighting.set(partial); lighting.apply(); lighting.dirty = false; }
+        show();
+      },
+      toggle() { el('light-panel').hidden = !el('light-panel').hidden; $('b-light').classList.toggle('on'); show(); },
+      togglePlay() { playing = !playing; lastT = performance.now(); show(); },
+      tick() {
+        if (!playing) return;
+        const now = performance.now();
+        const hours = ((now - lastT) / 1000) * 0.4;     // 1 hour every 2.5 s
+        lastT = now;
+        const t = ((lighting.params?.time ?? lighting.fromAuthored().time) + hours) % 24;
+        lighting.set({ time: t });
+        el('lp-time').value = t;
+        el('lp-clock').textContent = fmt(t);
+        el('lp-status').textContent = lighting.describe();
+      },
+    };
+  })();
+
   function toggleSpin() {
     controls.autoRotate = !controls.autoRotate;
     $('b-spin').classList.toggle('on', controls.autoRotate);
@@ -294,13 +386,17 @@ const viewer = (() => {
   $('b-next').onclick = () => step(1);
   $('b-reset').onclick = resetView;
   $('b-spin').onclick = toggleSpin;
+  $('b-light').onclick = () => lightPanel.toggle();
   window.addEventListener('keydown', (e) => {
     if ($('viewer').hidden) return;
     if (e.key === 'Escape') location.hash = '#/';
     if (e.key === '[') step(-1);
     if (e.key === ']') step(1);
     if (e.key === '0') resetView();
+    if (e.target.closest?.('#light-panel')) return;
     if (e.key === 'r') toggleSpin();
+    if (e.key === 'l') lightPanel.toggle();
+    if (e.key === ' ' && !$('light-panel').hidden) { e.preventDefault(); lightPanel.togglePlay(); }
   });
 
   // Handle for debugging and automated checks from the browser console.

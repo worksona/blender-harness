@@ -42,7 +42,10 @@ To build without rendering, add `--no-render`.
 | Detailed structures | `MeshBuilder(name)` assembles hundreds of parts into one object: `box`, `slab`, `beam(a, b)`, `rod(a, b)`, `cylinder`, `sphere`, `dome`, `torus`, `pipe(points)` (ball elbows), `tube(points, bend_radius=)` (smooth real pipe bends), `flange`, `handwheel`, `ladder(cage=True)`, `railing`, `ring_platform`, then `.build()`. Use it for frames, pipework, and vessels. `worlds/oil-refinery` shows it at scale |
 | Terrain | `terrain(name, size, resolution, height=f(x, y), bands=[(max_z, mat), ...], center=, backdrop=)`, `fbm`, `island_falloff`, `scatter(rng, n, area, height, accept, min_dist)`, `slope` |
 | Water | `ocean(level, waves='calm'|'moderate'|'rough', wind, color, shallow, foam, clarity)`, `bob(obj, amount, draft)` makes an object float on the viewer's waves |
-| Environment | `sun(elevation, azimuth, strength, color)`, `sky(color, strength, ground)`, `fog(color, near, far)`, `camera(location, target, lens)` |
+| Time of day | `atmosphere(time="18:40", latitude, day, north, haze, visibility, exposure, lamps)`: real solar position, sun colour from atmospheric extinction, a physical sky, distance haze, automatic exposure, and lamps that switch on at dusk. Prefer it over manual `sun`/`sky`/`fog` |
+| Night and effects | `lamp(location, color, power, pool_z=, light=)`, `lamps_along(points, spacing, height)`, `plume(base, height, radius, drift)` (steam: volumetric in Blender, animated particles in the viewer) |
+| Environment (manual) | `sun(elevation, azimuth, strength, color)`, `sky(color, strength, ground, glow, glow_height)`, `fog(color, near, far)`, `camera(location, target, lens)` |
+| Plant equipment | `from harness import industrial as ind`: `vessel`, `drum`, `steel_frame`, `pipe_rack`, `air_coolers`, `storage_tank`, `lpg_sphere`, `fired_heater`, `stack`, `cooling_tower`, `flare`, and instanced infill `kit_prefabs` + `fill` |
 | Grouping | `collection="Name"` on any object call |
 
 ## Rules
@@ -68,6 +71,21 @@ To build without rendering, add `--no-render`.
 - Previews render with Cycles on CPU (there is no GPU in the cloud). EEVEE and Workbench need
   a GPU, so don't use them.
 - Keep worlds deterministic: the same seed must give the same world.
+
+## Time of day and lighting
+
+`atmosphere()` drives everything from one set of numbers, and the Blender render and the web
+viewer use the same model. The sky is calibrated so both agree within about 20% from noon to
+twilight. Lamp watts are scaled so a lamp is about 1/600 of a high sun.
+
+- Preview another time without changing the world:
+  `scripts/bl tools/build_world.py <slug> --time 21:30 [--haze 0.6] [--lamps on] [--ev 0.5]`
+  writes `build/<slug>/time2130.jpg`.
+- In the viewer, the Light button (key L) gives a time slider, a ▶ button to play through the
+  day, season, latitude, haze, visibility, exposure and lamps. The URL keeps the state
+  (`#/w/<slug>?t=21.5&haze=0.3...`). Worlds with hand-set lighting switch to the physical sky
+  as soon as you move a control.
+- `META["draft"] = True` keeps a work-in-progress world out of `--all` and CI.
 
 ## Building from a reference photo
 

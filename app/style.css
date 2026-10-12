@@ -54,4 +54,19 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0
   .hud .title { order: 3; flex-basis: 100%; }
   .hud .actions { margin-left: auto; }
 }
+.panel {
+  position: absolute; top: 64px; right: 12px; width: min(300px, calc(100vw - 24px));
+  padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  backdrop-filter: blur(10px); font-size: 12px; color: var(--text); display: grid; gap: 6px;
+}
+.panel .row { display: flex; align-items: center; gap: 8px; }
+.panel .row label { color: var(--muted); }
+.panel .row output { margin-left: auto; font-variant-numeric: tabular-nums; }
+.panel .row label + output { margin-left: auto; }
+.panel .head { font-size: 13px; }
+.panel input[type=range] { width: 100%; accent-color: var(--accent); }
+.panel select { font: inherit; color: var(--text); background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); border-radius: 6px; padding: 3px 4px; }
+.panel .note { margin: 2px 0 0; color: var(--muted); }
+.btn.small { padding: 3px 8px; font-size: 12px; border-radius: 7px; }
+@media (max-width: 640px) { .panel { top: auto; bottom: 48px; } }
 [hidden] { display: none !important; }

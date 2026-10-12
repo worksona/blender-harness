@@ -21,7 +21,11 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 import harness  # noqa: E402
 from harness import output  # noqa: E402
+from harness.atmosphere import OVERRIDES as ATMOSPHERE_OVERRIDES  # noqa: E402
+from harness.core import STATE  # noqa: E402
 from manifest import write_manifest  # noqa: E402
+
+EXPLORE = {}  # atmosphere overrides from the command line
 
 WORLDS = os.path.join(ROOT, "worlds")
 APP_WORLDS = os.path.join(ROOT, "app", "worlds")
@@ -59,6 +63,18 @@ def build(slug, args):
     output.ensure_defaults()
     t_build = time.time() - t0
 
+    if EXPLORE:  # --time/--haze/--lamps/--ev: just render a look at that time of day
+        rcfg = meta.get("render", {})
+        res = args.res or _parse_res(rcfg.get("res", "1280x720"))
+        tag = "-".join(f"{k}{str(v).replace(':', '')}" for k, v in EXPLORE.items())
+        path = output.render(os.path.join(BUILD, slug, f"{tag}.jpg"), res,
+                             args.samples or rcfg.get("samples", 24), look=rcfg.get("look", "None"),
+                             view=rcfg.get("view", "AgX"), glare=rcfg.get("glare", 0.0))
+        atmo = STATE.get("atmosphere") or {}
+        print(f"[world] {slug} at {EXPLORE}: sun {atmo.get('elevation')} deg, EV {atmo.get('ev')}, "
+              f"lamps {atmo.get('lamp_level')} -> {os.path.relpath(path, ROOT)}")
+        return None
+
     out = os.path.join(APP_WORLDS, slug)
     glb = os.path.join(out, "world.glb")
     draco = meta.get("export", {}).get("draco")  # True / False / None = automatic
@@ -82,7 +98,8 @@ def build(slug, args):
     renders = []
     if not args.no_render:
         renders.append(output.render(os.path.join(out, "preview.jpg"), res, samples,
-                                     look=rcfg.get("look", "None"), view=rcfg.get("view", "AgX")))
+                                     look=rcfg.get("look", "None"), view=rcfg.get("view", "AgX"),
+                                     glare=rcfg.get("glare", 0.0)))
         if args.top:
             renders.append(output.render(os.path.join(BUILD, slug, "top.jpg"), (1024, 1024),
                                          max(8, samples // 2), camera=output.top_camera()))
@@ -134,14 +151,23 @@ def main():
     p.add_argument("--res", help="WxH; default: META['render']['res'] or 1280x720")
     p.add_argument("--top", action="store_true", help="also render a top-down layout view")
     p.add_argument("--blend", action="store_true", help="also save build/<slug>/<slug>.blend")
+    p.add_argument("--time", help="render the world at another time of day, e.g. 06:30 (preview only)")
+    p.add_argument("--haze", type=float, help="override atmosphere haze 0..1 (preview only)")
+    p.add_argument("--lamps", help="override lamps: auto | on | off | 0..1 (preview only)")
+    p.add_argument("--ev", type=float, help="override exposure offset in EV (preview only)")
     args = p.parse_args(argv)
     args.res = _parse_res(args.res) if args.res else None
+    for key in ("time", "haze", "lamps", "ev"):
+        if getattr(args, key) is not None:
+            EXPLORE[key] = getattr(args, key)
+    ATMOSPHERE_OVERRIDES.update(EXPLORE)
 
     slugs = args.slugs
     if args.all:
         slugs = sorted(d for d in os.listdir(WORLDS)
                        if not d.startswith(("_", ".")) and
-                       os.path.exists(os.path.join(WORLDS, d, "world.py")))
+                       os.path.exists(os.path.join(WORLDS, d, "world.py")) and
+                       not getattr(load_world(d), "META", {}).get("draft"))
     if not slugs:
         p.error("give one or more world slugs, or --all")
 

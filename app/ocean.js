@@ -197,6 +197,7 @@ export class Ocean {
     });
     const maxHeight = this.waves.reduce((s, w) => s + w.q / w.k, 0);
     const light = Math.min(1.0, 0.35 * skyStrength + 0.55 * sunStrength * Math.max(sunElevation, 0));
+    this.authoredLight = light;
 
     this.uniforms = THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
       uTime: { value: 0 },
@@ -230,6 +231,11 @@ export class Ocean {
     }));
     this.mesh.frustumCulled = false;
     this.mesh.name = 'Ocean';
+  }
+
+  /** Brightness of the water body: a value from the physical sky, or null for the authored one. */
+  setLight(level) {
+    this.uniforms.uLight.value = level === null ? this.authoredLight : Math.min(1.2, level);
   }
 
   /** Called every frame, before rendering. */

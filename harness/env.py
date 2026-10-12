@@ -23,14 +23,18 @@ def sun(elevation=45.0, azimuth=135.0, strength=4.0, color="#fff4e0", angle=1.0)
     return obj
 
 
-def sky(color="#9cc7f0", strength=1.0, ground="#6b7a5a"):
-    """Uniform sky light / background. `ground` tints the viewer's hemisphere fill light."""
+def sky(color="#9cc7f0", strength=1.0, ground="#6b7a5a", glow=None, glow_height=None):
+    """Sky light / background. `ground` tints the viewer's hemisphere fill light.
+    glow: brightness of the glow around the sun (defaults to sun strength x 0.25); raise it for
+    dusk and dawn skies, where the sun is below the horizon but the sky is still on fire.
+    glow_height: how far up the glow reaches (sine of the angle; 0.1 = a thin band on the horizon)."""
     world = bpy.data.worlds.new("Sky")
     bpy.context.scene.world = world
     bg = world.node_tree.nodes["Background"]
     bg.inputs["Color"].default_value = rgb(color)
     bg.inputs["Strength"].default_value = strength
-    STATE["sky"] = {"color": hex_of(color), "ground": hex_of(ground), "strength": strength}
+    STATE["sky"] = {"color": hex_of(color), "ground": hex_of(ground), "strength": strength,
+                    "glow": glow, "glow_height": glow_height}
     return world
 
 

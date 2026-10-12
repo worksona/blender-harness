@@ -9,6 +9,9 @@ from mathutils import Vector
 from .core import STATE, bounds, rgb
 
 
+SKY_FOG_GAIN = 0.35  # horizon-colour estimate -> scene-referred haze brightness
+
+
 def to_gltf(v):
     """Blender Z-up (x, y, z) -> glTF/three.js Y-up (x, z, -y)."""
     return [round(v[0], 4), round(v[2], 4), round(-v[1], 4)]
@@ -21,7 +24,13 @@ def ensure_defaults():
         sun()
     if STATE.get("sky") is None:
         sky()
-    _sky_gradient()
+    atmo = STATE.get("atmosphere")
+    if atmo:
+        from .atmosphere import LAMP_GAIN
+        from .effects import apply_lamp_level
+        apply_lamp_level(atmo["lamp_level"], LAMP_GAIN)
+    else:
+        _sky_gradient()
     if STATE.get("camera") is None:
         lo, hi = bounds()
         center = (lo + hi) / 2
@@ -47,13 +56,102 @@ def _sky_gradient():
     ramp.color_ramp.elements[1].color = rgb(sky_state["color"])
     nt.links.new(coords.outputs["Generated"], xyz.inputs[0])
     nt.links.new(xyz.outputs["Z"], ramp.inputs["Fac"])
-    nt.links.new(ramp.outputs["Color"], nt.nodes["Background"].inputs["Color"])
+    # Glow around the sun (also below the horizon at dusk), like the viewer's sky model.
+    sun = STATE["sun"]
+    glow = sky_state.get("glow")
+    glow = sun["strength"] * 0.25 if glow is None else glow
+    glow_height = sky_state.get("glow_height") or 0.45   # sine of how high the glow reaches
+    dot = nt.nodes.new("ShaderNodeVectorMath")
+    dot.operation = "DOT_PRODUCT"
+    dot.inputs[1].default_value = sun["direction"]
+    nt.links.new(coords.outputs["Generated"], dot.inputs[0])
+    clamp = nt.nodes.new("ShaderNodeMath")
+    clamp.operation = "MAXIMUM"
+    clamp.inputs[1].default_value = 0.0
+    nt.links.new(dot.outputs["Value"], clamp.inputs[0])
+    lobe = nt.nodes.new("ShaderNodeMath")
+    lobe.operation = "POWER"
+    lobe.inputs[1].default_value = 2.0
+    nt.links.new(clamp.outputs["Value"], lobe.inputs[0])
+    hug = nt.nodes.new("ShaderNodeMapRange")   # strongest at the horizon, gone by ~25 degrees up
+    hug.inputs["From Min"].default_value = 0.0
+    hug.inputs["From Max"].default_value = glow_height
+    hug.inputs["To Min"].default_value = 1.0
+    hug.inputs["To Max"].default_value = 0.0
+    nt.links.new(xyz.outputs["Z"], hug.inputs["Value"])
+    banded = nt.nodes.new("ShaderNodeMath")
+    banded.operation = "MULTIPLY"
+    nt.links.new(lobe.outputs["Value"], banded.inputs[0])
+    nt.links.new(hug.outputs["Result"], banded.inputs[1])
+    lobe = banded
+    tint = nt.nodes.new("ShaderNodeMix")
+    tint.data_type = "RGBA"
+    tint.blend_type = "ADD"
+    tint.inputs["B"].default_value = tuple(c * glow for c in rgb(sun["color"])[:3]) + (1.0,)
+    nt.links.new(lobe.outputs["Value"], tint.inputs["Factor"])
+    nt.links.new(ramp.outputs["Color"], tint.inputs["A"])
+    nt.links.new(tint.outputs["Result"], nt.nodes["Background"].inputs["Color"])
 
 
-def render(path, resolution=(1280, 720), samples=24, camera=None, look="None", view="AgX"):
+def _compositor(glare=0.0, haze=None):
+    """Post effects via the Blender 5 node-group compositor.
+    glare: bloom on bright lights. haze: (rgb, near, far) distance haze from the mist pass,
+    matching the viewer's fog (used by atmosphere())."""
+    scene = bpy.context.scene
+    if glare <= 0 and not haze:
+        scene.compositing_node_group = None
+        return
+    ng = bpy.data.node_groups.get("_Post") or bpy.data.node_groups.new("_Post", "CompositorNodeTree")
+    ng.nodes.clear()
+    if not ng.interface.items_tree:
+        ng.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")
+    layers = ng.nodes.new("CompositorNodeRLayers")
+    image = layers.outputs["Image"]
+    if haze:
+        # Haze from the depth pass (not the mist pass, which also fogs the sky background).
+        color, near, far = haze
+        scene.view_layers[0].use_pass_z = True
+        depth = layers.outputs["Depth"]
+        ramp = ng.nodes.new("ShaderNodeMapRange")
+        ramp.inputs["From Min"].default_value = near
+        ramp.inputs["From Max"].default_value = far
+        ng.links.new(depth, ramp.inputs["Value"])
+        curve = ng.nodes.new("ShaderNodeMath")
+        curve.operation = "POWER"
+        curve.inputs[1].default_value = 1.6
+        ng.links.new(ramp.outputs["Result"], curve.inputs[0])
+        is_geometry = ng.nodes.new("ShaderNodeMath")   # the sky has "infinite" depth: no haze on it
+        is_geometry.operation = "LESS_THAN"
+        is_geometry.inputs[1].default_value = 1e8
+        ng.links.new(depth, is_geometry.inputs[0])
+        factor = ng.nodes.new("ShaderNodeMath")
+        factor.operation = "MULTIPLY"
+        ng.links.new(curve.outputs["Value"], factor.inputs[0])
+        ng.links.new(is_geometry.outputs["Value"], factor.inputs[1])
+        mix = ng.nodes.new("ShaderNodeMix")
+        mix.data_type = "RGBA"
+        mix.inputs["B"].default_value = (*color, 1.0)
+        ng.links.new(factor.outputs["Value"], mix.inputs["Factor"])
+        ng.links.new(image, mix.inputs["A"])
+        image = mix.outputs["Result"]
+    if glare > 0:
+        g = ng.nodes.new("CompositorNodeGlare")
+        g.inputs["Type"].default_value = "Bloom"
+        g.inputs["Threshold"].default_value = 1.0
+        g.inputs["Strength"].default_value = glare
+        g.inputs["Size"].default_value = 0.7
+        ng.links.new(image, g.inputs["Image"])
+        image = g.outputs["Image"]
+    out = ng.nodes.new("NodeGroupOutput")
+    ng.links.new(image, out.inputs[0])
+    scene.compositing_node_group = ng
+
+
+def render(path, resolution=(1280, 720), samples=24, camera=None, look="None", view="AgX", glare=0.0):
     """Cycles CPU render (works headless with no GPU). Writes JPEG unless path ends in .png.
     view: "AgX" (filmic, soft highlights) or "Standard" (camera-like, saturated, for photo matching).
-    look: an AgX look such as "AgX - Punchy"."""
+    look: an AgX look such as "AgX - Punchy".
+    glare: bloom strength around bright lights (0 = off); good for night scenes."""
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
     scene.cycles.device = "CPU"
@@ -64,6 +162,16 @@ def render(path, resolution=(1280, 720), samples=24, camera=None, look="None", v
     scene.render.resolution_percentage = 100
     scene.view_settings.view_transform = view
     scene.view_settings.look = look if view == "AgX" else "None"
+    atmo = STATE.get("atmosphere")
+    scene.view_settings.exposure = atmo["ev"] if atmo else 0.0
+    haze = None
+    if atmo:
+        fog = STATE["fog"]
+        h = fog["color"].lstrip("#")
+        # The mist pass runs before exposure is applied; pre-divide so haze matches the sky.
+        col = tuple((int(h[i:i + 2], 16) / 255) ** 2.2 * SKY_FOG_GAIN / 2 ** atmo["ev"] for i in (0, 2, 4))
+        haze = (col, fog["near"], fog["far"])
+    _compositor(glare, haze)
     is_png = path.lower().endswith(".png")
     scene.render.image_settings.file_format = "PNG" if is_png else "JPEG"
     if not is_png:
@@ -192,4 +300,9 @@ def viewer_meta():
                 "far": (fog or {}).get("far", size * 2.5)},
         "bounds": {"min": to_gltf((lo.x, hi.y, lo.z)), "max": to_gltf((hi.x, lo.y, hi.z))},
         "ocean": STATE.get("ocean"),
+        "atmosphere": STATE.get("atmosphere"),
+        # Lamps: [x, y, z, color, watts, ground-y-or-null] in viewer coordinates.
+        "lamps": [to_gltf(l[:3]) + [l[3], l[4], l[5]] for l in STATE.get("lamps", [])],
+        "plumes": [{**p, "base": to_gltf(p["base"]), "drift": [p["drift"][0], -p["drift"][1]]}
+                   for p in STATE.get("plumes", [])],
     }

@@ -21,7 +21,7 @@ _SPECTRUM = [(1.0, 0.26, 0), (0.63, 0.20, 24), (0.41, 0.16, -33), (0.27, 0.12, 5
 
 
 def ocean(level=0.0, waves="moderate", wind=45.0, color="#0a3550", shallow="#2a9d9a",
-          foam=0.6, clarity=1.0, size=1600.0, render_detail=12):
+          foam=0.6, clarity=1.0, size=1600.0, render_detail=12, center=(0.0, 0.0)):
     """Add an ocean at height `level`.
 
     waves:   'calm' | 'moderate' | 'rough'.
@@ -30,6 +30,7 @@ def ocean(level=0.0, waves="moderate", wind=45.0, color="#0a3550", shallow="#2a9
     foam:    0..1 whitecaps and shoreline foam in the viewer.
     clarity: how far you can see into the water (1 = clear tropical, 0.3 = murky).
     size:    extent of the rendered ocean in the Blender preview (viewer ocean is endless).
+    center:  (x, y) the Blender ocean patch is centered on, e.g. out in the bay in front of the camera.
     """
     longest, steepness, blender_scale = PRESETS[waves]
     wind_rad = math.radians(wind)
@@ -63,8 +64,8 @@ def ocean(level=0.0, waves="moderate", wind=45.0, color="#0a3550", shallow="#2a9
     mod.wave_direction = math.pi / 2 - wind_rad
     mod.wave_alignment = 0.4
     mod.use_normals = True
-    obj.location.x -= tile * mod.repeat_x / 2
-    obj.location.y -= tile * mod.repeat_y / 2
+    obj.location.x += center[0] - tile * mod.repeat_x / 2
+    obj.location.y += center[1] - tile * mod.repeat_y / 2
 
     STATE["ocean"] = {
         "level": level,

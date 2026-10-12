@@ -4,3 +4,7 @@ __pycache__/
 *.blend1
 .DS_Store
 .venv*/
+
+# Reference photos are often third-party (stock) images: keep them local by default.
+# Commit ones you own with: git add -f worlds/<slug>/reference/<file>
+worlds/*/reference/

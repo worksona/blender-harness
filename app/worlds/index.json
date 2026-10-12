@@ -55,6 +55,18 @@
         "hi-res"
       ],
       "preview": "worlds/oil-refinery/preview.jpg"
+    },
+    {
+      "slug": "refinery-dusk",
+      "title": "Refinery at Dusk",
+      "description": "A coastal refinery at blue hour from a drone: thousands of lights, steam plumes lit from below, tanks, stacks and the bay beyond.",
+      "tags": [
+        "industrial",
+        "night",
+        "photo-matched",
+        "aerial"
+      ],
+      "preview": "worlds/refinery-dusk/preview.jpg"
     }
   ]
 }
