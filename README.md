@@ -31,14 +31,19 @@ A usage guide (getting started, use cases, limits, and a reference) ships with t
 
 1. Push this repo to GitHub.
 2. At claude.ai/code, create an **environment** for it:
-   - **Network access**: choose *Custom* and add `download.blender.org` (keep the defaults).
-     That gets the official Blender build. If you stay on the default *Trusted* network, setup
-     installs Blender from PyPI (`bpy`) instead, which is also fine.
-   - **Setup script** (optional, speeds up every session): paste the contents of
-     [`scripts/setup.sh`](scripts/setup.sh). The installed Blender is then cached with the
-     environment.
-3. Start a session on the repo. The SessionStart hook ([`.claude/settings.json`](.claude/settings.json))
-   installs Blender if it isn't there yet (about 1–2 min), then Claude reads [`CLAUDE.md`](CLAUDE.md).
+   - **Setup script**: paste the whole of [`scripts/cloud-env-setup.sh`](scripts/cloud-env-setup.sh).
+     It installs Blender **once**. The environment is saved as a snapshot and reused, so sessions
+     start with Blender already there; nothing is downloaded per session. It re-runs only if you
+     edit the script or the network settings, or after about 7 days, and takes about a minute.
+   - **Network access**: choose *Custom* and add `download.blender.org` (keep the defaults) for the
+     official build. On the default *Trusted* network it installs Blender from PyPI (`bpy`) instead.
+3. Start a session on the repo. If Blender is somehow missing, the SessionStart hook
+   ([`.claude/settings.json`](.claude/settings.json)) installs it as a fallback. Claude reads
+   [`CLAUDE.md`](CLAUDE.md).
+
+Why not keep Blender in the repo? It's about 380 MB compressed (1 GB installed). GitHub rejects
+files over 100 MB, Git LFS is metered, and every session would still download it when it clones
+the repo. The cached setup script is the one place it's downloaded only once.
 4. Ask for a world: *"Make a foggy pine valley at dawn with a wooden cabin and a river."*
    Claude scaffolds it, builds it, looks at the renders, iterates, and commits.
 

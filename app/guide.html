@@ -103,11 +103,11 @@
         <h3>Claude Code on the web <span class="tag">recommended</span></h3>
         <ol>
           <li>At claude.ai/code, create an environment for <code>worksona/blender-harness</code>.</li>
+          <li><b>Setup script:</b> paste the whole of <code>scripts/cloud-env-setup.sh</code>. Blender installs
+            <b>once</b> (about a minute). The environment is then cached, so sessions start with Blender ready.</li>
           <li><b>Network access:</b> choose <i>Custom</i> and add <code>download.blender.org</code>, keeping the
-            defaults. Optional: on the default <i>Trusted</i> network, Blender installs from PyPI instead.</li>
-          <li><b>Setup script</b> (optional, makes sessions start faster): paste the contents of
-            <code>scripts/setup.sh</code>.</li>
-          <li>Start a session and ask for a world. Blender installs on its own at session start (about 1–2 min).</li>
+            defaults. On the default <i>Trusted</i> network, Blender installs from PyPI instead.</li>
+          <li>Start a session and ask for a world.</li>
         </ol>
       </section>
       <section>

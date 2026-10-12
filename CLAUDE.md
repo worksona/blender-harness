@@ -9,8 +9,10 @@ This repo builds 3D worlds in headless Blender from Python and shows them all in
 
 ## Setup
 
-In Claude Code cloud sessions the SessionStart hook installs Blender automatically. Its status
-line is in your context at session start. If Blender is missing, run `scripts/setup.sh`, then
+In Claude Code cloud sessions Blender is normally already installed: the environment's setup
+script (`scripts/cloud-env-setup.sh`, pasted into the environment settings) installs it once, and
+the environment snapshot is reused across sessions. If it's missing anyway, the SessionStart hook
+installs it. The hook's status line is in your context at session start. If Blender is missing, run `scripts/setup.sh`, then
 `make doctor`. If setup fails on network, tell the user to allow `download.blender.org` (or
 PyPI + GitHub) in the environment's network settings.
 
