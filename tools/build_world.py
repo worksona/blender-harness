@@ -26,6 +26,7 @@ from manifest import write_manifest  # noqa: E402
 WORLDS = os.path.join(ROOT, "worlds")
 APP_WORLDS = os.path.join(ROOT, "app", "worlds")
 BUILD = os.path.join(ROOT, "build")
+DRACO_ABOVE = 10e6  # bytes; bigger exports are re-exported with Draco compression
 
 
 class Context:
@@ -59,17 +60,31 @@ def build(slug, args):
     t_build = time.time() - t0
 
     out = os.path.join(APP_WORLDS, slug)
-    output.export_glb(os.path.join(out, "world.glb"))
+    glb = os.path.join(out, "world.glb")
+    draco = meta.get("export", {}).get("draco")  # True / False / None = automatic
+    output.export_glb(glb, draco=bool(draco))
+    if draco is None and os.path.getsize(glb) > DRACO_ABOVE:
+        raw = os.path.getsize(glb)
+        try:
+            output.export_glb(glb, draco=True)
+            print(f"[world]   glb {raw / 1e6:.1f} MB > {DRACO_ABOVE / 1e6:.0f} MB, "
+                  f"Draco-compressed to {os.path.getsize(glb) / 1e6:.1f} MB")
+        except Exception as e:  # a Blender build without Draco: keep the plain export
+            print(f"[world]   Draco unavailable ({e}); keeping uncompressed glb")
+            output.export_glb(glb)
     st = output.stats()
-    st["glb_bytes"] = os.path.getsize(os.path.join(out, "world.glb"))
+    st["glb_bytes"] = os.path.getsize(glb)
 
+    # Render settings: command line > META["render"] > defaults.
+    rcfg = meta.get("render", {})
+    res = args.res or _parse_res(rcfg.get("res", "1280x720"))
+    samples = args.samples or rcfg.get("samples", 24)
     renders = []
     if not args.no_render:
-        renders.append(output.render(os.path.join(out, "preview.jpg"),
-                                     args.res, args.samples))
+        renders.append(output.render(os.path.join(out, "preview.jpg"), res, samples))
         if args.top:
             renders.append(output.render(os.path.join(BUILD, slug, "top.jpg"), (1024, 1024),
-                                         max(8, args.samples // 2), camera=output.top_camera()))
+                                         max(8, samples // 2), camera=output.top_camera()))
     if args.blend:
         output.save_blend(os.path.join(BUILD, slug, f"{slug}.blend"))
 
@@ -97,18 +112,22 @@ def build(slug, args):
     return record
 
 
+def _parse_res(text):
+    return tuple(int(v) for v in text.lower().split("x"))
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     p = argparse.ArgumentParser(prog="build_world")
     p.add_argument("slugs", nargs="*")
     p.add_argument("--all", action="store_true")
     p.add_argument("--no-render", action="store_true", help="export only, skip preview render")
-    p.add_argument("--samples", type=int, default=24)
-    p.add_argument("--res", default="1280x720")
+    p.add_argument("--samples", type=int, help="default: META['render']['samples'] or 24")
+    p.add_argument("--res", help="WxH; default: META['render']['res'] or 1280x720")
     p.add_argument("--top", action="store_true", help="also render a top-down layout view")
     p.add_argument("--blend", action="store_true", help="also save build/<slug>/<slug>.blend")
     args = p.parse_args(argv)
-    args.res = tuple(int(v) for v in args.res.lower().split("x"))
+    args.res = _parse_res(args.res) if args.res else None
 
     slugs = args.slugs
     if args.all:

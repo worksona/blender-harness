@@ -6,6 +6,7 @@ Worlds import everything from here:  `from harness import *`
 # bpy must be imported first: with the PyPI `bpy` module, bmesh/mathutils only exist after it.
 import bpy  # noqa: F401
 
+from .builder import MeshBuilder
 from .core import (bounds, box, collection, cone, cylinder, hex_of, instance, join, material,
                    mesh, plane, prefab, reset, rgb, sphere)
 from .env import camera, fog, sky, sun
@@ -14,6 +15,7 @@ from .terrain import fbm, island_falloff, scatter, slope, terrain
 from .water import bob, ocean
 
 __all__ = [
+    "MeshBuilder",
     "bounds", "box", "collection", "cone", "cylinder", "hex_of", "instance", "join", "material",
     "mesh", "plane", "prefab", "reset", "rgb", "sphere",
     "camera", "fog", "sky", "sun",

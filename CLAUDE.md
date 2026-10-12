@@ -39,7 +39,8 @@ To build without rendering, add `--no-render`.
 | Materials | `material(name, color, roughness, metallic, emission, emission_strength, alpha)` |
 | Primitives | `box`, `sphere`, `cylinder`, `cone`, `plane`, `mesh(verts, faces)` |
 | Prefabs | `join(name, parts)` merges parts into one mesh, `prefab(obj)` hides the template, `instance(prefab, ...)` places linked copies that cost nothing extra in the .glb |
-| Terrain | `terrain(name, size, resolution, height=f(x, y), bands=[(max_z, mat), ...], center=)`, `fbm`, `island_falloff`, `scatter(rng, n, area, height, accept, min_dist)`, `slope` |
+| Detailed structures | `MeshBuilder(name)` assembles hundreds of parts into one object: `box`, `slab`, `beam(a, b)`, `rod(a, b)`, `cylinder`, `sphere`, `dome`, `torus`, `pipe(points)`, `ladder`, `railing`, `ring_platform`, then `.build()`. Use it for frames, pipework, and vessels. `worlds/oil-refinery` shows it at scale |
+| Terrain | `terrain(name, size, resolution, height=f(x, y), bands=[(max_z, mat), ...], center=, backdrop=)`, `fbm`, `island_falloff`, `scatter(rng, n, area, height, accept, min_dist)`, `slope` |
 | Water | `ocean(level, waves='calm'|'moderate'|'rough', wind, color, shallow, foam, clarity)`, `bob(obj, amount, draft)` makes an object float on the viewer's waves |
 | Environment | `sun(elevation, azimuth, strength, color)`, `sky(color, strength, ground)`, `fog(color, near, far)`, `camera(location, target, lens)` |
 | Grouping | `collection="Name"` on any object call |
@@ -51,9 +52,17 @@ To build without rendering, add `--no-render`.
 - Only Principled BSDF color, roughness, metallic, emission, and alpha survive glTF export.
   Don't use procedural textures or node tricks for anything the web app must show. Use face
   bands, separate materials, or geometry instead.
-- Repeated objects go through `prefab` + `instance`, never copies.
-- Budgets per world: under 300k triangles drawn and under 15 MB of .glb.
-- Mark huge flat surfaces (`plane(..., backdrop=True)`) so they don't distort framing and shadows.
+- Repeated objects go through `prefab` + `instance`, never copies. The viewer turns them into GPU
+  instances (one draw call per mesh and material), so a kit repeated 500 times costs little.
+- Budgets per world: about 300k triangles drawn for ordinary worlds. Hi-res worlds can reach
+  about 2M drawn if most of that comes from instances. Keep unique (stored) triangles under
+  about 600k.
+- An export over 10 MB is re-exported with Draco compression automatically (the viewer decodes
+  it). Force it on or off with `META["export"] = {"draco": True/False}`.
+- Preview render settings per world: `META["render"] = {"res": "1920x1080", "samples": 48}`.
+  `--res` and `--samples` on the command line override them.
+- Mark huge surroundings as backdrop (`plane(..., backdrop=True)`, `terrain(..., backdrop=True)`)
+  so they don't distort framing, the top view, or shadows.
 - `ocean()` is replaced in the viewer by an endless animated ocean with refraction, foam, and
   floating objects. The Blender preview shows an FFT ocean modifier instead.
 - Previews render with Cycles on CPU (there is no GPU in the cloud). EEVEE and Workbench need
@@ -65,7 +74,9 @@ To build without rendering, add `--no-render`.
 `make serve` runs it at http://localhost:8000. The gallery reads `app/worlds/index.json`.
 Opening `#/w/<slug>` loads that world's `meta.json` (camera, sun, sky, fog, ocean) plus
 `world.glb`. Per-world viewer overrides go in `META["viewer"]` (`bloom`, `exposure`).
-`window.viewer` exposes `{scene, camera, controls, renderer, ocean}` for debugging. three.js
+`window.viewer` exposes `{scene, camera, controls, renderer, ocean}` for debugging. For example,
+`viewer.renderer.info.render.calls` gives the draw-call count. Shadows follow the orbit target
+and scale with zoom. three.js
 is pinned to 0.170.0 via the import map in `app/index.html`.
 
 The ocean shader lives in `app/ocean.js`. The sky model is shared between the dome and the

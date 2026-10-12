@@ -2,6 +2,7 @@
 // Worlds come from worlds/index.json, written by tools/build_world.py.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -74,7 +75,6 @@ const viewer = (() => {
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
   sun.shadow.bias = -0.0004;
-  sun.shadow.normalBias = 0.4;
   scene.add(hemi, sun, sun.target);
 
   // Sky dome; the ocean reflects the same sky via the shared uniforms.
@@ -96,7 +96,9 @@ const viewer = (() => {
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
-  const loader = new GLTFLoader();
+  // Large worlds are Draco-compressed by the build; the decoder is only fetched when needed.
+  const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+  const loader = new GLTFLoader().setDRACOLoader(draco);
   let current = null;   // { slug, root, meta }
   let running = false;
   let loadToken = 0;
@@ -113,10 +115,29 @@ const viewer = (() => {
   }
   window.addEventListener('resize', resize);
 
+  // The shadow map covers the area around what you're looking at, sized to the zoom level,
+  // so close-ups get crisp shadows even in kilometer-wide worlds.
+  const shadowFit = { dir: new THREE.Vector3(0, 1, 0), worldRadius: 100, radius: 0,
+    center: new THREE.Vector3() };
+  function fitShadow() {
+    const dist = camera.position.distanceTo(controls.target);
+    const r = THREE.MathUtils.clamp(dist * 0.9, 30, shadowFit.worldRadius);
+    const moved = shadowFit.center.distanceTo(controls.target);
+    if (Math.abs(r - shadowFit.radius) < r * 0.08 && moved < r * 0.08) return;
+    shadowFit.radius = r;
+    shadowFit.center.copy(controls.target);
+    sun.target.position.copy(controls.target);
+    sun.position.copy(controls.target).addScaledVector(shadowFit.dir, r * 3);
+    Object.assign(sun.shadow.camera, { left: -r, right: r, top: r, bottom: -r, near: 0.1, far: r * 6 });
+    sun.shadow.camera.updateProjectionMatrix();
+    sun.shadow.normalBias = 0.02 + r * 0.0015;
+  }
+
   function frame() {
     if (!running) return;
     requestAnimationFrame(frame);
     controls.update();
+    if (current) fitShadow();
     skyDome.position.copy(camera.position);
     const t = clock.getElapsedTime();
     if (ocean) {
@@ -147,16 +168,10 @@ const viewer = (() => {
     sun.color.set(v.sun.color);
     sun.intensity = 0.75 * v.sun.strength;
 
-    // Fit the shadow camera around the world's bounds.
     const min = new THREE.Vector3(...v.bounds.min), max = new THREE.Vector3(...v.bounds.max);
-    const center = min.clone().add(max).multiplyScalar(0.5);
-    const radius = Math.max(max.clone().sub(min).length() / 2, 1);
-    const dir = new THREE.Vector3(...v.sun.direction).normalize();
-    sun.position.copy(center).addScaledVector(dir, radius * 2);
-    sun.target.position.copy(center);
-    Object.assign(sun.shadow.camera, { left: -radius, right: radius, top: radius, bottom: -radius,
-      near: 0.1, far: radius * 4 });
-    sun.shadow.camera.updateProjectionMatrix();
+    shadowFit.worldRadius = Math.max(max.clone().sub(min).length() / 2, 1);
+    shadowFit.dir.set(...v.sun.direction).normalize();
+    shadowFit.radius = 0;
 
     bloom.strength = v.bloom ?? 0;
     bloom.enabled = bloom.strength > 0;
@@ -196,6 +211,7 @@ const viewer = (() => {
         scene.add(ocean.mesh);
         floaters = new Floaters(gltf.scene, ocean);
       }
+      batchInstances(gltf.scene);
       gltf.scene.traverse((o) => {
         if (o.isMesh) {
           o.castShadow = !o.material.transparent;
@@ -221,6 +237,34 @@ const viewer = (() => {
   function close() {
     running = false;
     document.title = 'Worlds';
+  }
+
+  // Repeated objects (harness instance() copies) arrive as separate meshes sharing geometry and
+  // material. Merge each such set into one InstancedMesh: one draw call instead of hundreds.
+  function batchInstances(root) {
+    root.updateMatrixWorld(true);
+    const groups = new Map();
+    root.traverse((o) => {
+      if (!o.isMesh || o.isInstancedMesh) return;
+      for (let p = o; p; p = p.parent) if (p.userData?.bob) return;  // floaters move on their own
+      const key = `${o.geometry.uuid}|${o.material.uuid}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(o);
+    });
+    let merged = 0;
+    for (const meshes of groups.values()) {
+      if (meshes.length < 4) continue;
+      const inst = new THREE.InstancedMesh(meshes[0].geometry, meshes[0].material, meshes.length);
+      inst.name = `${meshes[0].name}×${meshes.length}`;
+      meshes.forEach((m, i) => {
+        inst.setMatrixAt(i, m.matrixWorld);  // root sits at the origin, so world == root space
+        m.removeFromParent();
+      });
+      inst.computeBoundingSphere();
+      root.add(inst);
+      merged += meshes.length;
+    }
+    return merged;
   }
 
   function dispose(root) {

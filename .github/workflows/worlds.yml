@@ -1,5 +1,6 @@
-# Rebuild every world from source with headless Blender and publish the app to GitHub Pages.
-# Enable Pages once: Settings → Pages → Source: GitHub Actions.
+# Rebuild every world from source with headless Blender. Optionally publish the app to Pages.
+# Publishing is opt-in: enable Pages (Settings → Pages → Source: GitHub Actions), then set the
+# repository variable DEPLOY_PAGES=true (Settings → Secrets and variables → Actions → Variables).
 name: worlds
 
 on:
@@ -46,12 +47,12 @@ jobs:
           path: app/worlds
 
       - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'
         with:
           path: app
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'
     needs: build
     runs-on: ubuntu-24.04
     permissions:

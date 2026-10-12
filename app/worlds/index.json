@@ -32,6 +32,18 @@
         "night"
       ],
       "preview": "worlds/neon-city/preview.jpg"
+    },
+    {
+      "slug": "oil-refinery",
+      "title": "Coastal Oil Refinery",
+      "description": "A kilometer of process units, pipe racks, tank farm and a burning flare, with a tanker riding the swell at the marine jetty.",
+      "tags": [
+        "industrial",
+        "golden hour",
+        "ocean",
+        "hi-res"
+      ],
+      "preview": "worlds/oil-refinery/preview.jpg"
     }
   ]
 }

@@ -1,0 +1,230 @@
+"""MeshBuilder: assemble many parts into one mesh, for detailed structures (steel frames, pipework,
+vessels with platforms and ladders) without thousands of separate objects.
+
+    mb = MeshBuilder("Frame")
+    mb.beam((0, 0, 0), (0, 0, 20), 0.4, steel)          # column from a to b
+    mb.pipe([(0, 0, 5), (10, 0, 5), (10, 8, 5)], 0.3, grey)
+    frame = mb.build(collection="Units")                 # -> one object, one material slot per material
+
+Positions are in the builder's local space; place the built object like any other, or make it
+a prefab and instance() it.
+"""
+
+import math
+
+import bpy  # noqa: I001  (before bmesh/mathutils, required by the bpy module)
+import bmesh
+from mathutils import Euler, Matrix, Vector
+
+from .core import _place
+
+
+def _align_z(a, b):
+    """Matrix that maps a unit Z-axis primitive centered on the origin onto segment a -> b."""
+    a, b = Vector(a), Vector(b)
+    d = b - a
+    length = d.length
+    if length < 1e-6:
+        return None, 0.0
+    rot = d.normalized().to_track_quat("Z", "Y").to_matrix().to_4x4()
+    return Matrix.Translation((a + b) / 2) @ rot, length
+
+
+class MeshBuilder:
+    def __init__(self, name):
+        self.name = name
+        self.bm = bmesh.new()
+        self.materials = []
+
+    # ------------------------------------------------------------ internals
+
+    def _mat_index(self, mat):
+        if mat is None:
+            return 0
+        if mat not in self.materials:
+            self.materials.append(mat)
+        return self.materials.index(mat)
+
+    def _tag(self, verts, mat, smooth):
+        idx = self._mat_index(mat)
+        faces = {f for v in verts for f in v.link_faces}
+        for f in faces:
+            f.material_index = idx
+            # Smooth curved sides, keep flat caps (n-gons) flat so they shade cleanly.
+            f.smooth = smooth and (smooth == "all" or len(f.verts) <= 4)
+        return faces
+
+    # ------------------------------------------------------------ primitives
+
+    def box(self, center, size, mat, rotation=(0, 0, 0)):
+        """Box centered on `center`; size (x, y, z); rotation in degrees."""
+        sx, sy, sz = size if isinstance(size, (tuple, list)) else (size,) * 3
+        m = (Matrix.Translation(center) @ Euler([math.radians(r) for r in rotation]).to_matrix().to_4x4()
+             @ Matrix.Diagonal((sx, sy, sz, 1)))
+        verts = bmesh.ops.create_cube(self.bm, size=1.0, matrix=m)["verts"]
+        self._tag(verts, mat, False)
+        return self
+
+    def slab(self, x0, y0, x1, y1, z, thickness, mat):
+        """Horizontal plate from corner (x0, y0) to (x1, y1), top surface at z."""
+        return self.box(((x0 + x1) / 2, (y0 + y1) / 2, z - thickness / 2),
+                        (abs(x1 - x0), abs(y1 - y0), thickness), mat)
+
+    def beam(self, a, b, width, mat, depth=None):
+        """Square-section member from point a to point b (columns, beams, braces)."""
+        m, length = _align_z(a, b)
+        if m is None:
+            return self
+        m = m @ Matrix.Diagonal((width, depth or width, length, 1))
+        verts = bmesh.ops.create_cube(self.bm, size=1.0, matrix=m)["verts"]
+        self._tag(verts, mat, False)
+        return self
+
+    def rod(self, a, b, radius, mat, segments=12, radius_b=None, caps=True):
+        """Round member from a to b (pipes, posts, rungs). radius_b tapers it."""
+        m, length = _align_z(a, b)
+        if m is None:
+            return self
+        verts = bmesh.ops.create_cone(self.bm, cap_ends=caps, segments=segments, radius1=radius,
+                                      radius2=radius if radius_b is None else radius_b,
+                                      depth=length, matrix=m)["verts"]
+        self._tag(verts, mat, True)
+        return self
+
+    def cylinder(self, base, radius, height, mat, segments=32, radius_top=None):
+        """Vertical cylinder standing on `base` (x, y, z)."""
+        x, y, z = base
+        return self.rod((x, y, z), (x, y, z + height), radius, mat, segments, radius_top)
+
+    def sphere(self, center, radius, mat, subdivisions=3, scale=(1, 1, 1)):
+        m = Matrix.Translation(center) @ Matrix.Diagonal((*scale, 1))
+        verts = bmesh.ops.create_icosphere(self.bm, subdivisions=subdivisions, radius=radius,
+                                           matrix=m)["verts"]
+        self._tag(verts, mat, "all")
+        return self
+
+    def dome(self, center, radius, height, mat, segments=32, rings=6):
+        """Elliptical cap (vessel heads, tank roofs) sitting on `center`, bulging up by `height`."""
+        cx, cy, cz = center
+        rows = []
+        for r in range(rings + 1):
+            t = r / rings * math.pi / 2
+            rr, zz = radius * math.cos(t), height * math.sin(t)
+            if r == rings:
+                rows.append([self.bm.verts.new((cx, cy, cz + height))])
+                break
+            rows.append([self.bm.verts.new((cx + rr * math.cos(2 * math.pi * s / segments),
+                                            cy + rr * math.sin(2 * math.pi * s / segments), cz + zz))
+                         for s in range(segments)])
+        new = []
+        for r in range(len(rows) - 1):
+            lo, hi = rows[r], rows[r + 1]
+            for s in range(segments):
+                s2 = (s + 1) % segments
+                quad = [lo[s], lo[s2], hi[s2 % len(hi)], hi[s % len(hi)]]
+                quad = list(dict.fromkeys(quad))
+                new.append(self.bm.faces.new(quad))
+        idx = self._mat_index(mat)
+        for f in new:
+            f.material_index = idx
+            f.smooth = True
+        return self
+
+    def torus(self, center, major, minor, mat, major_segments=48, minor_segments=6, arc=360.0):
+        """Ring in the XY plane (handrails, stiffener rings). arc < 360 makes an open ring."""
+        cx, cy, cz = center
+        closed = arc >= 360
+        n = major_segments if closed else major_segments + 1
+        rings = []
+        for i in range(n):
+            u = math.radians(arc) * i / major_segments
+            ring = []
+            for j in range(minor_segments):
+                v = 2 * math.pi * j / minor_segments
+                r = major + minor * math.cos(v)
+                ring.append(self.bm.verts.new((cx + r * math.cos(u), cy + r * math.sin(u),
+                                               cz + minor * math.sin(v))))
+            rings.append(ring)
+        idx = self._mat_index(mat)
+        for i in range(major_segments if closed else n - 1):
+            a, b = rings[i], rings[(i + 1) % n]
+            for j in range(minor_segments):
+                j2 = (j + 1) % minor_segments
+                f = self.bm.faces.new((a[j], b[j], b[j2], a[j2]))
+                f.material_index = idx
+                f.smooth = True
+        return self
+
+    def pipe(self, points, radius, mat, segments=12, elbows=True):
+        """Pipe along a polyline, with spherical elbows at the bends."""
+        pts = [Vector(p) for p in points]
+        for a, b in zip(pts, pts[1:]):
+            self.rod(a, b, radius, mat, segments, caps=False)
+        if elbows:
+            for p in pts[1:-1]:
+                self.sphere(p, radius, mat, subdivisions=1 if segments <= 8 else 2)
+        return self
+
+    def ladder(self, bottom, height, mat, facing=0.0, width=0.5, rung_step=0.3):
+        """Vertical ladder: two rails plus rungs. facing = direction it faces (degrees)."""
+        bx, by, bz = bottom
+        f = math.radians(facing)
+        side = Vector((-math.sin(f), math.cos(f), 0)) * width / 2
+        base = Vector((bx, by, bz))
+        for s in (side, -side):
+            self.rod(base + s, base + s + Vector((0, 0, height)), 0.03, mat, 6)
+        z = rung_step
+        while z < height:
+            self.rod(base + side + Vector((0, 0, z)), base - side + Vector((0, 0, z)), 0.018, mat, 5,
+                     caps=False)
+            z += rung_step
+        return self
+
+    def railing(self, points, mat, height=1.1, post_step=2.0, closed=False):
+        """Handrail with mid-rail and posts along a polyline at the polyline's height."""
+        pts = [Vector(p) for p in points] + ([Vector(points[0])] if closed else [])
+        up = Vector((0, 0, height))
+        for a, b in zip(pts, pts[1:]):
+            self.rod(a + up, b + up, 0.03, mat, 6, caps=False)
+            self.rod(a + up * 0.5, b + up * 0.5, 0.025, mat, 6, caps=False)
+            n = max(1, int((b - a).length / post_step))
+            for i in range(n):
+                p = a.lerp(b, i / n)
+                self.rod(p, p + up, 0.03, mat, 6)
+        return self
+
+    def ring_platform(self, center, inner, outer, mat_floor, mat_rail, segments=32, arc=360.0,
+                      start=0.0):
+        """Circular walkway around a vessel at height center.z, with an outer handrail."""
+        cx, cy, cz = center
+        n = segments if arc >= 360 else segments + 1
+        outer_v, inner_v = [], []
+        for i in range(n):
+            u = math.radians(start + arc * i / segments)
+            outer_v.append(self.bm.verts.new((cx + outer * math.cos(u), cy + outer * math.sin(u), cz)))
+            inner_v.append(self.bm.verts.new((cx + inner * math.cos(u), cy + inner * math.sin(u), cz)))
+        idx = self._mat_index(mat_floor)
+        for i in range(segments if arc >= 360 else n - 1):
+            j = (i + 1) % n
+            f = self.bm.faces.new((inner_v[i], outer_v[i], outer_v[j], inner_v[j]))
+            f.material_index = idx
+        rail_r = outer - 0.05
+        self.torus((cx, cy, cz + 1.1), rail_r, 0.03, mat_rail, segments, 5, arc=arc)
+        self.torus((cx, cy, cz + 0.55), rail_r, 0.025, mat_rail, segments, 5, arc=arc)
+        for i in range(0, n, 2):
+            u = math.radians(start + arc * i / segments)
+            p = Vector((cx + rail_r * math.cos(u), cy + rail_r * math.sin(u), cz))
+            self.rod(p, p + Vector((0, 0, 1.1)), 0.03, mat_rail, 5)
+        return self
+
+    # ------------------------------------------------------------ output
+
+    def build(self, location=(0, 0, 0), rotation=(0, 0, 0), collection=None):
+        me = bpy.data.meshes.new(self.name)
+        self.bm.normal_update()
+        self.bm.to_mesh(me)
+        self.bm.free()
+        for m in self.materials:
+            me.materials.append(m)
+        obj = bpy.data.objects.new(self.name, me)
+        return _place(obj, location, rotation, (1, 1, 1), collection)

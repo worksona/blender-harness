@@ -1,0 +1,154 @@
+{
+  "slug": "oil-refinery",
+  "title": "Coastal Oil Refinery",
+  "description": "A kilometer of process units, pipe racks, tank farm and a burning flare, with a tanker riding the swell at the marine jetty.",
+  "tags": [
+    "industrial",
+    "golden hour",
+    "ocean",
+    "hi-res"
+  ],
+  "seed": 23,
+  "glb": "worlds/oil-refinery/world.glb",
+  "preview": "worlds/oil-refinery/preview.jpg",
+  "viewer": {
+    "camera": {
+      "position": [
+        560,
+        190,
+        720
+      ],
+      "target": [
+        -60,
+        10,
+        -10
+      ],
+      "fov": 37.3
+    },
+    "sun": {
+      "direction": [
+        -0.7612,
+        0.2588,
+        0.5947
+      ],
+      "color": "#ffcf9e",
+      "strength": 4.2
+    },
+    "sky": {
+      "color": "#7ea6d1",
+      "ground": "#5e5a48",
+      "strength": 0.9
+    },
+    "fog": {
+      "color": "#e8c7a4",
+      "near": 900,
+      "far": 3800
+    },
+    "bounds": {
+      "min": [
+        -595.5095,
+        -16.0,
+        -704.0145
+      ],
+      "max": [
+        599.7183,
+        128.4699,
+        590.0
+      ]
+    },
+    "ocean": {
+      "level": 0,
+      "color": "#0c3c55",
+      "shallow": "#3a8a86",
+      "foam": 0.45,
+      "clarity": 0.55,
+      "waves": [
+        {
+          "wavelength": 22.0,
+          "steepness": 0.117,
+          "direction": [
+            -0.342,
+            0.9397
+          ]
+        },
+        {
+          "wavelength": 13.86,
+          "steepness": 0.09,
+          "direction": [
+            -0.6947,
+            0.7193
+          ]
+        },
+        {
+          "wavelength": 9.02,
+          "steepness": 0.072,
+          "direction": [
+            0.225,
+            0.9744
+          ]
+        },
+        {
+          "wavelength": 5.94,
+          "steepness": 0.054,
+          "direction": [
+            -0.9455,
+            0.3256
+          ]
+        },
+        {
+          "wavelength": 3.96,
+          "steepness": 0.045,
+          "direction": [
+            -0.1045,
+            0.9945
+          ]
+        },
+        {
+          "wavelength": 2.64,
+          "steepness": 0.0315,
+          "direction": [
+            -0.9994,
+            -0.0349
+          ]
+        },
+        {
+          "wavelength": 1.76,
+          "steepness": 0.0225,
+          "direction": [
+            0.6157,
+            0.788
+          ]
+        },
+        {
+          "wavelength": 1.1,
+          "steepness": 0.018,
+          "direction": [
+            -0.6018,
+            0.7986
+          ]
+        }
+      ]
+    },
+    "bloom": 0.35,
+    "exposure": 1.0
+  },
+  "stats": {
+    "objects": 794,
+    "unique_meshes": 32,
+    "triangles_drawn": 1813168,
+    "triangles_stored": 584774,
+    "materials": 46,
+    "bounds_min": [
+      -595.51,
+      -590.0,
+      -16.0
+    ],
+    "bounds_max": [
+      599.72,
+      704.01,
+      128.47
+    ],
+    "glb_bytes": 3226432
+  },
+  "built_with": "5.2.2 LTS"
+}

@@ -27,8 +27,10 @@ def island_falloff(x, y, radius):
 
 
 def terrain(name, size=200.0, resolution=128, height=lambda x, y: 0.0, bands=None,
-            material=None, smooth=False, center=(0.0, 0.0), collection=None):
+            material=None, smooth=False, center=(0.0, 0.0), backdrop=False, collection=None):
     """Heightfield grid of `size` meters centered on `center` (x, y).
+
+    backdrop=True for landscape that surrounds the subject (keeps framing and shadows tight).
 
     height: f(x, y) -> z in meters.
     bands:  [(max_z, material), ...] ascending; each face gets the first band its center is under.
@@ -51,6 +53,8 @@ def terrain(name, size=200.0, resolution=128, height=lambda x, y: 0.0, bands=Non
                 (i for i, (top, _) in enumerate(bands) if z <= top), len(bands) - 1)
     elif material is not None:
         me.materials.append(material)
+    if backdrop:
+        obj["backdrop"] = True
     return _place(obj, (0, 0, 0), (0, 0, 0), (1, 1, 1), collection)
 
 

@@ -89,14 +89,18 @@ def top_camera():
     return obj
 
 
-def export_glb(path):
-    """Export the visible scene (meshes + materials) as a binary glTF for the web app."""
+def export_glb(path, draco=False):
+    """Export the visible scene (meshes + materials) as a binary glTF for the web app.
+
+    draco=True compresses meshes (typically 5-10x smaller; the viewer decodes it). Positions are
+    quantized to 20 bits so fine detail like ladder rungs survives on kilometer-wide meshes.
+    """
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     # Objects the viewer replaces with its own version (e.g. the ocean) stay out of the .glb.
     replaced = [o for o in bpy.context.scene.objects if o.get("viewer")]
     for o in replaced:
         o.hide_set(True)
-    bpy.ops.export_scene.gltf(
+    opts = dict(
         filepath=os.path.abspath(path),
         export_format="GLB",
         export_apply=True,
@@ -106,6 +110,12 @@ def export_glb(path):
         export_extras=True,
         use_visible=True,
     )
+    if draco:
+        opts.update(export_draco_mesh_compression_enable=True,
+                    export_draco_mesh_compression_level=7,
+                    export_draco_position_quantization=20,
+                    export_draco_normal_quantization=10)
+    bpy.ops.export_scene.gltf(**opts)
     for o in replaced:
         o.hide_set(False)
     return path

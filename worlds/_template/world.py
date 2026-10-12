@@ -5,7 +5,8 @@ META = {
     "description": "One sentence for the gallery card.",
     "tags": [],
     "seed": 1,
-    # Optional viewer overrides: {"bloom": 0.8, "exposure": 1.1}
+    # Optional: "viewer": {"bloom": 0.8, "exposure": 1.1},
+    #           "render": {"res": "1920x1080", "samples": 48}   (preview render settings)
 }
 
 

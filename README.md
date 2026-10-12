@@ -18,7 +18,9 @@ app/  ──▶  gallery of every world + three.js viewer (orbit, shadows, bloom
 ```
 
 Included worlds: **Golden Harbor** (the ocean showcase: sunset swell, sailboats and buoys
-riding the waves), **Low-Poly Island**, and **Neon City**.
+riding the waves), **Coastal Oil Refinery** (the hi-res showcase: about 1 km of process units,
+1.8M triangles, 3 MB Draco-compressed, with a tanker riding the swell), **Low-Poly Island**, and
+**Neon City**.
 
 ## Three ways to run it
 
@@ -93,9 +95,10 @@ budgets).
 ## Publishing the app
 
 [`.github/workflows/worlds.yml`](.github/workflows/worlds.yml) rebuilds every world from source
-on each push and deploys `app/` to GitHub Pages. Turn it on once under
-*Settings → Pages → Source: GitHub Actions*. Built worlds are also committed, so the app works
-straight from a clone with `make serve`.
+on each push to check that they all still build. Deploying `app/` to GitHub Pages is opt-in:
+enable Pages (*Settings → Pages → Source: GitHub Actions*), then set the repository variable
+`DEPLOY_PAGES=true` (*Settings → Secrets and variables → Actions → Variables*). Built worlds are
+also committed, so the app works straight from a clone with `make serve`.
 
 ## Layout
 
