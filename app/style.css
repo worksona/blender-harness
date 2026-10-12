@@ -14,6 +14,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 #gallery { max-width: 1200px; margin: 0 auto; padding: 40px 16px 64px; }
 #gallery header h1 { margin: 0 0 4px; font-size: 28px; }
 #gallery header p { margin: 0 0 28px; color: var(--muted); }
+.guide-link { color: var(--accent); text-decoration: none; margin-left: 8px; white-space: nowrap; }
+.guide-link:hover { text-decoration: underline; }
 code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; }
 
 #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }

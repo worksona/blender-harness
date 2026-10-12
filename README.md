@@ -22,6 +22,9 @@ riding the waves), **Coastal Oil Refinery** (the hi-res showcase: about 1 km of 
 1.8M triangles, 3 MB Draco-compressed, with a tanker riding the swell), **Low-Poly Island**, and
 **Neon City**.
 
+A usage guide (getting started, use cases, limits, and a reference) ships with the app: open
+`guide.html`, or follow "How to use the harness" from the gallery.
+
 ## Three ways to run it
 
 ### 1. Claude Code on the web (claude.ai/code): recommended

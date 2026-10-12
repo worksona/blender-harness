@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harness Guide</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .guide { max-width: 1120px; margin: 0 auto; padding: 32px 16px 80px; display: grid;
+      grid-template-columns: 210px minmax(0, 1fr); gap: 40px; line-height: 1.6; }
+    .toc { position: sticky; top: 24px; align-self: start; font-size: 13px; }
+    .toc a { display: block; padding: 4px 0; color: var(--muted); text-decoration: none; }
+    .toc a:hover { color: var(--text); }
+    .toc .back { margin-bottom: 16px; color: var(--accent); }
+    main h1 { font-size: 30px; margin: 0 0 6px; }
+    main .lede { color: var(--muted); font-size: 17px; margin: 0 0 28px; max-width: 760px; }
+    main h2 { font-size: 21px; margin: 48px 0 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+    main h3 { font-size: 16px; margin: 24px 0 6px; }
+    main p, main li { color: #cfd6df; max-width: 780px; }
+    main a { color: var(--accent); }
+    pre { background: #151a21; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+      overflow-x: auto; font-size: 13px; line-height: 1.5; }
+    code { color: #e6edf6; }
+    p code, li code, td code { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 5px; }
+    .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 18px 0; }
+    .flow div { background: #151a21; border: 1px solid var(--line); border-radius: 10px; padding: 10px;
+      font-size: 13px; color: var(--muted); }
+    .flow b { display: block; color: var(--text); font-size: 14px; margin-bottom: 2px; }
+    .ways { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .ways section { background: #151a21; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+    .ways h3 { margin-top: 0; }
+    .ways .tag { font-size: 11px; color: var(--accent); border: 1px solid var(--accent); border-radius: 99px;
+      padding: 1px 8px; margin-left: 6px; vertical-align: middle; }
+    .ways ol { padding-left: 18px; margin: 6px 0 0; font-size: 14px; }
+    .uses { display: grid; gap: 16px; }
+    .use { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; background: #151a21;
+      border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .use img { width: 100%; height: 100%; object-fit: cover; min-height: 150px; display: block; }
+    .use .txt { padding: 12px 16px 14px 0; }
+    .use h3 { margin: 0 0 4px; }
+    .use p { margin: 0 0 8px; font-size: 14px; }
+    .use .ask { font-size: 13px; color: var(--muted); border-left: 2px solid var(--accent); padding-left: 10px; margin: 8px 0; }
+    .use .uses-tags { font-size: 12px; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 8px 0 4px; }
+    th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .limits li { margin-bottom: 4px; }
+    kbd { font-family: inherit; font-size: 12px; border: 1px solid var(--line); border-bottom-width: 2px;
+      border-radius: 5px; padding: 0 6px; background: rgba(255,255,255,0.05); }
+    @media (max-width: 860px) {
+      .guide { grid-template-columns: 1fr; gap: 12px; }
+      .toc { position: static; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+      .toc a { padding: 2px 0; }
+      .ways, .two { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr 1fr; }
+      .use { grid-template-columns: 1fr; }
+      .use img { min-height: 0; aspect-ratio: 16 / 9; }
+      .use .txt { padding: 0 14px 14px; }
+    }
+  </style>
+</head>
+<body>
+<div class="guide">
+  <nav class="toc" aria-label="Contents">
+    <a class="back" href="index.html#/">&larr; Worlds gallery</a>
+    <a href="#what">What it is</a>
+    <a href="#start">Getting started</a>
+    <a href="#session">A build session</a>
+    <a href="#uses">Use cases</a>
+    <a href="#limits">Limits</a>
+    <a href="#ref-commands">Commands</a>
+    <a href="#ref-world">Writing a world</a>
+    <a href="#ref-meta">World settings</a>
+    <a href="#ref-viewer">Viewer controls</a>
+  </nav>
+
+  <main>
+    <h1>Using the Blender world harness</h1>
+    <p class="lede">You describe a 3D world, or hand over a photo, and Claude builds it in headless Blender,
+      checks the renders, and publishes it to this app as an explorable scene. It runs in a Claude Code
+      cloud session, in Docker, or on your own machine.</p>
+
+    <h2 id="what">What it is</h2>
+    <p>Every world is one Python file, <code>worlds/&lt;name&gt;/world.py</code>, written against a small
+      world-building API. The build tool runs it in Blender and produces three things: a <code>.glb</code> for
+      the web, a preview render that Claude looks at to check its own work, and the world's settings
+      (camera, sun, sky, ocean, lamps). This app turns every built world into a gallery card and a live
+      3D scene.</p>
+    <div class="flow" role="list">
+      <div role="listitem"><b>1 · Describe</b>A prompt, or a reference photo</div>
+      <div role="listitem"><b>2 · Code</b>Claude writes <code>world.py</code></div>
+      <div role="listitem"><b>3 · Build</b>Headless Blender: model, render, export</div>
+      <div role="listitem"><b>4 · Check</b>Claude reads the renders and fixes problems</div>
+      <div role="listitem"><b>5 · Publish</b>Commit; the world appears here</div>
+    </div>
+    <p>Because worlds are code, they're reproducible (the same seed gives the same world), reviewable in a pull
+      request, and easy to change ("add a second jetty", "make it winter at 08:30").</p>
+
+    <h2 id="start">Getting started</h2>
+    <div class="ways">
+      <section>
+        <h3>Claude Code on the web <span class="tag">recommended</span></h3>
+        <ol>
+          <li>At claude.ai/code, create an environment for <code>worksona/blender-harness</code>.</li>
+          <li><b>Network access:</b> choose <i>Custom</i> and add <code>download.blender.org</code>, keeping the
+            defaults. Optional: on the default <i>Trusted</i> network, Blender installs from PyPI instead.</li>
+          <li><b>Setup script</b> (optional, makes sessions start faster): paste the contents of
+            <code>scripts/setup.sh</code>.</li>
+          <li>Start a session and ask for a world. Blender installs on its own at session start (about 1–2 min).</li>
+        </ol>
+      </section>
+      <section>
+        <h3>Docker</h3>
+        <ol>
+          <li><code>docker compose build</code>: Ubuntu, Blender 5.2.2 and Claude Code.</li>
+          <li><code>make docker-claude</code> runs Claude Code inside the container. <code>make docker-shell</code>
+            gives you a plain shell.</li>
+          <li>Works on any cloud VM. The image is x86-64; on Apple Silicon it runs under emulation.</li>
+        </ol>
+      </section>
+      <section>
+        <h3>Your own machine</h3>
+        <ol>
+          <li>Install Blender 5.2, or run <code>make setup</code>.</li>
+          <li>Run <code>make doctor</code> to check Blender, rendering and export.</li>
+          <li>Run <code>make serve</code>, then open <code>http://localhost:8000</code>.</li>
+          <li>Run <code>claude</code> in the repo, or use the <code>make</code> commands yourself.</li>
+        </ol>
+      </section>
+    </div>
+
+    <h2 id="session">A build session</h2>
+    <p>Ask in plain language. A good request names the theme, the time of day, one landmark and the scale:</p>
+    <pre>Make a foggy pine valley at 06:30 in autumn, with a timber sawmill by a river and a log truck
+on the road. About 600 m across. High-ish 3/4 camera.</pre>
+    <p>Claude then follows the <code>build-world</code> skill:</p>
+    <ol>
+      <li><b>Scaffold:</b> <code>make new NAME="Pine Valley"</code> creates <code>worlds/pine-valley/world.py</code>.</li>
+      <li><b>Write the world in layers:</b> ground and water, then landmarks, then repeated set dressing
+        (instanced), then time of day, then the camera.</li>
+      <li><b>Build fast drafts:</b> <code>scripts/bl tools/build_world.py pine-valley --top --samples 8 --res 640x360</code>,
+        typically 5–60 s.</li>
+      <li><b>Look:</b> Claude reads the hero preview, the top-down layout view, and the photo comparison when
+        there's a reference. It fixes things that float or are buried, scale problems, empty areas and lighting,
+        usually over 2–4 rounds.</li>
+      <li><b>Finish:</b> a full-quality build, a check in this app, then a commit. CI rebuilds every world on push.</li>
+    </ol>
+    <p>Then keep iterating in conversation: <i>"the sawmill is too small"</i>, <i>"show it at dusk"</i>,
+      <i>"add steam from the kiln"</i>, <i>"match this photo"</i>.</p>
+
+    <h2 id="uses">Use cases</h2>
+    <div class="uses">
+      <article class="use">
+        <img src="worlds/oil-refinery/preview.jpg" alt="Aerial render of a coastal oil refinery with a tanker at the jetty">
+        <div class="txt">
+          <h3>Industrial sites and digital-twin style scenes</h3>
+          <p>Plants, refineries, terminals and utilities, built from a library of process equipment: columns,
+            drums, steel frames, pipe racks, air coolers, storage tanks, LPG spheres, fired heaters, stacks,
+            cooling towers and flares. Process areas fill up with instanced modules, so a kilometre-wide site
+            stays light (the oil refinery is 1.8M triangles in a 3 MB download).</p>
+          <p class="ask">"Build a gas terminal: four LNG tanks, a jetty with two loading arms, a pipe rack to a
+            compressor station, at 14:00."</p>
+          <p class="uses-tags">See: Coastal Oil Refinery · <code>harness/industrial.py</code></p>
+        </div>
+      </article>
+      <article class="use">
+        <img src="worlds/gas-station/preview.jpg" alt="Gas processing station with yellow pipe loops matched to a photo">
+        <div class="txt">
+          <h3>Rebuild a real place from photos</h3>
+          <p>Give Claude a photo. It estimates the camera from the horizon and known object sizes, places the
+            equipment by measurement, renders from the matching camera, and compares photo against render
+            each round. Expect a faithful recreation of layout and character, not a survey-grade model. More
+            angles, an aerial view, or known dimensions make it more accurate.</p>
+          <p class="ask">"Here's a photo of our compressor station. Build it, and make the yellow pipelines match."</p>
+          <p class="uses-tags">See: Gas Processing Station, Refinery at Dusk · <code>worlds/&lt;name&gt;/reference/</code></p>
+        </div>
+      </article>
+      <article class="use">
+        <img src="worlds/refinery-dusk/preview.jpg" alt="Refinery at blue hour with lights and steam plumes">
+        <div class="txt">
+          <h3>Lighting, time-of-day and night studies</h3>
+          <p>One call, <code>atmosphere(time, latitude, day, …)</code>, gives the real sun position, a physical
+            sky, haze, automatic exposure and lamps that switch on at dusk. In this app, the Light panel scrubs
+            through the day or plays it, and changes season, latitude, haze, visibility and exposure. That's
+            useful for shadow studies, night lighting, visibility, and "how does it look at 6 am in December".</p>
+          <p class="ask">"Render the site at 07:00, 12:00 and 21:30 in midwinter at 60°N."</p>
+          <p class="uses-tags">See: Refinery at Dusk · <code>--time</code> · Light panel (<kbd>L</kbd>)</p>
+        </div>
+      </article>
+      <article class="use">
+        <img src="worlds/golden-harbor/preview.jpg" alt="Sunset harbour with sailboats on a rolling sea">
+        <div class="txt">
+          <h3>Coastal and marine scenes</h3>
+          <p>An endless animated ocean (swell, foam, sun glitter, refraction, shoreline foam), with boats, buoys
+            and tankers that ride the waves. In the Blender render it becomes an FFT ocean, or flat water for
+            distant bays.</p>
+          <p class="ask">"A fishing harbour at dawn with a breakwater, a dozen boats bobbing and rough sea outside."</p>
+          <p class="uses-tags">See: Golden Harbor · <code>ocean()</code>, <code>bob()</code></p>
+        </div>
+      </article>
+      <article class="use">
+        <img src="worlds/lowpoly-island/preview.jpg" alt="Low-poly island with pine forest and lighthouse">
+        <div class="txt">
+          <h3>Stylised and game-style environments</h3>
+          <p>Terrain from noise with height-banded materials, scattered forests and rocks, landmarks, and
+            stylised night scenes with neon and bloom. A good fit for concept art, level blockouts, and the
+            backdrops of a multi-world app.</p>
+          <p class="ask">"A desert canyon with a mesa village, low-poly, golden hour."</p>
+          <p class="uses-tags">See: Low-Poly Island, Neon City · <code>terrain()</code>, <code>scatter()</code></p>
+        </div>
+      </article>
+      <article class="use">
+        <img src="worlds/neon-city/preview.jpg" alt="Neon city at night">
+        <div class="txt">
+          <h3>Presenting and sharing</h3>
+          <p>Every world gets a gallery card, an orbitable scene and a high-resolution preview render. Links keep
+            the lighting state (for example <code>#/w/refinery-dusk?t=21.2</code>), so you can send someone the
+            exact view. CI can publish the whole app to GitHub Pages. Renders can be produced at any time of day
+            for decks and reports.</p>
+          <p class="ask">"Give me 1920×1080 hero renders of every world at golden hour."</p>
+          <p class="uses-tags">See: this app · <code>META["render"]</code> · GitHub Pages (opt-in)</p>
+        </div>
+      </article>
+    </div>
+
+    <h2 id="limits">Limits: what it isn't for</h2>
+    <ul class="limits">
+      <li><b>Survey-grade or CAD-accurate models.</b> Photo matching estimates dimensions, and routing it can't
+        see is invented. For exact geometry, give dimensions or plans; photogrammetry is a different tool chain.</li>
+      <li><b>Textured, photoreal materials in the web app.</b> Only flat-colour PBR materials (colour, roughness,
+        metal, emission, alpha) export to the web. Procedural textures show in Blender renders only.</li>
+      <li><b>Animation beyond the built-in effects.</b> Ocean waves, floating objects and steam animate. Moving
+        vehicles, machinery, characters and physics aren't supported yet.</li>
+      <li><b>Interactive apps or games.</b> The viewer is for exploring. Clickable objects and game logic would be
+        new viewer work.</li>
+      <li><b>GPU rendering in the cloud.</b> Cloud sessions have no GPU, so previews use Cycles on CPU. Plan for
+        about 5 s to 3 min per render. Very large or heavily lit scenes take longest.</li>
+      <li><b>Budgets.</b> Aim for about 300k triangles drawn per ordinary world, or up to about 2M if most of
+        it is instanced. Keep unique triangles under about 600k.</li>
+    </ul>
+
+    <h2 id="ref-commands">Reference: commands</h2>
+    <table>
+      <tr><th>Command</th><th>What it does</th></tr>
+      <tr><td><code>make setup</code> / <code>make doctor</code></td><td>Install headless Blender / check rendering and export</td></tr>
+      <tr><td><code>make new NAME="Title"</code></td><td>Scaffold <code>worlds/&lt;slug&gt;/world.py</code></td></tr>
+      <tr><td><code>make world W=&lt;slug&gt;</code></td><td>Build one world, with a top-down layout view in <code>build/&lt;slug&gt;/top.jpg</code></td></tr>
+      <tr><td><code>make worlds</code></td><td>Build every world, skipping drafts</td></tr>
+      <tr><td><code>make serve</code></td><td>This app at <code>http://localhost:8000</code></td></tr>
+      <tr><td><code>scripts/bl tools/build_world.py &lt;slug&gt; [flags]</code></td><td>Build with flags:
+        <code>--samples N</code> <code>--res 1280x720</code> <code>--top</code> <code>--no-render</code>
+        <code>--blend</code> (also save the .blend) <code>--all</code></td></tr>
+      <tr><td><code>… --time 21:30 [--haze 0.6] [--lamps on] [--ev 0.5]</code></td><td>Preview the world at another
+        time or in other conditions, written to <code>build/&lt;slug&gt;/</code>. The published world is left unchanged.</td></tr>
+    </table>
+
+    <h2 id="ref-world">Reference: writing a world</h2>
+    <pre>from harness import *
+
+META = {"title": "Pine Cove", "description": "…", "tags": ["nature"], "seed": 3}
+
+def height(x, y):
+    return island_falloff(x, y, 80) * 20 * (0.6 + 0.4 * fbm(x, y, scale=30))
+
+def build(ctx):                       # use ctx.rng for every random choice
+    grass, rock = material("grass", "#6e9a45"), material("rock", "#8a8580")
+    terrain("Land", size=200, height=height, bands=[(10, grass), (99, rock)])
+    ocean(level=0, waves="moderate")
+    pine = prefab(join("Pine", [cylinder("trunk", 0.25, 1.6), cone("top", 1.6, 4, location=(0, 0, 1.2))]))
+    for i, (x, y, z) in enumerate(scatter(ctx.rng, 200, 80, height, lambda x, y, z: z > 1.5, min_dist=3)):
+        instance(pine, f"Pine.{i}", (x, y, z))
+    atmosphere(time="17:30", latitude=48, day=266, haze=0.3)
+    camera((140, -140, 70), (0, 0, 5))</pre>
+    <table>
+      <tr><th>Area</th><th>Functions</th></tr>
+      <tr><td>Shapes</td><td><code>box</code> <code>sphere</code> <code>cylinder</code> <code>cone</code> <code>plane</code> <code>mesh</code> · <code>material(name, color, roughness, metallic, emission, alpha)</code></td></tr>
+      <tr><td>Repeats</td><td><code>join</code> → <code>prefab</code> → <code>instance</code>. Copies are free in the download and the viewer draws them as one GPU batch.</td></tr>
+      <tr><td>Detailed parts</td><td><code>MeshBuilder</code>: <code>beam</code> <code>rod</code> <code>tube</code> (bent pipes) <code>pipe</code> <code>flange</code> <code>handwheel</code> <code>ladder(cage=True)</code> <code>railing</code> <code>ring_platform</code> <code>dome</code> <code>torus</code></td></tr>
+      <tr><td>Plant equipment</td><td><code>from harness import industrial as ind</code>: <code>vessel</code> <code>drum</code> <code>steel_frame</code> <code>pipe_rack</code> <code>air_coolers</code> <code>storage_tank</code> <code>lpg_sphere</code> <code>fired_heater</code> <code>stack</code> <code>cooling_tower</code> <code>flare</code> <code>kit_prefabs</code> + <code>fill</code></td></tr>
+      <tr><td>Land and water</td><td><code>terrain</code> <code>fbm</code> <code>island_falloff</code> <code>scatter</code> <code>slope</code> · <code>ocean</code> <code>bob</code></td></tr>
+      <tr><td>Light</td><td><code>atmosphere(time, latitude, day, north, haze, visibility, exposure, lamps)</code> · <code>lamp</code> <code>lamps_along</code> · <code>plume</code> (steam) · manual <code>sun</code> <code>sky</code> <code>fog</code></td></tr>
+      <tr><td>Camera</td><td><code>camera(location, target, lens)</code>: the hero preview and the viewer's starting view</td></tr>
+    </table>
+    <p>Conventions: Z is up, units are metres, and the ground is at z = 0. A bearing of 0° points to +Y (north)
+      and 90° to +X (east).</p>
+
+    <h2 id="ref-meta">Reference: world settings (<code>META</code>)</h2>
+    <table>
+      <tr><th>Key</th><th>Meaning</th></tr>
+      <tr><td><code>title</code> <code>description</code> <code>tags</code> <code>seed</code></td><td>The gallery card, plus the random seed for the world</td></tr>
+      <tr><td><code>render</code></td><td><code>{"res": "1920x1080", "samples": 48, "look": "AgX - Punchy", "view": "Standard", "glare": 0.4}</code>: preview render settings</td></tr>
+      <tr><td><code>grade</code></td><td><code>{"gains": [0.7, 1, 1.05], "saturation": 1.4}</code>: a colour grade, applied identically in the render and the viewer</td></tr>
+      <tr><td><code>viewer</code></td><td><code>{"bloom": 0.5, "exposure": 1.2, "tone": "neutral", "grade": {…}}</code>: viewer-only overrides</td></tr>
+      <tr><td><code>export</code></td><td><code>{"draco": true|false}</code>. By default, large worlds are compressed automatically.</td></tr>
+      <tr><td><code>draft</code></td><td><code>True</code> keeps a work-in-progress world out of <code>--all</code> and CI.</td></tr>
+    </table>
+
+    <h2 id="ref-viewer">Reference: viewer controls</h2>
+    <div class="two">
+      <table>
+        <tr><th>Key</th><th>Action</th></tr>
+        <tr><td>drag / scroll</td><td>Orbit / zoom</td></tr>
+        <tr><td><kbd>L</kbd></td><td>Light panel: time of day, season, latitude, haze, visibility, exposure, lamps</td></tr>
+        <tr><td><kbd>Space</kbd></td><td>Play through the day (with the Light panel open)</td></tr>
+        <tr><td><kbd>R</kbd> · <kbd>0</kbd></td><td>Auto-rotate · reset view</td></tr>
+        <tr><td><kbd>[</kbd> <kbd>]</kbd> · <kbd>Esc</kbd></td><td>Previous / next world · back to the gallery</td></tr>
+      </table>
+      <table>
+        <tr><th>URL parameter</th><th>Example</th></tr>
+        <tr><td>Time (hours)</td><td><code>t=21.25</code></td></tr>
+        <tr><td>Latitude · day of year</td><td><code>lat=58.3</code> · <code>day=172</code></td></tr>
+        <tr><td>Haze · visibility (m)</td><td><code>haze=0.4</code> · <code>vis=8000</code></td></tr>
+        <tr><td>Exposure · lamps</td><td><code>ev=0.5</code> · <code>lamps=on</code></td></tr>
+        <tr><td>Full link</td><td><code>#/w/refinery-dusk?t=21.2&amp;haze=0.3</code></td></tr>
+      </table>
+    </div>
+    <p>For the details behind each feature, read <code>CLAUDE.md</code> in the repo. Claude reads it at the start
+      of every session.</p>
+  </main>
+</div>
+</body>
+</html>
