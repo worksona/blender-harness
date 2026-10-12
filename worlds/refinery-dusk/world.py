@@ -27,7 +27,6 @@ META = {
     "description": "A coastal refinery at blue hour from a drone: thousands of lights, steam plumes "
                    "lit from below, tanks, stacks and the bay beyond.",
     "tags": ["industrial", "night", "photo-matched", "aerial"],
-    "draft": True,   # ~3 min locally, ~15 min on a 2-CPU CI runner: build it on demand
     "seed": 31,
     "render": {"res": "1440x1078", "samples": 24, "glare": 0.25, "look": "AgX - Punchy"},
     # The photo's teal-and-orange look: a cool white balance and punchier colour.
