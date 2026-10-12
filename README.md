@@ -102,10 +102,10 @@ budgets).
 
 ## Publishing the app
 
-**Live site:** https://worksona-blender-worlds.netlify.app (Netlify, worksona team). Publish
-the current `app/` with `make deploy`. To deploy automatically on every push instead, connect
-the GitHub repo in the Netlify UI under *Project configuration → Build & deploy*. `netlify.toml`
-already holds the settings.
+**Live site:** https://worksona-blender-worlds.netlify.app (Netlify, worksona team).
+**Every push to `main` deploys automatically.** A GitHub webhook triggers a Netlify build, which
+clones the repo with a read-only deploy key and publishes `app/` using `netlify.toml`. Nothing
+to compile, since built worlds are committed. `make deploy` still publishes by hand if needed.
 
 ### GitHub Pages (alternative)
 
