@@ -36,7 +36,7 @@ serve:
 # Symlinks are resolved into a copy first.
 deploy:
 	rm -rf build/site && mkdir -p build/site && rsync -aL app/ build/site/
-	netlify deploy --prod --dir build/site --message "$$(git log -1 --pretty=%s)"
+	netlify deploy --prod --no-build --dir build/site --message "$$(git log -1 --pretty=%s)"
 
 docker-build:
 	docker compose build
