@@ -29,7 +29,7 @@ worlds:
 	$(BL) tools/build_world.py --all
 
 serve:
-	python3 -m http.server $(PORT) -d app
+	python3 tools/serve.py $(PORT)
 
 docker-build:
 	docker compose build

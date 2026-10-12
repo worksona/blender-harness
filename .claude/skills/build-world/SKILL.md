@@ -1,6 +1,6 @@
 ---
 name: build-world
-description: Create or iterate on a Blender-built 3D world in this repo — "make a world", "new world", "build a <theme> scene", "add X to the island", "the forest looks sparse". Scaffolds worlds/<slug>/world.py, builds it headless, reviews the renders visually, and iterates.
+description: Create or iterate on a Blender-built 3D world in this repo — "make a world", "new world", "build a <theme> scene", "add X to the island", "the forest looks sparse", "build this from the photo". Scaffolds worlds/<slug>/world.py, builds it headless, reviews the renders visually (against a reference photo when one is given), and iterates.
 ---
 
 # Build a world
@@ -11,6 +11,11 @@ Ask only if the theme itself is unclear. Otherwise choose and state your choices
 
 ## 2. Scaffold (new worlds only)
 `make new NAME="<Title>"`, then edit `META` (title, one-line description, tags, seed).
+
+### Given a reference photo?
+Save it to `worlds/<slug>/reference/photo.jpg` and follow "Building from a reference photo"
+in CLAUDE.md. Match the camera first using measured angles. After each build, Read
+`build/<slug>/compare.jpg`.
 
 ## 3. Write `build(ctx)` in layers
 1. Ground: `terrain(...)` with `bands`, or `plane(..., backdrop=True)`. Add water with `ocean(...)`.

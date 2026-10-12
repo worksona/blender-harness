@@ -130,14 +130,16 @@ class MeshBuilder:
             f.smooth = True
         return self
 
-    def torus(self, center, major, minor, mat, major_segments=48, minor_segments=6, arc=360.0):
-        """Ring in the XY plane (handrails, stiffener rings). arc < 360 makes an open ring."""
+    def torus(self, center, major, minor, mat, major_segments=48, minor_segments=6, arc=360.0,
+              start=0.0):
+        """Ring in the XY plane (handrails, stiffener rings). arc < 360 makes an open ring
+        running from `start` degrees."""
         cx, cy, cz = center
         closed = arc >= 360
         n = major_segments if closed else major_segments + 1
         rings = []
         for i in range(n):
-            u = math.radians(arc) * i / major_segments
+            u = math.radians(start) + math.radians(arc) * i / major_segments
             ring = []
             for j in range(minor_segments):
                 v = 2 * math.pi * j / minor_segments
@@ -165,11 +167,104 @@ class MeshBuilder:
                 self.sphere(p, radius, mat, subdivisions=1 if segments <= 8 else 2)
         return self
 
-    def ladder(self, bottom, height, mat, facing=0.0, width=0.5, rung_step=0.3):
-        """Vertical ladder: two rails plus rungs. facing = direction it faces (degrees)."""
+    def tube(self, points, radius, mat, bend_radius=None, segments=24, arc_steps=10, caps=True):
+        """Pipe swept along a polyline with smooth circular bends at the corners (real pipe bends,
+        not ball joints). bend_radius defaults to 1.5x the pipe diameter (a long-radius elbow).
+        Returns the path's corner tangent points, handy for placing flanges."""
+        pts = [Vector(p) for p in points]
+        R = bend_radius or radius * 3.0
+        path = [pts[0]]
+        for i in range(1, len(pts) - 1):
+            a = (pts[i] - pts[i - 1]).normalized()
+            b = (pts[i + 1] - pts[i]).normalized()
+            cos_phi = max(-1.0, min(1.0, a.dot(b)))
+            phi = math.acos(cos_phi)
+            if phi < 1e-3:
+                path.append(pts[i])
+                continue
+            t = min(R * math.tan(phi / 2), (pts[i] - pts[i - 1]).length * 0.49,
+                    (pts[i + 1] - pts[i]).length * 0.49)
+            r = t / math.tan(phi / 2)
+            n = (b - a * cos_phi).normalized()
+            start = pts[i] - a * t
+            center = start + n * r
+            for k in range(arc_steps + 1):
+                al = phi * k / arc_steps
+                path.append(center + (-n * math.cos(al) + a * math.sin(al)) * r)
+        path.append(pts[-1])
+        # Drop duplicate points, then sweep a circle with parallel-transported frames.
+        clean = [path[0]]
+        for p in path[1:]:
+            if (p - clean[-1]).length > 1e-4:
+                clean.append(p)
+        tangents = []
+        for i in range(len(clean)):
+            prev = clean[max(i - 1, 0)]
+            nxt = clean[min(i + 1, len(clean) - 1)]
+            tangents.append((nxt - prev).normalized())
+        t0 = tangents[0]
+        normal = t0.orthogonal().normalized()
+        rings = []
+        for i, (p, t) in enumerate(zip(clean, tangents)):
+            if i:
+                normal = (tangents[i - 1].rotation_difference(t) @ normal).normalized()
+            binormal = t.cross(normal)
+            rings.append([self.bm.verts.new(p + (normal * math.cos(2 * math.pi * s / segments) +
+                                                 binormal * math.sin(2 * math.pi * s / segments)) * radius)
+                          for s in range(segments)])
+        idx = self._mat_index(mat)
+        for r0, r1 in zip(rings, rings[1:]):
+            for s in range(segments):
+                s2 = (s + 1) % segments
+                f = self.bm.faces.new((r0[s], r0[s2], r1[s2], r1[s]))
+                f.material_index = idx
+                f.smooth = True
+        if caps:
+            for ring, rev in ((rings[0], True), (rings[-1], False)):
+                f = self.bm.faces.new(list(reversed(ring)) if rev else ring)
+                f.material_index = idx
+        return clean
+
+    def flange(self, center, direction, pipe_radius, mat, bolts=16, bolt_mat=None):
+        """Bolted flange pair on a pipe at `center`, facing along `direction`."""
+        d = Vector(direction).normalized()
+        c = Vector(center)
+        fr = pipe_radius * 1.55
+        self.rod(c - d * 0.09, c + d * 0.09, fr, mat, 32)
+        self.rod(c - d * 0.13, c + d * 0.13, pipe_radius * 1.12, mat, 32)  # weld necks
+        u = d.orthogonal().normalized()
+        v = d.cross(u)
+        for k in range(bolts):
+            ang = 2 * math.pi * k / bolts
+            p = c + (u * math.cos(ang) + v * math.sin(ang)) * fr * 0.84
+            self.rod(p - d * 0.16, p + d * 0.16, min(0.035, pipe_radius * 0.09), bolt_mat or mat, 6)
+        return self
+
+    def handwheel(self, center, direction, radius, mat, stem_mat=None):
+        """Valve handwheel: rim, spokes and stem, facing along `direction`."""
+        d = Vector(direction).normalized()
+        c = Vector(center)
+        u = d.orthogonal().normalized()
+        v = d.cross(u)
+        rim = []
+        for k in range(17):
+            ang = 2 * math.pi * k / 16
+            rim.append(c + (u * math.cos(ang) + v * math.sin(ang)) * radius)
+        for a, b in zip(rim, rim[1:]):
+            self.rod(a, b, radius * 0.07, mat, 6, caps=False)
+        for k in range(4):
+            ang = math.pi / 2 * k
+            self.rod(c, c + (u * math.cos(ang) + v * math.sin(ang)) * radius, radius * 0.05, mat, 6)
+        self.rod(c, c - d * radius * 1.2, radius * 0.08, stem_mat or mat, 8)
+        return self
+
+    def ladder(self, bottom, height, mat, facing=0.0, width=0.5, rung_step=0.3, cage=False):
+        """Vertical ladder: two rails plus rungs. facing = direction the climber's back points
+        (degrees). cage=True adds safety hoops and bars from 2.5 m up."""
         bx, by, bz = bottom
         f = math.radians(facing)
         side = Vector((-math.sin(f), math.cos(f), 0)) * width / 2
+        out = Vector((math.cos(f), math.sin(f), 0))
         base = Vector((bx, by, bz))
         for s in (side, -side):
             self.rod(base + s, base + s + Vector((0, 0, height)), 0.03, mat, 6)
@@ -178,6 +273,21 @@ class MeshBuilder:
             self.rod(base + side + Vector((0, 0, z)), base - side + Vector((0, 0, z)), 0.018, mat, 5,
                      caps=False)
             z += rung_step
+        if cage and height > 3:
+            hoop_r = 0.38
+            center = base + out * hoop_r
+            start = math.degrees(f) + 180 + 55   # open on the ladder side
+            hz = []
+            z = 2.5
+            while z < height + 0.9:
+                self.torus((center.x, center.y, bz + z), hoop_r, 0.025, mat, 18, 4, arc=250.0,
+                           start=start)
+                hz.append(bz + z)
+                z += 0.9
+            for k in range(5):
+                ang = math.radians(start + 250 * (k + 0.5) / 5)
+                p = center + Vector((math.cos(ang), math.sin(ang), 0)) * hoop_r
+                self.rod((p.x, p.y, hz[0]), (p.x, p.y, hz[-1]), 0.02, mat, 4, caps=False)
         return self
 
     def railing(self, points, mat, height=1.1, post_step=2.0, closed=False):
@@ -209,8 +319,8 @@ class MeshBuilder:
             f = self.bm.faces.new((inner_v[i], outer_v[i], outer_v[j], inner_v[j]))
             f.material_index = idx
         rail_r = outer - 0.05
-        self.torus((cx, cy, cz + 1.1), rail_r, 0.03, mat_rail, segments, 5, arc=arc)
-        self.torus((cx, cy, cz + 0.55), rail_r, 0.025, mat_rail, segments, 5, arc=arc)
+        self.torus((cx, cy, cz + 1.1), rail_r, 0.03, mat_rail, segments, 5, arc=arc, start=start)
+        self.torus((cx, cy, cz + 0.55), rail_r, 0.025, mat_rail, segments, 5, arc=arc, start=start)
         for i in range(0, n, 2):
             u = math.radians(start + arc * i / segments)
             p = Vector((cx + rail_r * math.cos(u), cy + rail_r * math.sin(u), cz))

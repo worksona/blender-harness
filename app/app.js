@@ -175,6 +175,8 @@ const viewer = (() => {
 
     bloom.strength = v.bloom ?? 0;
     bloom.enabled = bloom.strength > 0;
+    // "agx" (default, filmic) or "neutral" (keeps saturated colors; good for photo-matched worlds).
+    renderer.toneMapping = v.tone === 'neutral' ? THREE.NeutralToneMapping : THREE.AgXToneMapping;
     renderer.toneMappingExposure = v.exposure ?? 1;
     resetView();
   }

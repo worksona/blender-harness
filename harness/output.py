@@ -50,8 +50,10 @@ def _sky_gradient():
     nt.links.new(ramp.outputs["Color"], nt.nodes["Background"].inputs["Color"])
 
 
-def render(path, resolution=(1280, 720), samples=24, camera=None):
-    """Cycles CPU render (works headless with no GPU). Writes JPEG unless path ends in .png."""
+def render(path, resolution=(1280, 720), samples=24, camera=None, look="None", view="AgX"):
+    """Cycles CPU render (works headless with no GPU). Writes JPEG unless path ends in .png.
+    view: "AgX" (filmic, soft highlights) or "Standard" (camera-like, saturated, for photo matching).
+    look: an AgX look such as "AgX - Punchy"."""
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
     scene.cycles.device = "CPU"
@@ -60,7 +62,8 @@ def render(path, resolution=(1280, 720), samples=24, camera=None):
     scene.cycles.max_bounces = 4
     scene.render.resolution_x, scene.render.resolution_y = resolution
     scene.render.resolution_percentage = 100
-    scene.view_settings.view_transform = "AgX"
+    scene.view_settings.view_transform = view
+    scene.view_settings.look = look if view == "AgX" else "None"
     is_png = path.lower().endswith(".png")
     scene.render.image_settings.file_format = "PNG" if is_png else "JPEG"
     if not is_png:
@@ -119,6 +122,31 @@ def export_glb(path, draco=False):
     for o in replaced:
         o.hide_set(False)
     return path
+
+
+def side_by_side(left_path, right_path, out_path, height=600):
+    """Write left | right as one JPEG, both scaled to `height` (reference photo vs render)."""
+    import numpy as np
+
+    halves = []
+    for path in (left_path, right_path):
+        img = bpy.data.images.load(os.path.abspath(path))
+        w, h = img.size
+        img.scale(max(1, round(w * height / h)), height)
+        px = np.empty(img.size[0] * img.size[1] * 4, dtype=np.float32)
+        img.pixels.foreach_get(px)
+        halves.append(px.reshape(height, img.size[0], 4))
+        bpy.data.images.remove(img)
+    gap = np.ones((height, 8, 4), dtype=np.float32)
+    combined = np.concatenate([halves[0], gap, halves[1]], axis=1)
+    out = bpy.data.images.new("_compare", combined.shape[1], height)
+    out.pixels.foreach_set(combined.ravel())
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+    out.filepath_raw = os.path.abspath(out_path)
+    out.file_format = "JPEG"
+    out.save()
+    bpy.data.images.remove(out)
+    return out_path
 
 
 def save_blend(path):

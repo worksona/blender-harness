@@ -39,7 +39,7 @@ To build without rendering, add `--no-render`.
 | Materials | `material(name, color, roughness, metallic, emission, emission_strength, alpha)` |
 | Primitives | `box`, `sphere`, `cylinder`, `cone`, `plane`, `mesh(verts, faces)` |
 | Prefabs | `join(name, parts)` merges parts into one mesh, `prefab(obj)` hides the template, `instance(prefab, ...)` places linked copies that cost nothing extra in the .glb |
-| Detailed structures | `MeshBuilder(name)` assembles hundreds of parts into one object: `box`, `slab`, `beam(a, b)`, `rod(a, b)`, `cylinder`, `sphere`, `dome`, `torus`, `pipe(points)`, `ladder`, `railing`, `ring_platform`, then `.build()`. Use it for frames, pipework, and vessels. `worlds/oil-refinery` shows it at scale |
+| Detailed structures | `MeshBuilder(name)` assembles hundreds of parts into one object: `box`, `slab`, `beam(a, b)`, `rod(a, b)`, `cylinder`, `sphere`, `dome`, `torus`, `pipe(points)` (ball elbows), `tube(points, bend_radius=)` (smooth real pipe bends), `flange`, `handwheel`, `ladder(cage=True)`, `railing`, `ring_platform`, then `.build()`. Use it for frames, pipework, and vessels. `worlds/oil-refinery` shows it at scale |
 | Terrain | `terrain(name, size, resolution, height=f(x, y), bands=[(max_z, mat), ...], center=, backdrop=)`, `fbm`, `island_falloff`, `scatter(rng, n, area, height, accept, min_dist)`, `slope` |
 | Water | `ocean(level, waves='calm'|'moderate'|'rough', wind, color, shallow, foam, clarity)`, `bob(obj, amount, draft)` makes an object float on the viewer's waves |
 | Environment | `sun(elevation, azimuth, strength, color)`, `sky(color, strength, ground)`, `fog(color, near, far)`, `camera(location, target, lens)` |
@@ -69,11 +69,32 @@ To build without rendering, add `--no-render`.
   a GPU, so don't use them.
 - Keep worlds deterministic: the same seed must give the same world.
 
+## Building from a reference photo
+
+Put the photo(s) in `worlds/<slug>/reference/`. Every build then writes
+`build/<slug>/compare.jpg` with the first photo on the left and the render on the right.
+`worlds/gas-station` is the worked example. The loop:
+
+1. Read the photo and list the equipment, materials, sky and light, and roughly where the camera is.
+2. Set `META["render"]["res"]` to the photo's aspect ratio. For saturated, camera-like
+   colours add `"view": "Standard"` (and `"viewer": {"tone": "neutral"}` for the web app).
+3. Measure; don't guess. The horizon's height in the frame gives the camera pitch. An object
+   of known size (vessel diameter, ladder 0.5 m wide, handrail 1.1 m, truck 12 m) gives its
+   distance from the share of the frame it covers (22 mm lens: horizontal tan = 0.818 per
+   half-frame). Place things at those distances. Get the camera right first, because
+   everything else depends on it.
+4. Build at low samples, Read `compare.jpg`, fix the biggest difference, and repeat. Then
+   do a final build at full quality.
+5. Accept what one photo can't give you: hidden sides, exact dimensions, untraceable pipe
+   routes. Make them plausible, and tell the user which parts are inferred.
+
 ## Web app
 
-`make serve` runs it at http://localhost:8000. The gallery reads `app/worlds/index.json`.
+`make serve` runs it at http://localhost:8000. `tools/serve.py` disables caching, so a reload
+picks up your edits. The gallery reads `app/worlds/index.json`.
 Opening `#/w/<slug>` loads that world's `meta.json` (camera, sun, sky, fog, ocean) plus
-`world.glb`. Per-world viewer overrides go in `META["viewer"]` (`bloom`, `exposure`).
+`world.glb`. Per-world viewer overrides go in `META["viewer"]`: `bloom`, `exposure`, and `tone`
+(`"agx"`, the default, or `"neutral"` for saturated photo-matched colours).
 `window.viewer` exposes `{scene, camera, controls, renderer, ocean}` for debugging. For example,
 `viewer.renderer.info.render.calls` gives the draw-call count. Shadows follow the orbit target
 and scale with zoom. three.js

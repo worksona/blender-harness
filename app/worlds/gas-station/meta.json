@@ -1,0 +1,80 @@
+{
+  "slug": "gas-station",
+  "title": "Gas Processing Station",
+  "description": "Filter-separators, scrubbers and big yellow pipe loops, matched to a reference photo.",
+  "tags": [
+    "industrial",
+    "photo-matched",
+    "pipelines"
+  ],
+  "seed": 5,
+  "glb": "worlds/gas-station/world.glb",
+  "preview": "worlds/gas-station/preview.jpg",
+  "viewer": {
+    "camera": {
+      "position": [
+        0.0,
+        2.2,
+        -0.0
+      ],
+      "target": [
+        0.0,
+        4.3021,
+        -20.0
+      ],
+      "fov": 49.43
+    },
+    "sun": {
+      "direction": [
+        -0.1228,
+        0.7071,
+        0.6964
+      ],
+      "color": "#fff7ea",
+      "strength": 4.0
+    },
+    "sky": {
+      "color": "#1f74de",
+      "ground": "#a08d6c",
+      "strength": 0.8
+    },
+    "fog": {
+      "color": "#a4cdf3",
+      "near": 150,
+      "far": 900
+    },
+    "bounds": {
+      "min": [
+        -584.8098,
+        -1.1634,
+        -648.0369
+      ],
+      "max": [
+        188.2605,
+        400.7889,
+        0.1585
+      ]
+    },
+    "ocean": null,
+    "tone": "neutral"
+  },
+  "stats": {
+    "objects": 10,
+    "unique_meshes": 10,
+    "triangles_drawn": 60762,
+    "triangles_stored": 60762,
+    "materials": 13,
+    "bounds_min": [
+      -584.81,
+      -0.16,
+      -1.16
+    ],
+    "bounds_max": [
+      188.26,
+      648.04,
+      400.79
+    ],
+    "glb_bytes": 1420852
+  },
+  "built_with": "5.2.2 LTS"
+}

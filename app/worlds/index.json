@@ -1,6 +1,17 @@
 {
   "worlds": [
     {
+      "slug": "gas-station",
+      "title": "Gas Processing Station",
+      "description": "Filter-separators, scrubbers and big yellow pipe loops, matched to a reference photo.",
+      "tags": [
+        "industrial",
+        "photo-matched",
+        "pipelines"
+      ],
+      "preview": "worlds/gas-station/preview.jpg"
+    },
+    {
       "slug": "golden-harbor",
       "title": "Golden Harbor",
       "description": "Low sun over a rolling sea: sailboats and buoys ride the swell past a lighthouse islet.",

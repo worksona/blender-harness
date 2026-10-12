@@ -81,10 +81,18 @@ def build(slug, args):
     samples = args.samples or rcfg.get("samples", 24)
     renders = []
     if not args.no_render:
-        renders.append(output.render(os.path.join(out, "preview.jpg"), res, samples))
+        renders.append(output.render(os.path.join(out, "preview.jpg"), res, samples,
+                                     look=rcfg.get("look", "None"), view=rcfg.get("view", "AgX")))
         if args.top:
             renders.append(output.render(os.path.join(BUILD, slug, "top.jpg"), (1024, 1024),
                                          max(8, samples // 2), camera=output.top_camera()))
+        # Photo-matched worlds: put each reference photo next to the render for comparison.
+        ref_dir = os.path.join(WORLDS, slug, "reference")
+        refs = sorted(f for f in os.listdir(ref_dir)
+                      if f.lower().endswith((".jpg", ".jpeg", ".png"))) if os.path.isdir(ref_dir) else []
+        if refs:
+            renders.append(output.side_by_side(os.path.join(ref_dir, refs[0]), renders[0],
+                                               os.path.join(BUILD, slug, "compare.jpg")))
     if args.blend:
         output.save_blend(os.path.join(BUILD, slug, f"{slug}.blend"))
 

@@ -4,7 +4,10 @@
     {
       "name": "worlds-app",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8000", "-d", "app"],
+      "runtimeArgs": [
+        "tools/serve.py",
+        "8000"
+      ],
       "port": 8000
     }
   ]
