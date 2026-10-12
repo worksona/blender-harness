@@ -46,10 +46,16 @@
     th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
     .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .limits li { margin-bottom: 4px; }
+    .script-box { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 10px 0; }
+    .script-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 8px 12px; background: rgba(255, 255, 255, 0.04); border-bottom: 1px solid var(--line); font-size: 13px; }
+    .script-actions { display: flex; align-items: center; gap: 12px; }
+    .script-box pre { margin: 0; border: 0; border-radius: 0; max-height: 460px; }
+    .note { color: var(--muted); font-size: 14px; }
     kbd { font-family: inherit; font-size: 12px; border: 1px solid var(--line); border-bottom-width: 2px;
       border-radius: 5px; padding: 0 6px; background: rgba(255,255,255,0.05); }
     @media (max-width: 860px) {
-      .guide { grid-template-columns: 1fr; gap: 12px; }
+      .guide { grid-template-columns: minmax(0, 1fr); gap: 12px; }   /* minmax: long code lines scroll, not stretch */
       .toc { position: static; display: flex; flex-wrap: wrap; gap: 4px 14px; }
       .toc a { padding: 2px 0; }
       .ways, .two { grid-template-columns: 1fr; }
@@ -66,6 +72,7 @@
     <a class="back" href="index.html#/">&larr; Worlds gallery</a>
     <a href="#what">What it is</a>
     <a href="#start">Getting started</a>
+    <a href="#setup-script">Cloud setup script</a>
     <a href="#session">A build session</a>
     <a href="#uses">Use cases</a>
     <a href="#limits">Limits</a>
@@ -103,7 +110,7 @@
         <h3>Claude Code on the web <span class="tag">recommended</span></h3>
         <ol>
           <li>At claude.ai/code, create an environment for <code>worksona/blender-harness</code>.</li>
-          <li><b>Setup script:</b> paste the whole of <code>scripts/cloud-env-setup.sh</code>. Blender installs
+          <li><b>Setup script:</b> paste the <a href="#setup-script">cloud setup script</a> below. Blender installs
             <b>once</b> (about a minute). The environment is then cached, so sessions start with Blender ready.</li>
           <li><b>Network access:</b> choose <i>Custom</i> and add <code>download.blender.org</code>, keeping the
             defaults. On the default <i>Trusted</i> network, Blender installs from PyPI instead.</li>
@@ -129,6 +136,24 @@
         </ol>
       </section>
     </div>
+
+    <h3 id="setup-script">Cloud setup script</h3>
+    <p>Paste all of this into the <b>Setup script</b> field of your environment at claude.ai/code. It installs
+      Blender once. The environment is saved as a snapshot and reused for every session, and the script re-runs
+      only if you edit it or the network settings, or after about 7 days. It's the same file as
+      <code>scripts/cloud-env-setup.sh</code> in the repo.</p>
+    <div class="script-box">
+      <div class="script-bar">
+        <span><code>cloud-env-setup.sh</code></span>
+        <span class="script-actions">
+          <a href="cloud-env-setup.sh" download>Download</a>
+          <button type="button" class="btn small" id="copy-setup">Copy</button>
+        </span>
+      </div>
+      <pre id="setup-code">Loading the script… (if this doesn't load, open scripts/cloud-env-setup.sh in the repo)</pre>
+    </div>
+    <p class="note">Network: set access to <i>Custom</i> and add <code>download.blender.org</code> for the official
+      build. On the default <i>Trusted</i> network the script installs Blender's PyPI package instead.</p>
 
     <h2 id="session">A build session</h2>
     <p>Ask in plain language. A good request names the theme, the time of day, one landmark and the scale:</p>
@@ -319,5 +344,27 @@ def build(ctx):                       # use ctx.rng for every random choice
       of every session.</p>
   </main>
 </div>
+<script>
+  // Show the setup script straight from the repo (one source of truth), with a copy button.
+  const code = document.getElementById('setup-code');
+  const copy = document.getElementById('copy-setup');
+  fetch('cloud-env-setup.sh', { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.text() : Promise.reject(new Error(r.status))))
+    .then((text) => { code.textContent = text; })
+    .catch(() => { copy.disabled = true; });
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(code.textContent);
+      copy.textContent = 'Copied';
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents(code);
+      getSelection().removeAllRanges();
+      getSelection().addRange(range);
+      copy.textContent = 'Selected: press ⌘C';
+    }
+    setTimeout(() => { copy.textContent = 'Copy'; }, 2000);
+  });
+</script>
 </body>
 </html>

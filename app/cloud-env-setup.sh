@@ -1,0 +1,1 @@
+../scripts/cloud-env-setup.sh
