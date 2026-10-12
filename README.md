@@ -102,6 +102,13 @@ budgets).
 
 ## Publishing the app
 
+**Live site:** https://worksona-blender-worlds.netlify.app (Netlify, worksona team). Publish
+the current `app/` with `make deploy`. To deploy automatically on every push instead, connect
+the GitHub repo in the Netlify UI under *Project configuration → Build & deploy*. `netlify.toml`
+already holds the settings.
+
+### GitHub Pages (alternative)
+
 [`.github/workflows/worlds.yml`](.github/workflows/worlds.yml) rebuilds every world from source
 on each push to check that they all still build. Deploying `app/` to GitHub Pages is opt-in:
 enable Pages (*Settings → Pages → Source: GitHub Actions*), then set the repository variable

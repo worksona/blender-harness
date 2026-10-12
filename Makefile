@@ -1,7 +1,7 @@
 BL   := scripts/bl
 PORT ?= 8000
 
-.PHONY: help setup doctor new world worlds serve docker-build docker-shell docker-claude clean
+.PHONY: help setup doctor new world worlds serve deploy docker-build docker-shell docker-claude clean
 
 help:
 	@echo "make setup               install headless Blender (idempotent)"
@@ -10,6 +10,7 @@ help:
 	@echo "make world W=<slug>      build one world + top-down view (build/<slug>/top.jpg)"
 	@echo "make worlds              build every world"
 	@echo "make serve               web app on http://localhost:$(PORT)"
+	@echo "make deploy              publish the app to Netlify (worksona-blender-worlds.netlify.app)"
 	@echo "make docker-build        build the Docker image"
 	@echo "make docker-claude       run Claude Code inside the container"
 
@@ -30,6 +31,12 @@ worlds:
 
 serve:
 	python3 tools/serve.py $(PORT)
+
+# Publish app/ to Netlify (needs the Netlify CLI, logged in, and this folder linked to the site).
+# Symlinks are resolved into a copy first.
+deploy:
+	rm -rf build/site && mkdir -p build/site && rsync -aL app/ build/site/
+	netlify deploy --prod --dir build/site --message "$$(git log -1 --pretty=%s)"
 
 docker-build:
 	docker compose build

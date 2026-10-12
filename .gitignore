@@ -8,3 +8,6 @@ __pycache__/
 # Reference photos are often third-party (stock) images: keep them local by default.
 # Commit ones you own with: git add -f worlds/<slug>/reference/<file>
 worlds/*/reference/
+
+# Netlify CLI link state
+.netlify/

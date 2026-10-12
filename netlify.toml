@@ -1,0 +1,10 @@
+# Netlify: the worlds app is static (built worlds are committed), so there's nothing to compile.
+# The build step only replaces the guide's symlinked setup script with a real copy.
+[build]
+  publish = "app"
+  command = "rm -f app/cloud-env-setup.sh && cp scripts/cloud-env-setup.sh app/cloud-env-setup.sh"
+
+[[headers]]
+  for = "/worlds/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
