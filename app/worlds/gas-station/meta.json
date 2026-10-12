@@ -36,7 +36,9 @@
     "sky": {
       "color": "#1f74de",
       "ground": "#a08d6c",
-      "strength": 0.8
+      "strength": 0.8,
+      "glow": null,
+      "glow_height": null
     },
     "fog": {
       "color": "#a4cdf3",
@@ -56,6 +58,9 @@
       ]
     },
     "ocean": null,
+    "atmosphere": null,
+    "lamps": [],
+    "plumes": [],
     "tone": "neutral"
   },
   "stats": {
@@ -74,7 +79,7 @@
       648.04,
       400.79
     ],
-    "glb_bytes": 1420852
+    "glb_bytes": 1420300
   },
   "built_with": "5.2.2 LTS"
 }

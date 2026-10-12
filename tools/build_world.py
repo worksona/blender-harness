@@ -31,6 +31,7 @@ WORLDS = os.path.join(ROOT, "worlds")
 APP_WORLDS = os.path.join(ROOT, "app", "worlds")
 BUILD = os.path.join(ROOT, "build")
 DRACO_ABOVE = 10e6  # bytes; bigger exports are re-exported with Draco compression
+DRACO_TRIS = 300_000  # unique triangles; above this, export with Draco straight away
 
 
 class Context:
@@ -78,6 +79,8 @@ def build(slug, args):
     out = os.path.join(APP_WORLDS, slug)
     glb = os.path.join(out, "world.glb")
     draco = meta.get("export", {}).get("draco")  # True / False / None = automatic
+    if draco is None and output.stats()["triangles_stored"] > DRACO_TRIS:
+        draco = True  # clearly big: skip the plain export that would only be thrown away
     output.export_glb(glb, draco=bool(draco))
     if draco is None and os.path.getsize(glb) > DRACO_ABOVE:
         raw = os.path.getsize(glb)

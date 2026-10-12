@@ -36178,11 +36178,11 @@
     "bloom": 0.45
   },
   "stats": {
-    "objects": 15296,
-    "unique_meshes": 45,
-    "triangles_drawn": 2583156,
-    "triangles_stored": 398992,
-    "materials": 48,
+    "objects": 14932,
+    "unique_meshes": 52,
+    "triangles_drawn": 2558752,
+    "triangles_stored": 404268,
+    "materials": 55,
     "bounds_min": [
       -8978.93,
       11.44,
@@ -36193,7 +36193,7 @@
       8328.14,
       149.3
     ],
-    "glb_bytes": 5096520
+    "glb_bytes": 5086928
   },
   "built_with": "5.2.2 LTS"
 }

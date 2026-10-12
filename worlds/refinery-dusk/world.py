@@ -29,7 +29,7 @@ META = {
     "tags": ["industrial", "night", "photo-matched", "aerial"],
     "draft": True,   # work in progress: renders too slowly for --all / CI so far
     "seed": 31,
-    "render": {"res": "1440x1078", "samples": 48, "glare": 0.45, "look": "AgX - Punchy"},
+    "render": {"res": "1440x1078", "samples": 24, "glare": 0.45, "look": "AgX - Punchy"},
     "viewer": {"bloom": 0.45},
 }
 

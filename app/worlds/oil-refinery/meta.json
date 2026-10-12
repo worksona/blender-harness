@@ -37,7 +37,9 @@
     "sky": {
       "color": "#7ea6d1",
       "ground": "#5e5a48",
-      "strength": 0.9
+      "strength": 0.9,
+      "glow": null,
+      "glow_height": null
     },
     "fog": {
       "color": "#e8c7a4",
@@ -52,7 +54,7 @@
       ],
       "max": [
         599.7183,
-        128.4699,
+        128.4694,
         590.0
       ]
     },
@@ -129,6 +131,9 @@
         }
       ]
     },
+    "atmosphere": null,
+    "lamps": [],
+    "plumes": [],
     "bloom": 0.35,
     "exposure": 1.0
   },
@@ -148,7 +153,7 @@
       704.01,
       128.47
     ],
-    "glb_bytes": 3226464
+    "glb_bytes": 3213860
   },
   "built_with": "5.2.2 LTS"
 }

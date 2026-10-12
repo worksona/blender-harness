@@ -7,7 +7,6 @@ plume(): volumetric steam in the Blender render; in the viewer an animated parti
 """
 
 import math
-import random
 
 import bpy  # noqa: I001  (before mathutils, required by the bpy module)
 from mathutils import Vector
@@ -38,10 +37,8 @@ def apply_lamp_level(level, gain=1.0):
         for mat in obj.data.materials:
             mat.node_tree.nodes["Principled BSDF"].inputs["Emission Strength"].default_value = BULB_GLOW * level
     # Steam glows from the plant lights below it, so its self-light follows the lamps too.
-    for obj in _PUFFS.values():
-        for mat in obj.data.materials:
-            vol = mat.node_tree.nodes["Principled Volume"]
-            vol.inputs["Emission Strength"].default_value = STEAM_GLOW * level * gain / 0.0015
+    for mat in _STEAM_MATS:
+        mat.node_tree.nodes["SteamGlow"].outputs[0].default_value = STEAM_GLOW * level * gain / 0.0015
 
 
 def _bulb(color_hex, radius):
@@ -103,63 +100,84 @@ def lamps_along(points, spacing, height, color="sodium", power=4000.0, ground=0.
     return placed
 
 
-def _steam_material(density):
-    """Volume material for one puff (a unit sphere scaled per puff): density fades from the
-    puff's center to its edge, broken up by world-space noise so neighbouring puffs merge."""
-    name = f"steam_{density:.3f}"
-    mat = bpy.data.materials.get(name)
-    if mat:
-        return mat
-    mat = bpy.data.materials.new(name)
+_STEAM_MATS = []
+WIDEN = 5.5   # how much wider a plume is at the top than at its source, in source radii
+
+
+def _steam_material(name, height, radius, drift, density):
+    """Volume material for one plume. The plume's shape lives in the shader: density falls off
+    with distance from the drifting centre-line (radius widening with height), fades in at the
+    source and out at the top, and is broken up by noise. The mesh is just a container, so each
+    plume is a single volume object (Blender precomputes a density grid per volume object, so
+    hundreds of small puffs made renders take many minutes)."""
+    mat = bpy.data.materials.new(f"steam_{name}")
+    _STEAM_MATS.append(mat)
     nt = mat.node_tree
     nt.nodes.clear()
-    out = nt.nodes.new("ShaderNodeOutputMaterial")
-    vol = nt.nodes.new("ShaderNodeVolumePrincipled")
+    N, L = nt.nodes.new, nt.links.new
+
+    def math(op, a, b=None, value=None):
+        n = N("ShaderNodeMath")
+        n.operation = op
+        for i, x in enumerate((a, b)):
+            if x is None:
+                continue
+            if isinstance(x, (int, float)):
+                n.inputs[i].default_value = x
+            else:
+                L(x, n.inputs[i])
+        return n.outputs[0]
+
+    def remap(x, a, b, c, d):
+        n = N("ShaderNodeMapRange")
+        n.interpolation_type = "SMOOTHSTEP"
+        n.clamp = True
+        for key, v in (("From Min", a), ("From Max", b), ("To Min", c), ("To Max", d)):
+            n.inputs[key].default_value = v
+        L(x, n.inputs["Value"])
+        return n.outputs["Result"]
+
+    coords = N("ShaderNodeTexCoord").outputs["Object"]   # object origin = plume base
+    xyz = N("ShaderNodeSeparateXYZ")
+    L(coords, xyz.inputs[0])
+    x, y, z = xyz.outputs["X"], xyz.outputs["Y"], xyz.outputs["Z"]
+    t = math("MINIMUM", math("MAXIMUM", math("DIVIDE", z, height), 0.0), 1.0)
+    tp = math("POWER", t, 1.4)
+    ex = math("SUBTRACT", x, math("MULTIPLY", tp, drift[0] * height))
+    ey = math("SUBTRACT", y, math("MULTIPLY", tp, drift[1] * height))
+    dist = math("SQRT", math("ADD", math("MULTIPLY", ex, ex), math("MULTIPLY", ey, ey)))
+    r = math("ADD", math("MULTIPLY", t, WIDEN * radius), 1.3 * radius)
+    # Lumpy, cauliflower outline: large-scale noise pushes the edge in and out.
+    lumps = N("ShaderNodeTexNoise")
+    lumps.inputs["Scale"].default_value = 1.0 / (radius * 3.0)
+    lumps.inputs["Detail"].default_value = 4.0
+    L(coords, lumps.inputs["Vector"])
+    edge = math("ADD", math("DIVIDE", dist, r), math("MULTIPLY", math("SUBTRACT", lumps.outputs["Fac"], 0.5), 1.1))
+    shape = remap(edge, 0.2, 1.0, 1.0, 0.0)
+    ends = math("MULTIPLY", remap(t, 0.0, 0.05, 0.0, 1.0), remap(t, 0.7, 1.0, 1.0, 0.0))
+    noise = N("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value = 1.0 / (radius * 1.2)
+    noise.inputs["Detail"].default_value = 8.0
+    noise.inputs["Distortion"].default_value = 0.6
+    L(coords, noise.inputs["Vector"])
+    billow = remap(noise.outputs["Fac"], 0.3, 0.7, 0.25, 1.0)
+    dens = math("MULTIPLY", math("MULTIPLY", math("MULTIPLY", shape, ends), billow), density)
+
+    vol = N("ShaderNodeVolumePrincipled")
     vol.inputs["Color"].default_value = (1.0, 1.0, 1.0, 1)
     vol.inputs["Anisotropy"].default_value = 0.5
     # Steam over a plant glows: a little warm self-light stands in for all the lamps below it.
     vol.inputs["Emission Color"].default_value = (1.0, 0.72, 0.45, 1)
-    vol.inputs["Emission Strength"].default_value = 0.08
-    coords = nt.nodes.new("ShaderNodeTexCoord")
-    falloff = nt.nodes.new("ShaderNodeTexGradient")
-    falloff.gradient_type = "SPHERICAL"
-    nt.links.new(coords.outputs["Object"], falloff.inputs["Vector"])
-    soft = nt.nodes.new("ShaderNodeMath")
-    soft.operation = "POWER"
-    soft.inputs[1].default_value = 1.6
-    nt.links.new(falloff.outputs["Fac"], soft.inputs[0])
-    geo = nt.nodes.new("ShaderNodeNewGeometry")
-    noise = nt.nodes.new("ShaderNodeTexNoise")
-    noise.inputs["Scale"].default_value = 0.09
-    noise.inputs["Detail"].default_value = 8.0
-    noise.inputs["Distortion"].default_value = 0.5
-    nt.links.new(geo.outputs["Position"], noise.inputs["Vector"])
-    shape = nt.nodes.new("ShaderNodeMapRange")
-    shape.inputs["From Min"].default_value = 0.3
-    shape.inputs["From Max"].default_value = 0.75
-    nt.links.new(noise.outputs["Fac"], shape.inputs["Value"])
-    mul = nt.nodes.new("ShaderNodeMath")
-    mul.operation = "MULTIPLY"
-    nt.links.new(soft.outputs["Value"], mul.inputs[0])
-    nt.links.new(shape.outputs["Result"], mul.inputs[1])
-    dens = nt.nodes.new("ShaderNodeMath")
-    dens.operation = "MULTIPLY"
-    dens.inputs[1].default_value = density
-    nt.links.new(mul.outputs["Value"], dens.inputs[0])
-    nt.links.new(dens.outputs["Value"], vol.inputs["Density"])
-    nt.links.new(vol.outputs["Volume"], out.inputs["Volume"])
+    # Emission isn't scaled by density in the Principled Volume, so scale it here; otherwise
+    # the whole (invisible) container glows. "SteamGlow" is set by apply_lamp_level().
+    glow = N("ShaderNodeValue")
+    glow.name = "SteamGlow"
+    glow.outputs[0].default_value = 0.08
+    L(math("MULTIPLY", math("DIVIDE", dens, density), glow.outputs[0]), vol.inputs["Emission Strength"])
+    L(dens, vol.inputs["Density"])
+    out = N("ShaderNodeOutputMaterial")
+    L(vol.outputs["Volume"], out.inputs["Volume"])
     return mat
-
-
-_PUFFS = {}
-
-
-def _puff(density):
-    if density not in _PUFFS:
-        mb = MeshBuilder(f"SteamPuff_{density:.3f}")
-        mb.sphere((0, 0, 0), 1.0, _steam_material(density), 2)
-        _PUFFS[density] = prefab(mb.build())
-    return _PUFFS[density]
 
 
 def plume(base, height=100.0, radius=6.0, drift=(0.5, 0.15), density=0.35, rise=4.0,
@@ -171,29 +189,37 @@ def plume(base, height=100.0, radius=6.0, drift=(0.5, 0.15), density=0.35, rise=
     low/high: colour near the source (usually lit by the plant) and up high (sky-lit).
     """
     bx, by, bz = base
-    puff = _puff(round(density, 3))
-    rnd = random.Random(seed)
-    # Overlapping soft puffs along the drifting path: many small ones near the source, fewer
-    # and bigger as the plume spreads.
-    for k in range(int(14 + height / radius * 1.6)):
-        t = rnd.random() ** 1.4
-        r = radius * (1.2 + 3.4 * t) * rnd.uniform(0.75, 1.15)
-        spread = radius * (0.25 + 1.4 * t)
-        c = (bx + drift[0] * height * t ** 1.4 + rnd.uniform(-1, 1) * spread,
-             by + drift[1] * height * t ** 1.4 + rnd.uniform(-1, 1) * spread * 0.6,
-             bz + height * t + rnd.uniform(-0.4, 0.4) * radius)
-        obj = instance(puff, f"{name}.{k}", c, (rnd.uniform(0, 360), rnd.uniform(0, 360), 0), r,
-                       collection="Steam")
-        obj["viewer"] = "plume"   # the viewer animates its own particle plume instead
-        obj["backdrop"] = True
+    mat = _steam_material(f"{name}_{seed}", height, radius, drift, density)
+    # Container: a closed tapered tube that follows the drifting plume, a bit wider than it.
+    mb = MeshBuilder(name)
+    bm, idx = mb.bm, mb._mat_index(mat)
+    rings, seg = 18, 16
+    loops = []
+    for k in range(rings + 1):
+        t = -0.03 + 1.06 * k / rings
+        tc = max(t, 0.0)
+        cx, cy = drift[0] * height * tc ** 1.4, drift[1] * height * tc ** 1.4
+        r = radius * (1.3 + WIDEN * tc) * 1.7 + 1.0   # roomy: the lumpy edge can bulge out
+        loops.append([bm.verts.new((cx + r * math.cos(2 * math.pi * j / seg),
+                                    cy + r * math.sin(2 * math.pi * j / seg), height * t))
+                      for j in range(seg)])
+    faces = [bm.faces.new(list(reversed(loops[0]))), bm.faces.new(loops[-1])]
+    for a, b in zip(loops, loops[1:]):
+        faces += [bm.faces.new((a[j], a[(j + 1) % seg], b[(j + 1) % seg], b[j])) for j in range(seg)]
+    for f in faces:
+        f.material_index = idx
+    obj = mb.build(location=(bx, by, bz), collection="Steam")
+    obj["viewer"] = "plume"   # the viewer animates its own particle plume instead
+    obj["backdrop"] = True
     STATE.setdefault("plumes", []).append({
         "base": [round(bx, 2), round(by, 2), round(bz, 2)], "height": height, "radius": radius,
         "drift": [drift[0], drift[1]], "density": density, "rise": rise,
         "low": hex_of(low), "high": hex_of(high), "seed": seed,
     })
+    return obj
 
 
 def reset_effects():
     _LIGHT_DATA.clear()
     _BULBS.clear()
-    _PUFFS.clear()
+    _STEAM_MATS.clear()

@@ -158,6 +158,7 @@ def render(path, resolution=(1280, 720), samples=24, camera=None, look="None", v
     scene.cycles.samples = samples
     scene.cycles.use_denoising = True
     scene.cycles.max_bounces = 4
+    scene.cycles.volume_bounces = 2   # light bouncing inside steam/cloud volumes keeps them white
     scene.render.resolution_x, scene.render.resolution_y = resolution
     scene.render.resolution_percentage = 100
     scene.view_settings.view_transform = view

@@ -19,6 +19,31 @@ from mathutils import Euler, Matrix, Vector
 from .core import _place
 
 
+# Unit primitives (cube, cone, icosphere) built once with bmesh ops on a tiny mesh, then stamped
+# into builders by copying transformed vertices. Calling the ops directly on a big builder mesh
+# gets slower as the mesh grows (quadratic overall): a 10,000-pipe plant took over a minute.
+_TEMPLATES = {}
+
+
+def _template(kind, *params):
+    key = (kind,) + params
+    t = _TEMPLATES.get(key)
+    if t is None:
+        bm = bmesh.new()
+        if kind == "cube":
+            bmesh.ops.create_cube(bm, size=1.0)
+        elif kind == "cone":
+            segments, caps, ratio = params
+            bmesh.ops.create_cone(bm, cap_ends=caps, segments=segments, radius1=1.0, radius2=ratio, depth=1.0)
+        elif kind == "ico":
+            bmesh.ops.create_icosphere(bm, subdivisions=params[0], radius=1.0)
+        bm.verts.index_update()
+        t = _TEMPLATES[key] = ([v.co.copy() for v in bm.verts],
+                               [tuple(v.index for v in f.verts) for f in bm.faces])
+        bm.free()
+    return t
+
+
 def _align_z(a, b):
     """Matrix that maps a unit Z-axis primitive centered on the origin onto segment a -> b."""
     a, b = Vector(a), Vector(b)
@@ -45,14 +70,18 @@ class MeshBuilder:
             self.materials.append(mat)
         return self.materials.index(mat)
 
-    def _tag(self, verts, mat, smooth):
+    def _stamp(self, template, matrix, mat, smooth):
+        """Add a transformed copy of a unit primitive."""
+        coords, faces = template
+        new_vert, new_face = self.bm.verts.new, self.bm.faces.new
+        vs = [new_vert(matrix @ c) for c in coords]
         idx = self._mat_index(mat)
-        faces = {f for v in verts for f in v.link_faces}
         for f in faces:
-            f.material_index = idx
+            face = new_face([vs[i] for i in f])
+            face.material_index = idx
             # Smooth curved sides, keep flat caps (n-gons) flat so they shade cleanly.
-            f.smooth = smooth and (smooth == "all" or len(f.verts) <= 4)
-        return faces
+            face.smooth = smooth and (smooth == "all" or len(f) <= 4)
+        return self
 
     # ------------------------------------------------------------ primitives
 
@@ -61,9 +90,7 @@ class MeshBuilder:
         sx, sy, sz = size if isinstance(size, (tuple, list)) else (size,) * 3
         m = (Matrix.Translation(center) @ Euler([math.radians(r) for r in rotation]).to_matrix().to_4x4()
              @ Matrix.Diagonal((sx, sy, sz, 1)))
-        verts = bmesh.ops.create_cube(self.bm, size=1.0, matrix=m)["verts"]
-        self._tag(verts, mat, False)
-        return self
+        return self._stamp(_template("cube"), m, mat, False)
 
     def slab(self, x0, y0, x1, y1, z, thickness, mat):
         """Horizontal plate from corner (x0, y0) to (x1, y1), top surface at z."""
@@ -76,20 +103,18 @@ class MeshBuilder:
         if m is None:
             return self
         m = m @ Matrix.Diagonal((width, depth or width, length, 1))
-        verts = bmesh.ops.create_cube(self.bm, size=1.0, matrix=m)["verts"]
-        self._tag(verts, mat, False)
-        return self
+        return self._stamp(_template("cube"), m, mat, False)
 
     def rod(self, a, b, radius, mat, segments=12, radius_b=None, caps=True):
         """Round member from a to b (pipes, posts, rungs). radius_b tapers it."""
         m, length = _align_z(a, b)
         if m is None:
             return self
-        verts = bmesh.ops.create_cone(self.bm, cap_ends=caps, segments=segments, radius1=radius,
-                                      radius2=radius if radius_b is None else radius_b,
-                                      depth=length, matrix=m)["verts"]
-        self._tag(verts, mat, True)
-        return self
+        if radius <= 0:
+            return self
+        ratio = 1.0 if radius_b is None else round(radius_b / radius, 3)
+        m = m @ Matrix.Diagonal((radius, radius, length, 1))
+        return self._stamp(_template("cone", segments, bool(caps), ratio), m, mat, True)
 
     def cylinder(self, base, radius, height, mat, segments=32, radius_top=None):
         """Vertical cylinder standing on `base` (x, y, z)."""
@@ -97,11 +122,9 @@ class MeshBuilder:
         return self.rod((x, y, z), (x, y, z + height), radius, mat, segments, radius_top)
 
     def sphere(self, center, radius, mat, subdivisions=3, scale=(1, 1, 1)):
-        m = Matrix.Translation(center) @ Matrix.Diagonal((*scale, 1))
-        verts = bmesh.ops.create_icosphere(self.bm, subdivisions=subdivisions, radius=radius,
-                                           matrix=m)["verts"]
-        self._tag(verts, mat, "all")
-        return self
+        m = Matrix.Translation(center) @ Matrix.Diagonal((scale[0] * radius, scale[1] * radius,
+                                                          scale[2] * radius, 1))
+        return self._stamp(_template("ico", subdivisions), m, mat, "all")
 
     def dome(self, center, radius, height, mat, segments=32, rings=6):
         """Elliptical cap (vessel heads, tank roofs) sitting on `center`, bulging up by `height`."""
