@@ -6,13 +6,14 @@
 #                            in the Netlify dashboard. Recognised by its project name (Netlify sets
 #                            SITE_NAME in every build), or by INCLUDE_PRIVATE=true on any project.
 #                            TWINS_WORLDS (space- or comma-separated slugs) overrides the list.
+#                            The gallery shows the worlds in the order listed.
 #
 # Every other project builds the public site: a misconfigured site fails safe, toward
 # publishing less.
 set -euo pipefail
 
 TWINS_SITE="blender-harness-twins"
-TWINS_WORLDS_DEFAULT="gas-station oil-refinery refinery-dusk purnell-test-shop purnell-spools"
+TWINS_WORLDS_DEFAULT="purnell-test-shop purnell-spools gas-station oil-refinery refinery-dusk"
 
 echo "[netlify-build] SITE_NAME=${SITE_NAME:-<unset>} INCLUDE_PRIVATE=${INCLUDE_PRIVATE:-<unset>}"
 
