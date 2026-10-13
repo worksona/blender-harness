@@ -1,9 +1,11 @@
 # Netlify: the worlds app is static (built worlds are committed), so there's nothing to compile.
-# The build step replaces the guide's symlinked setup script with a real copy and removes private
-# worlds (META["private"] = True), which must never reach the public site.
+# Two sites build from this repo with this file; scripts/netlify-build.sh tells them apart:
+#   worksona-blender-worlds  public: private worlds (META["private"] = True) are removed.
+#   blender-harness-twins    the five oil and gas worlds, private twins included. Password-protected
+#                            in the Netlify dashboard; its environment sets INCLUDE_PRIVATE=true.
 [build]
   publish = "app"
-  command = "rm -f app/cloud-env-setup.sh && cp scripts/cloud-env-setup.sh app/cloud-env-setup.sh && python3 tools/strip_private.py app"
+  command = "scripts/netlify-build.sh"
 
 [[headers]]
   for = "/worlds/*"

@@ -106,6 +106,16 @@ budgets).
 **Every push to `main` deploys automatically.** A GitHub webhook triggers a Netlify build, which
 clones the repo with a read-only deploy key and publishes `app/` using `netlify.toml`. Nothing
 to compile, since built worlds are committed. `make deploy` still publishes by hand if needed.
+Worlds marked `META["private"] = True` are removed from this site on every build.
+
+**Oil and gas worlds, private twins included**, go to a second Netlify project from the same
+repo, `blender-harness-twins`: `gas-station`, `oil-refinery`, `refinery-dusk`,
+`purnell-test-shop` and `purnell-spools`. It is password-protected in the Netlify dashboard
+(*Project configuration → Access & security → Visitor access*), and its environment variable
+`INCLUDE_PRIVATE=true` makes [`scripts/netlify-build.sh`](scripts/netlify-build.sh) publish
+exactly that list (set `TWINS_WORLDS` to change it) and mark the site `noindex`. Any other value,
+or none, builds the public site instead, so a misconfigured site publishes less, not more. A
+misspelt world in the list fails the build.
 
 ### GitHub Pages (alternative)
 
