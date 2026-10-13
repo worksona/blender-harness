@@ -239,6 +239,7 @@ def export_glb(path, draco=False):
         export_cameras=False,
         export_lights=False,  # the viewer lights the scene from meta.json instead
         export_extras=True,
+        export_image_format="AUTO",   # keeps JPEG textures as JPEG inside the .glb
         use_visible=True,
     )
     if draco:
@@ -285,6 +286,7 @@ def save_blend(path):
 
 def stats():
     meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+    images = {i.name: i for i in bpy.data.images if i.users and i.size[0]}
     unique = {o.data.name: o.data for o in meshes}
     def tris(me):
         return sum(len(p.vertices) - 2 for p in me.polygons)
@@ -295,6 +297,7 @@ def stats():
         "triangles_drawn": sum(tris(o.data) for o in meshes),
         "triangles_stored": sum(tris(m) for m in unique.values()),
         "materials": len({m.name for o in meshes for m in o.data.materials if m}),
+        "textures": len(images),
         "bounds_min": [round(c, 2) for c in lo],
         "bounds_max": [round(c, 2) for c in hi],
     }
@@ -325,4 +328,6 @@ def viewer_meta():
         "lamps": [to_gltf(l[:3]) + [l[3], l[4], l[5]] for l in STATE.get("lamps", [])],
         "plumes": [{**p, "base": to_gltf(p["base"]), "drift": [p["drift"][0], -p["drift"][1]]}
                    for p in STATE.get("plumes", [])],
+        "interior": STATE.get("interior"),
+        "twin": STATE.get("twin"),
     }

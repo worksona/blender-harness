@@ -60,8 +60,10 @@ def build(slug, args):
     mod = load_world(slug)
     meta = dict(getattr(mod, "META", {}))
     harness.reset()
+    harness.textures.CACHE = os.path.join(BUILD, slug, "tex")
     mod.build(Context(slug, meta, args))
     output.ensure_defaults()
+    harness.textures.ensure_uvs()
     t_build = time.time() - t0
 
     if EXPLORE:  # --time/--haze/--lamps/--ev: just render a look at that time of day
@@ -79,6 +81,14 @@ def build(slug, args):
 
     out = os.path.join(APP_WORLDS, slug)
     glb = os.path.join(out, "world.glb")
+    # Documents the twin shows (drawings, report pages): worlds/<slug>/docs/*.png|jpg -> app.
+    docs = os.path.join(WORLDS, slug, "docs")
+    if os.path.isdir(docs):
+        import shutil
+        os.makedirs(os.path.join(out, "docs"), exist_ok=True)
+        for f in sorted(os.listdir(docs)):
+            if f.lower().endswith((".png", ".jpg", ".jpeg")):
+                shutil.copy2(os.path.join(docs, f), os.path.join(out, "docs", f))
     draco = meta.get("export", {}).get("draco")  # True / False / None = automatic
     if draco is None and output.stats()["triangles_stored"] > DRACO_TRIS:
         draco = True  # clearly big: skip the plain export that would only be thrown away
@@ -105,15 +115,40 @@ def build(slug, args):
                                      look=rcfg.get("look", "None"), view=rcfg.get("view", "AgX"),
                                      glare=rcfg.get("glare", 0.0), grade=meta.get("grade")))
         if args.top:
+            # Roofs and ceilings (obj["ceiling"] = True) would hide the layout: leave them out.
+            import bpy
+            ceiling = [o for o in bpy.context.scene.objects if o.get("ceiling")]
+            for o in ceiling:
+                o.hide_render = True
             renders.append(output.render(os.path.join(BUILD, slug, "top.jpg"), (1024, 1024),
                                          max(8, samples // 2), camera=output.top_camera()))
+            for o in ceiling:
+                o.hide_render = False
         # Photo-matched worlds: put each reference photo next to the render for comparison.
         ref_dir = os.path.join(WORLDS, slug, "reference")
         refs = sorted(f for f in os.listdir(ref_dir)
                       if f.lower().endswith((".jpg", ".jpeg", ".png"))) if os.path.isdir(ref_dir) else []
-        if refs:
+        views = {v["photo"]: v for v in STATE.get("ref_views", [])}
+        if refs and refs[0] not in views:
             renders.append(output.side_by_side(os.path.join(ref_dir, refs[0]), renders[0],
                                                os.path.join(BUILD, slug, "compare.jpg")))
+        # photo_camera() views: render each from its matched camera, next to its photo.
+        if args.views is not False:
+            for name, v in views.items():
+                if args.views and name not in args.views:
+                    continue
+                import bpy
+                w, h = v["size"]
+                long_side = 1200 if samples >= 32 else 720
+                vres = (long_side, round(long_side * h / w)) if w >= h else (round(long_side * w / h), long_side)
+                stem = os.path.splitext(name)[0]
+                shot = output.render(os.path.join(BUILD, slug, f"view-{stem}.jpg"), vres, samples,
+                                     camera=bpy.data.objects[v["camera"]], look=rcfg.get("look", "None"),
+                                     view=rcfg.get("view", "AgX"), glare=rcfg.get("glare", 0.0),
+                                     grade=meta.get("grade"))
+                renders.append(output.side_by_side(os.path.join(ref_dir, name), shot,
+                                                   os.path.join(BUILD, slug, f"compare-{stem}.jpg"),
+                                                   height=vres[1]))
     if args.blend:
         output.save_blend(os.path.join(BUILD, slug, f"{slug}.blend"))
 
@@ -123,6 +158,7 @@ def build(slug, args):
         "description": meta.get("description", ""),
         "tags": meta.get("tags", []),
         "seed": meta.get("seed", 1),
+        "private": bool(meta.get("private")),   # kept out of public deploys (tools/strip_private.py)
         "glb": f"worlds/{slug}/world.glb",
         "preview": f"worlds/{slug}/preview.jpg",
         # META["viewer"]["grade"] can soften the grade for the real-time viewer, whose lighting is
@@ -158,6 +194,10 @@ def main():
     p.add_argument("--res", help="WxH; default: META['render']['res'] or 1280x720")
     p.add_argument("--top", action="store_true", help="also render a top-down layout view")
     p.add_argument("--blend", action="store_true", help="also save build/<slug>/<slug>.blend")
+    p.add_argument("--views", nargs="*", default=None,
+                   help="photo_camera views to render (default all; give names to pick, "
+                        "--no-views to skip)")
+    p.add_argument("--no-views", dest="views", action="store_false")
     p.add_argument("--time", help="render the world at another time of day, e.g. 06:30 (preview only)")
     p.add_argument("--haze", type=float, help="override atmosphere haze 0..1 (preview only)")
     p.add_argument("--lamps", help="override lamps: auto | on | off | 0..1 (preview only)")

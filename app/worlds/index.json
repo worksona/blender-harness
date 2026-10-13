@@ -57,6 +57,32 @@
       "preview": "worlds/oil-refinery/preview.jpg"
     },
     {
+      "slug": "purnell-spools",
+      "title": "Purnell Pack 1 Spools",
+      "description": "All 21 spools of Pressure Test Pack 1 in drawing orientation: every pipe piece, fitting, flange and weld with its heat number and NDT record.",
+      "tags": [
+        "piping",
+        "data twin",
+        "catalog"
+      ],
+      "preview": "worlds/purnell-spools/preview.jpg",
+      "private": true
+    },
+    {
+      "slug": "purnell-test-shop",
+      "title": "Purnell Test Shop",
+      "description": "Hydrotest Pack 1 for Arc Resources' 10-16 sales gas rerouting: all 21 spools, test station and shop, twinned from the test pack and its photos.",
+      "tags": [
+        "industrial",
+        "photo-matched",
+        "data twin",
+        "piping",
+        "interior"
+      ],
+      "preview": "worlds/purnell-test-shop/preview.jpg",
+      "private": true
+    },
+    {
       "slug": "refinery-dusk",
       "title": "Refinery at Dusk",
       "description": "A coastal refinery at blue hour from a drone: thousands of lights, steam plumes lit from below, tanks, stacks and the bay beyond.",

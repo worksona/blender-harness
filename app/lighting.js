@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { bakeSky, LAMP_GAIN, lightingFor, sampleSky, SKY_SCALE, solarPosition } from './atmosphere.js';
 import { skyUniforms } from './sky.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const SKY_W = 128, SKY_H = 64;
 const rad = Math.PI / 180;
@@ -97,6 +98,30 @@ export class Lighting {
   apply() {
     if (!this.world) return;
     if (this.physical) this.applyPhysical(); else this.applyAuthored();
+    this.applyInterior();
+  }
+
+  /** Indoor worlds (META interior()): overhead key light, room reflections, floor bounce. */
+  applyInterior() {
+    const I = this.world.meta.viewer.interior;
+    if (!I) return;
+    if (!this.roomEnv) this.roomEnv = this.pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    this.scene.environment = this.roomEnv;
+    this.scene.environmentIntensity = I.env;
+    this.hemi.color.set(I.sky);
+    this.hemi.groundColor.set(I.ground);
+    this.hemi.intensity = I.ambient;
+    // Authored: the directional light is the overhead key and the roof lets it through.
+    // Physical: it is the real sun, so the roof shades the floor except at doors and windows.
+    const physical = this.physical;
+    if (!physical) {
+      this.sun.color.set(I.key_color);
+      this.sun.intensity = I.key;
+      this.onSunDir(I.key_dir);
+      this.renderer.toneMappingExposure = I.exposure;
+      this.scene.fog = null;
+    }
+    this.world.root.traverse((o) => { if (o.userData.no_cast) o.castShadow = physical; });
   }
 
   applyAuthored() {

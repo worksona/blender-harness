@@ -260,12 +260,13 @@ on the road. About 600 m across. High-ish 3/4 camera.</pre>
     <ul class="limits">
       <li><b>Survey-grade or CAD-accurate models.</b> Photo matching estimates dimensions, and routing it can't
         see is invented. For exact geometry, give dimensions or plans; photogrammetry is a different tool chain.</li>
-      <li><b>Textured, photoreal materials in the web app.</b> Only flat-colour PBR materials (colour, roughness,
-        metal, emission, alpha) export to the web. Procedural textures show in Blender renders only.</li>
+      <li><b>Arbitrary Blender shader graphs in the web app.</b> PBR colour, roughness, metal, emission, alpha and
+        image textures made with <code>harness.textures</code> (colour, normal, roughness, cutouts) export. Procedural
+        node textures show in Blender renders only, so bake them into images first.</li>
       <li><b>Animation beyond the built-in effects.</b> Ocean waves, floating objects and steam animate. Moving
         vehicles, machinery, characters and physics aren't supported yet.</li>
-      <li><b>Interactive apps or games.</b> The viewer is for exploring. Clickable objects and game logic would be
-        new viewer work.</li>
+      <li><b>Interactive apps or games.</b> The viewer is for exploring. A world can attach data-twin records to its
+        objects (click to inspect, replay time series), but game logic would be new viewer work.</li>
       <li><b>GPU rendering in the cloud.</b> Cloud sessions have no GPU, so previews use Cycles on CPU. Plan for
         about 5 s to 3 min per render. Very large or heavily lit scenes take longest.</li>
       <li><b>Budgets.</b> Aim for about 300k triangles drawn per ordinary world, or up to about 2M if most of
@@ -312,7 +313,11 @@ def build(ctx):                       # use ctx.rng for every random choice
       <tr><td>Plant equipment</td><td><code>from harness import industrial as ind</code>: <code>vessel</code> <code>drum</code> <code>steel_frame</code> <code>pipe_rack</code> <code>air_coolers</code> <code>storage_tank</code> <code>lpg_sphere</code> <code>fired_heater</code> <code>stack</code> <code>cooling_tower</code> <code>flare</code> <code>kit_prefabs</code> + <code>fill</code></td></tr>
       <tr><td>Land and water</td><td><code>terrain</code> <code>fbm</code> <code>island_falloff</code> <code>scatter</code> <code>slope</code> · <code>ocean</code> <code>bob</code></td></tr>
       <tr><td>Light</td><td><code>atmosphere(time, latitude, day, north, haze, visibility, exposure, lamps)</code> · <code>lamp</code> <code>lamps_along</code> · <code>plume</code> (steam) · manual <code>sun</code> <code>sky</code> <code>fog</code></td></tr>
-      <tr><td>Camera</td><td><code>camera(location, target, lens)</code>: the hero preview and the viewer's starting view</td></tr>
+      <tr><td>Camera</td><td><code>camera(location, target, lens)</code>: the hero preview and the viewer's starting view · <code>photo_camera(photo, location, target, focal_35mm)</code>: one per reference photo, each compared with its render</td></tr>
+      <tr><td>Textures</td><td><code>texture(name, pixels)</code> · <code>material(..., texture=, texture_size=, normal=, cutout=)</code> · <code>grime</code> <code>fbm_noise</code> <code>height_normal</code> <code>photo_patch</code> <code>text_image</code> <code>text_atlas</code> · <code>decal</code> (labels, signs, writing on pipes)</td></tr>
+      <tr><td>Process piping</td><td><code>from harness import piping</code>: <code>Spool(...).walk(route)</code> builds spools from isometric routes at ASME Class 600 dimensions · <code>test_blind</code> <code>bolt_joint</code></td></tr>
+      <tr><td>Data twin</td><td><code>twin_record</code> <code>twin_tag</code> <code>twin_series</code> <code>twin_gauge</code>: records on click, replayable test data, live gauges (viewer: Twin button, key T)</td></tr>
+      <tr><td>Interiors</td><td><code>interior(key_direction, key, ambient, env)</code>: overhead key light, room reflections and floor bounce in the viewer</td></tr>
     </table>
     <p>Conventions: Z is up, units are metres, and the ground is at z = 0. A bearing of 0° points to +Y (north)
       and 90° to +X (east).</p>
@@ -326,6 +331,7 @@ def build(ctx):                       # use ctx.rng for every random choice
       <tr><td><code>viewer</code></td><td><code>{"bloom": 0.5, "exposure": 1.2, "tone": "neutral", "grade": {…}}</code>: viewer-only overrides</td></tr>
       <tr><td><code>export</code></td><td><code>{"draco": true|false}</code>. By default, large worlds are compressed automatically.</td></tr>
       <tr><td><code>draft</code></td><td><code>True</code> keeps a work-in-progress world out of <code>--all</code> and CI.</td></tr>
+      <tr><td><code>private</code></td><td><code>True</code> keeps a world out of every public deploy (it still builds and shows locally).</td></tr>
     </table>
 
     <h2 id="ref-viewer">Reference: viewer controls</h2>

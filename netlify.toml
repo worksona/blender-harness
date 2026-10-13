@@ -1,8 +1,9 @@
 # Netlify: the worlds app is static (built worlds are committed), so there's nothing to compile.
-# The build step only replaces the guide's symlinked setup script with a real copy.
+# The build step replaces the guide's symlinked setup script with a real copy and removes private
+# worlds (META["private"] = True), which must never reach the public site.
 [build]
   publish = "app"
-  command = "rm -f app/cloud-env-setup.sh && cp scripts/cloud-env-setup.sh app/cloud-env-setup.sh"
+  command = "rm -f app/cloud-env-setup.sh && cp scripts/cloud-env-setup.sh app/cloud-env-setup.sh && python3 tools/strip_private.py app"
 
 [[headers]]
   for = "/worlds/*"

@@ -38,7 +38,8 @@ To build without rendering, add `--no-render`.
 
 | Area | Functions |
 |---|---|
-| Materials | `material(name, color, roughness, metallic, emission, emission_strength, alpha)` |
+| Materials | `material(name, color, roughness, metallic, emission, emission_strength, alpha, texture=, texture_size=, normal=, roughness_map=, cutout=)` |
+| Textures | `texture(name, pixels, data=)` turns numpy pixels into an image that is embedded in the .glb. Generators: `fbm_noise`, `value_noise`, `grime`, `height_normal`, `colorize`, `contrast`, `blur`, `make_tileable`, `photo_patch(photo, box)` (tileable crop of a reference photo), `text_image`/`text_mask`/`text_atlas` (lettering in Blender's font). `decal(name, image, size, ..., wrap_radius=, uv=)` places lettering, signs or labels, flat or wrapped around a pipe |
 | Primitives | `box`, `sphere`, `cylinder`, `cone`, `plane`, `mesh(verts, faces)` |
 | Prefabs | `join(name, parts)` merges parts into one mesh, `prefab(obj)` hides the template, `instance(prefab, ...)` places linked copies that cost nothing extra in the .glb |
 | Detailed structures | `MeshBuilder(name)` assembles hundreds of parts into one object: `box`, `slab`, `beam(a, b)`, `rod(a, b)`, `cylinder`, `sphere`, `dome`, `torus`, `pipe(points)` (ball elbows), `tube(points, bend_radius=)` (smooth real pipe bends), `flange`, `handwheel`, `ladder(cage=True)`, `railing`, `ring_platform`, then `.build()`. Use it for frames, pipework, and vessels. `worlds/oil-refinery` shows it at scale |
@@ -47,6 +48,9 @@ To build without rendering, add `--no-render`.
 | Time of day | `atmosphere(time="18:40", latitude, day, north, haze, visibility, exposure, lamps)`: real solar position, sun colour from atmospheric extinction, a physical sky, distance haze, automatic exposure, and lamps that switch on at dusk. Prefer it over manual `sun`/`sky`/`fog` |
 | Night and effects | `lamp(location, color, power, pool_z=, light=)`, `lamps_along(points, spacing, height)`, `plume(base, height, radius, drift)` (steam: volumetric in Blender, animated particles in the viewer) |
 | Environment (manual) | `sun(elevation, azimuth, strength, color)`, `sky(color, strength, ground, glow, glow_height)`, `fog(color, near, far)`, `camera(location, target, lens)` |
+| Process piping | `from harness import piping`: `Spool(name, nps, mats).walk(route, direction=)` builds a spool from an isometric-style route (`flange`, `pipe` with olets, `elbow`, `tee`, `reducer`, `flange_pair`, `blind`, `let`) at ASME B16.5/B16.9/B16.11 Class 600 dimensions. Each piece and weld is its own part (`sp.parts`, `sp.welds`) under one parent object, so each can carry a twin record; `test_blind`, `stud_prefab` and `bolt_joint` add test blinds and instanced studs. `worlds/purnell-test-shop/spools.py` matches parts to BOM items and welds to the drawing's weld table |
+| Data twin | `twin_record(id, title, group=, fields=, tables=, notes=, images=, parent=, listed=)`, `twin_tag(obj, id)` (click it in the viewer: the first click selects the outermost record, the next drills into the part; table `row_ids` make rows clickable), `twin_series(id, title, unit, times, values, events=, tint_group=)` (replayable data with a chart), `twin_gauge(label, location, series)` (live readout floating in 3D) |
+| Interiors and photo cameras | `interior(key_direction, key, ambient, env)` lights indoor worlds in the viewer (objects with `obj["no_cast"] = True`, such as roofs, don't block the key light). `photo_camera(photo, location, target, focal_35mm=, size=)` matches one reference photo, and each build writes `build/<slug>/compare-<photo>.jpg` |
 | Plant equipment | `from harness import industrial as ind`: `vessel`, `drum`, `steel_frame`, `pipe_rack`, `air_coolers`, `storage_tank`, `lpg_sphere`, `fired_heater`, `stack`, `cooling_tower`, `flare`, and instanced infill `kit_prefabs` + `fill` |
 | Grouping | `collection="Name"` on any object call |
 
@@ -54,9 +58,12 @@ To build without rendering, add `--no-render`.
 
 - Blender is Z-up, in meters, with the ground at z=0. Azimuth 0 = +Y (north), 90 = +X (east).
   The viewer converts to Y-up automatically.
-- Only Principled BSDF color, roughness, metallic, emission, and alpha survive glTF export.
-  Don't use procedural textures or node tricks for anything the web app must show. Use face
-  bands, separate materials, or geometry instead.
+- Principled BSDF color, roughness, metallic, emission and alpha survive glTF export, and so do
+  image textures made with `harness.textures` (colour, normal and roughness maps, cutouts).
+  Textured meshes get box-projected UVs automatically at the material's `texture_size`. Don't use
+  Blender procedural texture nodes for anything the web app must show: bake them into pixels
+  with `texture()` instead. Keep textures at 512 to 1024 px (one unique 2048x4096 floor is fine);
+  they count toward the .glb size.
 - Repeated objects go through `prefab` + `instance`, never copies. The viewer turns them into GPU
   instances (one draw call per mesh and material), so a kit repeated 500 times costs little.
 - Budgets per world: about 300k triangles drawn for ordinary worlds. Hi-res worlds can reach
@@ -73,6 +80,12 @@ To build without rendering, add `--no-render`.
 - Previews render with Cycles on CPU (there is no GPU in the cloud). EEVEE and Workbench need
   a GPU, so don't use them.
 - Keep worlds deterministic: the same seed must give the same world.
+- `META["private"] = True` keeps a world (for example one built from client documents) out of
+  every public deploy: Netlify, `make deploy` and GitHub Pages all run `tools/strip_private.py`.
+  It still builds, and shows in the local app with a "private" tag.
+- Objects with `obj["ceiling"] = True` (roofs, joists, ceiling lights) are left out of the top view.
+- Documents a world shows in its twin go in `worlds/<slug>/docs/`. Each build copies the PNG and
+  JPEG files to `app/worlds/<slug>/docs/`, and records refer to them as `docs/<file>`.
 
 ## Time of day and lighting
 
@@ -108,6 +121,14 @@ Put the photo(s) in `worlds/<slug>/reference/`. Every build then writes
 5. Accept what one photo can't give you: hidden sides, exact dimensions, untraceable pipe
    routes. Make them plausible, and tell the user which parts are inferred.
 
+Several photos of one place: add a `photo_camera(photo, location, target, focal_35mm=, size=)`
+per photo. Phones store the 35 mm-equivalent focal length in EXIF. Each build writes
+`build/<slug>/compare-<photo>.jpg`; `--views a.jpg b.jpg` renders only those, `--no-views` none.
+Solve the cameras against each other: a feature seen in two photos pins both, and column
+spacing, door sizes and keystoning (how much verticals lean) give pitch and scale.
+`worlds/purnell-test-shop` is the worked example: three photos plus a test pack of drawings
+(`worlds/purnell-spools` shows the same 21 spools on their own).
+
 ## Web app
 
 `make serve` runs it at http://localhost:8000. `tools/serve.py` disables caching, so a reload
@@ -115,7 +136,11 @@ picks up your edits. The gallery reads `app/worlds/index.json`.
 Opening `#/w/<slug>` loads that world's `meta.json` (camera, sun, sky, fog, ocean) plus
 `world.glb`. Per-world viewer overrides go in `META["viewer"]`: `bloom`, `exposure`, and `tone`
 (`"agx"`, the default, or `"neutral"` for saturated photo-matched colours).
-`window.viewer` exposes `{scene, camera, controls, renderer, ocean}` for debugging. For example,
+Worlds with twin records get a Twin button (key T): a searchable list of records, a card per
+record (fields, tables, drawings), click-to-inspect in 3D (click again to drill into a part),
+and a replay bar for time series with
+gauges floating at instruments. `window.viewer` exposes `{scene, camera, controls, renderer, twin,
+ocean}` for debugging. For example,
 `viewer.renderer.info.render.calls` gives the draw-call count. Shadows follow the orbit target
 and scale with zoom. three.js
 is pinned to 0.170.0 via the import map in `app/index.html`.

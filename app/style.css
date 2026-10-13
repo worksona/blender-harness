@@ -72,3 +72,58 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0
 .btn.small { padding: 3px 8px; font-size: 12px; border-radius: 7px; }
 @media (max-width: 640px) { .panel { top: auto; bottom: 48px; } }
 [hidden] { display: none !important; }
+
+/* ---- data twin ---- */
+.panel.twin { left: 12px; right: auto; width: min(380px, calc(100vw - 24px)); bottom: 132px; top: 64px;
+  overflow: auto; align-content: start; }
+.panel.twin .head strong { flex: 1; }
+#tw-card h3 { margin: 4px 0 2px; font-size: 15px; word-break: break-word; }
+#tw-card .sub { margin: 0 0 8px; color: var(--muted); }
+#tw-card dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 6px 0 10px; }
+#tw-card dt { color: var(--muted); }
+#tw-card dd { margin: 0; word-break: break-word; }
+#tw-card h4, #tw-list h4 { margin: 10px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+#tw-list h4 span { font-weight: normal; opacity: .7; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+.tbl table { border-collapse: collapse; width: 100%; font-size: 11px; }
+.tbl th, .tbl td { padding: 3px 6px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th { color: var(--muted); font-weight: 600; white-space: nowrap; position: sticky; top: 0; background: #151a21; }
+.tbl tr:last-child td { border-bottom: 0; }
+#tw-card .notes { margin: 8px 0; padding-left: 16px; color: var(--muted); }
+#tw-filter { width: 100%; font: inherit; color: var(--text); background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+#tw-list ul { list-style: none; margin: 0; padding: 0; }
+#tw-list li { display: grid; grid-template-columns: 10px 1fr; column-gap: 8px; padding: 5px 6px; border-radius: 7px; cursor: pointer; }
+#tw-list li:hover { background: rgba(255,255,255,.07); }
+#tw-list li i { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; grid-row: span 2; }
+#tw-list li small { color: var(--muted); grid-column: 2; }
+#twin-gauges { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.twin-gauge { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; white-space: nowrap;
+  margin: -34px 0 0 8px; padding: 3px 8px; border-radius: 7px; background: rgba(10, 30, 20, .85);
+  border: 1px solid #3ddc84; font: 600 12px ui-monospace, Menlo, monospace; color: #b8ffd5; }
+.twin-gauge .lbl { color: #7fd8a5; margin-right: 6px; font-weight: 400; }
+.replay { position: absolute; left: 12px; right: 12px; bottom: 44px; height: 80px; display: grid;
+  grid-template-columns: auto auto 1fr; grid-template-rows: auto 1fr; gap: 4px 8px; align-items: center;
+  padding: 8px 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  backdrop-filter: blur(10px); font-size: 12px; }
+.replay select { font: inherit; color: var(--text); background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 6px; }
+#tr-readout b { font-variant-numeric: tabular-nums; }
+#tr-readout small { color: var(--muted); margin-left: 6px; }
+#tr-chart { grid-column: 1 / -1; position: relative; height: 100%; min-height: 34px; cursor: ew-resize; }
+#tr-chart svg { width: 100%; height: 100%; display: block; }
+#tr-chart .line { fill: none; stroke: #ff8a3d; stroke-width: 2; vector-effect: non-scaling-stroke; }
+#tr-chart .area { fill: rgba(255, 138, 61, .15); stroke: none; }
+#tr-chart .g { stroke: rgba(255,255,255,.06); vector-effect: non-scaling-stroke; }
+#tr-chart .g.major { stroke: rgba(255,255,255,.16); }
+#tr-chart .ev { stroke: #6cb6ff; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+#tr-chart .head { stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; }
+#tr-chart .ax { position: absolute; font-size: 10px; color: var(--muted); pointer-events: none; }
+#tr-chart .lo { left: 2px; bottom: -2px; } #tr-chart .hi { right: 2px; bottom: -2px; } #tr-chart .top { left: 2px; top: -2px; }
+@media (max-width: 640px) {
+  .panel.twin { top: auto; bottom: 132px; max-height: 45vh; }
+}
+.twin-img img { display: block; width: 100%; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
+#tw-card .links a { color: var(--accent); }
+#tw-card .parent { margin: -4px 0 8px; color: var(--muted); }
+#tw-card .parent a { color: var(--accent); }
+.tbl tr.go { cursor: pointer; }
+.tbl tr.go:hover td { background: rgba(108, 182, 255, .12); }

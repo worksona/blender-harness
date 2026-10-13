@@ -33,6 +33,7 @@
         <button class="btn" id="b-prev" title="Previous world ([)">&lsaquo;</button>
         <button class="btn" id="b-next" title="Next world (])">&rsaquo;</button>
         <button class="btn" id="b-spin" title="Auto-rotate (R)">Spin</button>
+        <button class="btn" id="b-twin" title="Data twin: records and test replay (T)" hidden>Twin</button>
         <button class="btn" id="b-light" title="Time of day and atmosphere (L)">Light</button>
         <button class="btn" id="b-reset" title="Reset view (0)">Reset</button>
       </div>
@@ -59,6 +60,27 @@
         <button type="button" class="btn small" id="lp-reset">World default</button></div>
       <p class="note" id="lp-status"></p>
     </form>
+    <aside class="panel twin" id="twin-panel" hidden>
+      <div class="row head">
+        <button type="button" class="btn small" id="tw-back" hidden>&larr; All</button>
+        <strong>Data twin</strong>
+        <button type="button" class="btn small" id="tw-locate" hidden>Locate</button>
+        <button type="button" class="btn small" id="tw-close" title="Close (T)">&times;</button>
+      </div>
+      <div id="tw-card"></div>
+      <div id="tw-browse">
+        <input type="search" id="tw-filter" placeholder="Filter: line, heat no., weld…" aria-label="Filter records">
+        <div id="tw-list"></div>
+        <p class="note">Click any object in the scene to open its record.</p>
+      </div>
+    </aside>
+    <div id="twin-gauges"></div>
+    <div class="replay" id="twin-replay" hidden>
+      <button type="button" class="btn small" id="tr-play" title="Replay">▶</button>
+      <select id="tr-series" aria-label="Series"></select>
+      <div id="tr-readout"></div>
+      <div id="tr-chart"></div>
+    </div>
     <div class="hud bottom" id="w-stats"></div>
     <div id="loading">Loading…</div>
   </section>

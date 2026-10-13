@@ -46,6 +46,10 @@ jobs:
           name: worlds
           path: app/worlds
 
+      - name: Remove private worlds from the published site
+        if: github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'
+        run: python3 tools/strip_private.py app
+
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'
         with:
