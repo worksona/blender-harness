@@ -6,9 +6,10 @@
         stays in the repository and the local app but never reaches the public site.
 
     python3 tools/strip_private.py <app dir> --only gas-station,oil-refinery,...
-        keeps exactly the listed worlds, private ones included, and removes the rest. Used by
-        the password-protected Netlify project (see scripts/netlify-build.sh). Fails if a listed
-        world doesn't exist, so a typo can't silently publish a site missing a world.
+        keeps exactly the listed worlds, private ones included, and removes the rest. The
+        gallery shows them in the listed order. Used by the password-protected Netlify project
+        (see scripts/netlify-build.sh). Fails if a listed world doesn't exist, so a typo can't
+        silently publish a site missing a world.
 
 Plain Python, no Blender needed.
 """
@@ -41,6 +42,8 @@ def strip(app_dir, only=None):
             data = json.load(f)
         data["worlds"] = [w for w in data["worlds"] if w["slug"] not in removed and
                           (only is not None or not w.get("private"))]
+        if only is not None:
+            data["worlds"].sort(key=lambda w: only.index(w["slug"]))
         with open(index, "w") as f:
             json.dump(data, f, indent=2)
     what = "world(s) not listed" if only is not None else "private world(s)"

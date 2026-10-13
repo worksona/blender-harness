@@ -2,7 +2,7 @@
 # Two sites build from this repo with this file; scripts/netlify-build.sh tells them apart:
 #   worksona-blender-worlds  public: private worlds (META["private"] = True) are removed.
 #   blender-harness-twins    the five oil and gas worlds, private twins included. Password-protected
-#                            in the Netlify dashboard; its environment sets INCLUDE_PRIVATE=true.
+#                            in the Netlify dashboard; recognised by its project name (SITE_NAME).
 [build]
   publish = "app"
   command = "scripts/netlify-build.sh"

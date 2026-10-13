@@ -111,11 +111,12 @@ Worlds marked `META["private"] = True` are removed from this site on every build
 **Oil and gas worlds, private twins included**, go to a second Netlify project from the same
 repo, `blender-harness-twins`: `gas-station`, `oil-refinery`, `refinery-dusk`,
 `purnell-test-shop` and `purnell-spools`. It is password-protected in the Netlify dashboard
-(*Project configuration → Access & security → Visitor access*), and its environment variable
-`INCLUDE_PRIVATE=true` makes [`scripts/netlify-build.sh`](scripts/netlify-build.sh) publish
-exactly that list (set `TWINS_WORLDS` to change it) and mark the site `noindex`. Any other value,
-or none, builds the public site instead, so a misconfigured site publishes less, not more. A
-misspelt world in the list fails the build.
+(*Project configuration → Access & security → Visitor access*).
+[`scripts/netlify-build.sh`](scripts/netlify-build.sh) recognises it by its project name (Netlify
+sets `SITE_NAME` in every build; `INCLUDE_PRIVATE=true` does the same on any project), publishes
+exactly that list (set `TWINS_WORLDS` to change it) and marks the site `noindex`. Every other
+project builds the public site, so a misconfigured site publishes less, not more. A misspelt world
+in the list fails the build. The first lines of each build log say which build it chose.
 
 ### GitHub Pages (alternative)
 
