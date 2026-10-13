@@ -14,7 +14,10 @@ def write_manifest():
         if os.path.exists(meta):
             with open(meta) as f:
                 m = json.load(f)
-            worlds.append({k: m[k] for k in ("slug", "title", "description", "tags", "preview")})
+            entry = {k: m[k] for k in ("slug", "title", "description", "tags", "preview")}
+            if m.get("private"):
+                entry["private"] = True
+            worlds.append(entry)
     with open(os.path.join(APP_WORLDS, "index.json"), "w") as f:
         json.dump({"worlds": worlds}, f, indent=2)
     print(f"[manifest] {len(worlds)} worlds -> app/worlds/index.json")

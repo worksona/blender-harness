@@ -36,6 +36,7 @@ serve:
 # Symlinks are resolved into a copy first.
 deploy:
 	rm -rf build/site && mkdir -p build/site && rsync -aL app/ build/site/
+	python3 tools/strip_private.py build/site
 	netlify deploy --prod --no-build --dir build/site --message "$$(git log -1 --pretty=%s)"
 
 docker-build:

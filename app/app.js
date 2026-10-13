@@ -13,6 +13,7 @@ import { createSkyDome } from './sky.js';
 import { Floaters, Ocean } from './ocean.js';
 import { Lamps, Plumes } from './effects.js';
 import { Lighting } from './lighting.js';
+import { Twin, twinIdOf } from './twin.js';
 
 const $ = (id) => document.getElementById(id);
 let worlds = [];
@@ -48,7 +49,7 @@ function renderGallery() {
     a.querySelector('img').src = w.preview;
     a.querySelector('h3').textContent = w.title;
     a.querySelector('p').textContent = w.description;
-    for (const t of w.tags || []) {
+    for (const t of [...(w.private ? ['private'] : []), ...(w.tags || [])]) {
       const s = document.createElement('span');
       s.textContent = t;
       a.querySelector('.tags').append(s);
@@ -94,6 +95,7 @@ const viewer = (() => {
     renderer, scene, sun, hemi,
     onSunDir: (d) => { shadowFit.dir.set(...d).normalize(); shadowFit.radius = 0; },
   });
+  const twin = new Twin({ scene, camera, controls, canvas, overlay: $('twin-gauges') });
   let ocean = null;
   let floaters = null;
   let lamps = null;
@@ -170,7 +172,9 @@ const viewer = (() => {
     controls.update();
     if (current) fitShadow();
     skyDome.position.copy(camera.position);
-    const t = clock.getElapsedTime();
+    const dt = Math.min(clock.getDelta(), 0.1);
+    const t = clock.elapsedTime;
+    twin.update(dt);
     lightPanel.tick();
     lighting.update(camera);
     plumes?.update(t);
@@ -244,11 +248,13 @@ const viewer = (() => {
         if (o.isMesh) {
           o.castShadow = !o.material.transparent;
           o.receiveShadow = true;
+          for (let p = o; p; p = p.parent) if (p.userData?.no_cast) { o.castShadow = false; o.userData.no_cast = true; }
         }
       });
       scene.add(gltf.scene);
       current = { slug, root: gltf.scene, meta };
       applyMeta(meta, params);
+      twin.load(meta, gltf.scene);
       $('w-title').textContent = meta.title;
       $('w-desc').textContent = meta.description;
       $('w-stats').textContent =
@@ -264,6 +270,7 @@ const viewer = (() => {
 
   function close() {
     running = false;
+    twin.toggle(false);
     document.title = 'Worlds';
   }
 
@@ -284,6 +291,8 @@ const viewer = (() => {
       if (meshes.length < 4) continue;
       const inst = new THREE.InstancedMesh(meshes[0].geometry, meshes[0].material, meshes.length);
       inst.name = `${meshes[0].name}×${meshes.length}`;
+      const ids = meshes.map(twinIdOf);
+      if (ids.some(Boolean)) inst.userData.instanceTwin = ids;   // picking a copy finds its record
       meshes.forEach((m, i) => {
         inst.setMatrixAt(i, m.matrixWorld);  // root sits at the origin, so world == root space
         m.removeFromParent();
@@ -411,20 +420,23 @@ const viewer = (() => {
   $('b-reset').onclick = resetView;
   $('b-spin').onclick = toggleSpin;
   $('b-light').onclick = () => lightPanel.toggle();
+  $('b-twin').onclick = () => twin.toggle();
   window.addEventListener('keydown', (e) => {
     if ($('viewer').hidden) return;
+    if (e.target.matches?.('input[type=search], input[type=text]')) return;   // typing in a filter box
     if (e.key === 'Escape') location.hash = '#/';
     if (e.key === '[') step(-1);
     if (e.key === ']') step(1);
     if (e.key === '0') resetView();
-    if (e.target.closest?.('#light-panel')) return;
+    if (e.target.closest?.('#light-panel, #twin-panel, input, select')) return;
     if (e.key === 'r') toggleSpin();
     if (e.key === 'l') lightPanel.toggle();
+    if (e.key === 't') twin.toggle();
     if (e.key === ' ' && !$('light-panel').hidden) { e.preventDefault(); lightPanel.togglePlay(); }
   });
 
   // Handle for debugging and automated checks from the browser console.
-  window.viewer = { scene, camera, controls, renderer, get ocean() { return ocean; } };
+  window.viewer = { scene, camera, controls, renderer, twin, get ocean() { return ocean; } };
 
   return { open, close };
 })();

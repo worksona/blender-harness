@@ -44,13 +44,25 @@ def hex_of(color):
 _MATERIALS = {}
 
 
-def material(name, color="#cccccc", roughness=0.6, metallic=0.0,
-             emission=None, emission_strength=1.0, alpha=1.0):
-    """Principled BSDF material. Only these inputs survive glTF export, so stick to them."""
+def material(name, color=None, roughness=0.6, metallic=0.0,
+             emission=None, emission_strength=1.0, alpha=1.0,
+             texture=None, texture_size=1.0, normal=None, normal_strength=1.0,
+             roughness_map=None, cutout=False):
+    """Principled BSDF material. Only these inputs survive glTF export, so stick to them.
+
+    Image textures (see harness.textures) are exported into the .glb too:
+      texture:       colour image; `color` (default white) tints it, like glTF's baseColorFactor.
+      texture_size:  meters covered by one repeat of the image. Meshes get box-projected UVs at
+                     that scale automatically, unless they already have a UV map.
+      normal:        tangent-space normal map image (texture(..., data=True)).
+      roughness_map: greyscale image whose value is the roughness (replaces `roughness`).
+      cutout:        use the colour image's alpha as a hard mask (decals, lettering, grating)."""
     if name in _MATERIALS:
         return _MATERIALS[name]
+    color = color or ("#ffffff" if texture is not None else "#cccccc")
     mat = bpy.data.materials.new(name)
-    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    nt = mat.node_tree
+    bsdf = nt.nodes["Principled BSDF"]
     bsdf.inputs["Base Color"].default_value = rgb(color)
     bsdf.inputs["Roughness"].default_value = roughness
     bsdf.inputs["Metallic"].default_value = metallic
@@ -60,6 +72,37 @@ def material(name, color="#cccccc", roughness=0.6, metallic=0.0,
     if alpha < 1.0:
         bsdf.inputs["Alpha"].default_value = alpha
         mat.surface_render_method = "BLENDED"
+    if texture is not None:
+        tex = nt.nodes.new("ShaderNodeTexImage")
+        tex.image = texture
+        tint = nt.nodes.new("ShaderNodeMix")      # exported as baseColorFactor
+        tint.data_type = "RGBA"
+        tint.blend_type = "MULTIPLY"
+        tint.inputs["Factor"].default_value = 1.0
+        tint.inputs["B"].default_value = rgb(color)
+        nt.links.new(tex.outputs["Color"], tint.inputs["A"])
+        nt.links.new(tint.outputs["Result"], bsdf.inputs["Base Color"])
+        if cutout:   # ROUND on alpha is what the glTF exporter reads as alphaMode MASK
+            clip = nt.nodes.new("ShaderNodeMath")
+            clip.operation = "ROUND"
+            nt.links.new(tex.outputs["Alpha"], clip.inputs[0])
+            nt.links.new(clip.outputs[0], bsdf.inputs["Alpha"])
+        mat["tex_size"] = float(texture_size)
+    if normal is not None:
+        ntex = nt.nodes.new("ShaderNodeTexImage")
+        ntex.image = normal
+        nmap = nt.nodes.new("ShaderNodeNormalMap")
+        nmap.inputs["Strength"].default_value = normal_strength
+        nt.links.new(ntex.outputs["Color"], nmap.inputs["Color"])
+        nt.links.new(nmap.outputs["Normal"], bsdf.inputs["Normal"])
+        mat["tex_size"] = float(texture_size)
+    if roughness_map is not None:
+        rtex = nt.nodes.new("ShaderNodeTexImage")
+        rtex.image = roughness_map
+        sep = nt.nodes.new("ShaderNodeSeparateColor")   # glTF keeps roughness in the green channel
+        nt.links.new(rtex.outputs["Color"], sep.inputs["Color"])
+        nt.links.new(sep.outputs["Green"], bsdf.inputs["Roughness"])
+        mat["tex_size"] = float(texture_size)
     mat.diffuse_color = rgb(color)
     _MATERIALS[name] = mat
     return mat

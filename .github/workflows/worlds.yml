@@ -32,6 +32,11 @@ jobs:
           path: ${{ env.BLENDER_PREFIX }}
           key: blender-${{ env.BLENDER_VERSION }}-linux-x64
 
+      # Blender opens EGL when it renders the physical sky (atmosphere()), even with Cycles on
+      # CPU; without libEGL.so.1 it aborts. Mesa's EGL lets it fall back and carry on.
+      - name: Install EGL
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libegl1 libegl-mesa0 libgl1-mesa-dri
+
       - name: Install Blender
         run: scripts/setup.sh
 
@@ -45,6 +50,10 @@ jobs:
         with:
           name: worlds
           path: app/worlds
+
+      - name: Remove private worlds from the published site
+        if: github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'
+        run: python3 tools/strip_private.py app
 
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'
