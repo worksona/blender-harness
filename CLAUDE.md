@@ -84,8 +84,8 @@ To build without rendering, add `--no-render`.
   every public deploy: Netlify, `make deploy` and GitHub Pages all run `tools/strip_private.py`.
   It still builds, and shows in the local app with a "private" tag. The password-protected
   Netlify project `blender-harness-twins` publishes the oil and gas worlds, private ones
-  included (it sets `INCLUDE_PRIVATE=true`; the list is in `scripts/netlify-build.sh`). Add a
-  new oil and gas world to that list to publish it there.
+  included (`scripts/netlify-build.sh` recognises it by its project name; the list is there
+  too). Add a new oil and gas world to that list to publish it there.
 - Objects with `obj["ceiling"] = True` (roofs, joists, ceiling lights) are left out of the top view.
 - Documents a world shows in its twin go in `worlds/<slug>/docs/`. Each build copies the PNG and
   JPEG files to `app/worlds/<slug>/docs/`, and records refer to them as `docs/<file>`.
