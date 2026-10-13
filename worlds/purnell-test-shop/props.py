@@ -24,8 +24,10 @@ def stand_texture(name, base, seed):
     yy = np.linspace(1, 0, n)[:, None] * np.ones((1, n))        # v (height in m) per pixel row
     smear = fbm_noise(n, 3, 6, seed)
     blot = fbm_noise(n, 10, 4, seed + 1)
-    grey_mask = contrast(smear * 0.7 + blot * 0.5 + (yy - 0.55) * 1.1, 0.62, 0.7)
-    drips = contrast(fbm_noise(n, 40, 2, seed + 5), 0.7, 0.75) * contrast(yy, 0.35, 0.6)
+    # v is height in metres (cylinder_uvs): grey paint over the top ~0.25 m where pipes rest,
+    # running down in drips and smears
+    grey_mask = contrast(smear * 0.7 + blot * 0.5 + (yy - 0.36) * 1.6, 0.74, 0.8)
+    drips = contrast(fbm_noise(n, 40, 2, seed + 5), 0.66, 0.72) * contrast(yy, 0.2, 0.45)
     grey_mask = np.maximum(grey_mask, drips * 0.8)
     dirt = contrast(fbm_noise(n, 6, 4, seed + 2) + (0.18 - yy) * 2.0, 0.6, 0.95) * 0.55
     scuff = contrast(fbm_noise(n, 20, 3, seed + 3), 0.66, 0.85) * 0.3
@@ -38,6 +40,28 @@ def stand_texture(name, base, seed):
 
 
 # ------------------------------------------------------------------ pipe stands
+
+def cylinder_uvs(obj, tile=1.0):
+    """Wrap a stand's texture round it: u = angle (one turn = 2.5 tiles), v = height in metres,
+    so paint and dirt follow the height the way they do on real stands (the foot stays dirty,
+    the saddle grey)."""
+    import math as _m
+    me = obj.data
+    layer = me.uv_layers.new(name="UVMap")
+    for poly in me.polygons:
+        cx = sum(me.vertices[i].co.x for i in poly.vertices) / len(poly.vertices)
+        cy = sum(me.vertices[i].co.y for i in poly.vertices) / len(poly.vertices)
+        a0 = _m.atan2(cy, cx)
+        for li in poly.loop_indices:
+            co = me.vertices[me.loops[li].vertex_index].co
+            a = _m.atan2(co.y, co.x)
+            if a - a0 > _m.pi:      # keep one face's corners on the same side of the seam
+                a -= 2 * _m.pi
+            elif a0 - a > _m.pi:
+                a += 2 * _m.pi
+            layer.data[li].uv = (a / (2 * _m.pi) * 2.5 / tile, co.z / tile)
+    return obj
+
 
 def _loft(mb, profiles, mat, cap_top=True, smooth=False):
     """Skin a list of closed rings (lists of 3D points, same count) into the builder."""
@@ -56,17 +80,17 @@ def _loft(mb, profiles, mat, cap_top=True, smooth=False):
     return rings
 
 
-def cone_stand(name, mat, hole_mat, H=0.76, saddle=0.07):
-    """Tapered round PE pipe stand with a saddle-cut top, a side hole and a rolled foot lip.
-    The pipe rests along local Y at height H - saddle."""
+def cone_stand(name, mat, hole_mat, H=0.62, saddle=0.07):
+    """Tapered round PE pipe stand with a U-saddle top, a side hole and a rolled foot lip.
+    The pipe rests along local Y at height H - saddle (0.55 m: measured in photos a and c)."""
     mb = MeshBuilder(name)
     n = 28
     prof = []
-    for z, r in ((0.0, 0.40), (0.035, 0.40), (0.045, 0.36), (H * 0.5, 0.27), (None, 0.17)):
+    for z, r in ((0.0, 0.39), (0.03, 0.39), (0.04, 0.345), (H * 0.5, 0.25), (None, 0.155)):
         ring = []
         for k in range(n):
             a = 2 * math.pi * k / n
-            zz = H - saddle * abs(math.sin(a)) if z is None else z    # V saddle, low along +-Y
+            zz = H - saddle * abs(math.sin(a)) ** 0.5 if z is None else z    # U saddle, low along +-Y
             ring.append(Vector((r * math.cos(a), r * math.sin(a), zz)))
         prof.append(ring)
     _loft(mb, prof, mat, cap_top=False, smooth=True)
@@ -80,13 +104,13 @@ def cone_stand(name, mat, hole_mat, H=0.76, saddle=0.07):
         f = bm.faces.new((rim[k], rim[(k + 1) % n], c))
         f.material_index = idx
     # Hole on the +X side near the top (dark disc set into the wall)
-    z = H - 0.17
-    r = 0.17 + (0.27 - 0.17) * (H - z) / (H * 0.5)
+    z = H - 0.15
+    r = 0.155 + (0.25 - 0.155) * (H - z) / (H * 0.5)
     mb.rod((r - 0.014, 0, z), (r + 0.003, 0, z), 0.045, hole_mat, 14)
-    return prefab(mb.build())
+    return prefab(cylinder_uvs(mb.build()))
 
 
-def star_stand(name, mat, H=0.58):
+def star_stand(name, mat, H=0.515):
     """Fluted four-rib PE stand (the 'star' stands under the big spools): a ribbed tapered
     column on a round foot, with a V-saddle block on top. Pipe runs along local Y."""
     mb = MeshBuilder(name)
@@ -108,7 +132,7 @@ def star_stand(name, mat, H=0.58):
     z0 = H - 0.06
     for s in (-1, 1):
         mb.box((s * w * 0.3, 0, z0 + t / 2), (w * 0.4, d, t), mat, rotation=(0, -s * 14, 0))
-    return prefab(mb.build())
+    return prefab(cylinder_uvs(mb.build()))
 
 
 # ------------------------------------------------------------------ racks and flanges

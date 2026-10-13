@@ -129,6 +129,20 @@ def build(slug, args):
         refs = sorted(f for f in os.listdir(ref_dir)
                       if f.lower().endswith((".jpg", ".jpeg", ".png"))) if os.path.isdir(ref_dir) else []
         views = {v["photo"]: v for v in STATE.get("ref_views", [])}
+        if views:   # solved cameras, for tools/photo_measure.py
+            import bpy
+            cams = []
+            for name, v in views.items():
+                obj = bpy.data.objects[v["camera"]]
+                img = bpy.data.images.load(os.path.join(ref_dir, name))
+                cams.append({"photo": name, "pixels": list(img.size),
+                             "matrix": [list(r) for r in obj.matrix_world],
+                             "lens": obj.data.lens, "sensor_width": obj.data.sensor_width,
+                             "shift": [obj.data.shift_x, obj.data.shift_y]})
+                bpy.data.images.remove(img)
+            os.makedirs(os.path.join(BUILD, slug), exist_ok=True)
+            with open(os.path.join(BUILD, slug, "cameras.json"), "w") as f:
+                json.dump(cams, f, indent=1)
         if refs and refs[0] not in views:
             renders.append(output.side_by_side(os.path.join(ref_dir, refs[0]), renders[0],
                                                os.path.join(BUILD, slug, "compare.jpg")))

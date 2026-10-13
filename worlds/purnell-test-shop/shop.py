@@ -43,7 +43,7 @@ def mats():
     rib = np.where(((x * 4) % 1.0) < 0.12, 1.0, 0.0) * 0.6 + np.where(((x * 4) % 1.0) < 0.04, 0.4, 0.0)
     h = np.tile(rib[None, :], (n, 1)) + fbm_noise(n, 4, 3, 7) * 0.05
     stain = fbm_noise(n, 3, 5, 11)
-    col = colorize(contrast(stain, 0.55, 0.95) * 0.35, "#d3d0c6", "#9a9486")
+    col = colorize(contrast(stain, 0.55, 0.95) * 0.35, "#c3c4c1", "#8f8d86")
     col *= (1.0 - 0.10 * np.tile(rib[None, :], (n, 1))[..., None])
     M["liner"] = material("liner", texture=texture("liner_c", col), texture_size=0.914,
                           normal=texture("liner_n", height_normal(h, 6.0), data=True),
@@ -61,7 +61,7 @@ def mats():
     pores = fbm_noise(n, 64, 2, 3)
     hgt = 1 - mortar * 0.8 + (pores - 0.5) * 0.08
     dirt = fbm_noise(n, 3, 5, 5)
-    base = colorize(contrast(dirt, 0.5, 0.95) * 0.25 + (pores - 0.5) * 0.1, "#dcdad2", "#aca695")
+    base = colorize(contrast(dirt, 0.5, 0.95) * 0.25 + (pores - 0.5) * 0.1, "#c9cac5", "#9d9a8f")
     base *= (1 - mortar[..., None] * 0.12)
     M["cmu"] = material("cmu_painted", texture=texture("cmu_c", base), texture_size=2.436,
                         normal=texture("cmu_n", height_normal(hgt, 4.0), data=True), roughness=0.75)
@@ -225,8 +225,8 @@ def lights(M):
     data = bpy.data.lights.new("HighBayLight", "AREA")
     data.shape = "RECTANGLE"
     data.size, data.size_y = 1.16, 0.36
-    data.energy = 260.0
-    data.color = (1.0, 0.97, 0.93)
+    data.energy = 230.0
+    data.color = (1.0, 0.985, 0.965)
     spots = []
     for x in (-4.6, 0.0, 4.6):
         y = 3.0

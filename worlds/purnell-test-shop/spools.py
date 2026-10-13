@@ -18,8 +18,8 @@ from harness import piping
 
 import pack
 
-STAR_TOP = 0.585      # saddle height of the fluted stands
-CONE_TOP = 0.69       # where a pipe sits in a cone's V saddle
+STAR_TOP = 0.525      # saddle height of the fluted stands
+CONE_TOP = 0.55       # where a pipe sits in a cone's saddle (measured from photos a and c)
 SPOOL_COLORS = {2: "#7fd1ff", 1: "#9fe39a", 6: "#ffd27a", 8: "#ffb36b", 10: "#ff8a6b", 12: "#f06bd0"}
 WELDERS = {"JI": "JI", "GC": "GC", "DJM": "DJM", "DF": "DF", "CS": "CS", "JI/DF": "JI and DF"}
 
@@ -122,16 +122,27 @@ def standard_note(part):
 def build_spool(sd, M, place, studs, stands, atlas, rng, cribbing=None, sid=None):
     """Build one spool component by component, bolt test blinds on its open flanges, set it on
     stands the way it sat for the test, write its paint markings, and create its records.
-    Returns the spool's root object."""
+
+    place: {"xy": (x, y), "rot": (rx, ry, yaw)} centres the spool there with its lowest run on
+    stands; or {"matrix": Matrix} puts it exactly (for spools bolted to each other), with
+    "stands": [(x, y, yaw, kind)] placed by hand. "mated": joint indices bolted to another spool
+    (no test blind, and the other spool's joint carries the studs). "floor": True lays the
+    spool on the floor. "blinds": test-blind paint per open joint.
+    Returns the spool's root object (sd["_joints"] keeps the joints in world space)."""
     sid = sid or f"spool-{sd['ctrl']}"
     sp = piping.Spool(sd["iso"], sd["nps"], M, sch=sd["sch"], branch_nps=sd.get("branch_nps"),
                       threaded=sd.get("threaded", False))
     sp.walk(sd["route"], direction=sd["start"])
     paints = place.get("blinds") or []
     joints = []
+    mated = place.get("mated", ())
     for k, j in enumerate(sp.joints):
         if j.get("mated"):
             joints.append((j, j["mate_t"]))
+            continue
+        if k in mated:
+            if mated[k] == "bolt":            # this side carries the studs for the pair
+                joints.append((j, piping.CL600[j["nps"]]["T"] / 1000))
             continue
         paint = paints[k] if k < len(paints) else ("black" if rng.random() < 0.6 else "rust")
         t = piping.test_blind(sp, j["pos"], j["normal"], j["nps"], M, paint=paint, vent=(k == 0))
@@ -140,7 +151,10 @@ def build_spool(sd, M, place, studs, stands, atlas, rng, cribbing=None, sid=None
     twin_tag(root, sid)
 
     # Orient, then sit the lowest horizontal run on its stands (or the whole spool on cribbing).
-    R = Euler([math.radians(a) for a in place["rot"]]).to_matrix().to_4x4()
+    if "matrix" in place:
+        R = place["matrix"].to_3x3().to_4x4()
+    else:
+        R = Euler([math.radians(a) for a in place["rot"]]).to_matrix().to_4x4()
     co = []
     for rec in sp.parts:
         if rec.get("obj"):
@@ -162,9 +176,19 @@ def build_spool(sd, M, place, studs, stands, atlas, rng, cribbing=None, sid=None
         low, big = [], True
         z_off = 0.1 - lo[2]
     z_off = max(z_off, 0.03 - lo[2])
-    T = Matrix.Translation((place["xy"][0] - (lo[0] + hi[0]) / 2, place["xy"][1] - (lo[1] + hi[1]) / 2, z_off))
+    if place.get("floor"):
+        low, z_off = [], -lo[2]
+    if "matrix" in place:
+        T = Matrix.Translation(place["matrix"].to_translation())
+        low = []
+    else:
+        T = Matrix.Translation((place["xy"][0] - (lo[0] + hi[0]) / 2, place["xy"][1] - (lo[1] + hi[1]) / 2, z_off))
     W = T @ R
     root.matrix_world = W
+    sd["_joints"] = [(W @ j["pos"], (W.to_3x3() @ j["normal"]).normalized(), j["nps"]) for j in sp.joints]
+    for x, y, yaw, kind in place.get("stands", ()):
+        pre = stands[kind][rng.randrange(len(stands[kind]))]
+        instance(pre, "PipeStand", (x, y, 0), (0, 0, yaw), collection="Pipe stands")
 
     # Stands under the lowest runs: only runs long enough to carry one (short runs between
     # fittings would put a stand under an elbow or a riser), at least 0.8 m apart.
@@ -186,7 +210,7 @@ def build_spool(sd, M, place, studs, stands, atlas, rng, cribbing=None, sid=None
             pre = stands[kind][rng.randrange(len(stands[kind]))]
             instance(pre, "PipeStand", (p.x, p.y, 0), (0, 0, run_yaw + rng.uniform(-4, 4)),
                      collection="Pipe stands")
-    if not runs and cribbing:
+    if not runs and cribbing and "xy" in place and not place.get("floor"):
         cribbing(place["xy"], place["rot"][2])
 
     stud_ids = stud_records(sd, sid) if "bom" in sd else {}
@@ -414,6 +438,8 @@ def spool_record(sd):
         ("Test", "N/A (not pressure tested)" if sd.get("dummy") else "Water, 15,307 kPa min, 15 min hold"),
         ("Result", "N/A" if sd.get("dummy") else "Accepted 2024-04-29 (Pack 1)"),
     ]
+    if sd.get("setup"):
+        fields.append(("On the test floor", sd["setup"]))
     rows = sd.get("_rows", {})
     tables = [{"title": "Bill of materials", "columns": ["Item", "Heat no.", "Size", "Description", "Qty"],
                "rows": [[str(i), h, s, d, str(q)] for i, h, s, d, q in sd["bom"]],

@@ -4,25 +4,28 @@ Arc Resources, 10-16 sales gas rerouting), as a data twin.
 Sources: docs/07-02_Pressure_Test_Pack_1.pdf (transcribed into pack.py) and the photos in
 reference/ (a, b, c: Galaxy S23 FE, 23 mm equivalent, 29 Apr 2024 08:18-08:39; d, e: close-ups).
 
-What is measured and what is inferred
+How it was measured
 - Spools: every pipe length, fitting, flange, olet and valve comes from the isometrics and their
-  bills of materials, at ASME B16.5/B16.9/B16.11 dimensions (harness/piping.py). Orientation is the
-  drawing's (north arrow), except 730512-51H-D, laid on its side as tall risers are for testing.
-- Building: 50 x 100 ft bay with 25 ft column bays, from vanishing points, door sizes and a
-  loader's tyres in the photos; cameras a and b are solved to within a few percent of the photos.
-- Layout: which spool sits where on the floor is inferred from the photos (big-bore spread in the
-  south-west quarter, small-bore runs on cones east of it, test station on the block wall).
-  Photo b confirms 730512-51H-E (heat AG2148 on the pipe, green test blind). Test blinds, studs
-  on open flanges and temporary vent valves are test equipment, not BOM items.
+  bills of materials, at ASME B16.5/B16.9/B16.11 dimensions (harness/piping.py, spools.py).
+- Building: 50 x 100 ft bay with 25 ft column bays, solved from photos a and b (vanishing points,
+  doors, columns); camera b's height from the green blind's 559 mm flange in its foreground.
+- Photo c's camera: solved from the 2" pipe in it (the apparent width of its 60.3 mm OD at seven
+  points along the run, plus the pipe pair's vanishing point): 1.46 m up, 42 deg down. That also
+  fixed the stand saddle height (0.55 m) for the whole shop.
+- Floor layout: stand feet projected onto the floor through the solved cameras (photos a and c
+  agree on them to ~0.15 m); spools 12, 5, 4, 11 and 18 are located that way (SETUP below).
+- Inferred: which spool is which where the photos can't tell, the spools not visible in any
+  photo, the test header and test blinds (test equipment), and the generic "other work" spools.
 """
 
+import math
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np  # noqa: E402
-from mathutils import Vector  # noqa: E402
+from mathutils import Matrix, Vector  # noqa: E402
 
 from harness import *  # noqa: E402
 from harness import piping  # noqa: E402
@@ -51,15 +54,38 @@ DOCS = os.path.join(HERE, "docs")
 # y along it (0 = near end with the two sectional doors), z up.
 CAMERAS = {
     "a-test-bay-to-door.jpg": dict(location=(0.6, 2.3, 1.35), target=(0.95, 24.3, -1.74), size=(4, 3)),
-    "b-corner-crane-c9610.jpg": dict(location=(3.66, 10.65, 1.0), target=(-6.49, 2.35, -0.96), size=(4, 3)),
-    "c-small-bore-runs.jpg": dict(location=(1.52, 2.95, 1.32), target=(1.62, 12.95, -5.9), size=(3, 4)),
+    # Height from the green blind in the foreground: its 559 mm flange spans 170 px at 2.1 m.
+    "b-corner-crane-c9610.jpg": dict(location=(3.66, 10.65, 1.2), target=(-6.49, 2.35, -0.76), size=(4, 3)),
+    # Solved from the 2" pipe in the photo (apparent width of its 60.3 mm OD along the run, and
+    # the vanishing point of the pipe pair): 0.88 m above the pipe axis, 42 deg down.
+    "c-small-bore-runs.jpg": dict(location=(1.50, 5.25, 1.46), target=(2.06, 15.26, -7.54), size=(3, 4)),
 }
 
 # Where each spool sits: plan centre (x, y), rotation (degrees: rx, ry, yaw), test-blind paint.
 # Yaw 0 keeps the drawing's north along +y.
+# How each spool sat for the test, shown on its twin card. "Measured" means located from the photos
+# (stand feet projected onto the floor through the solved cameras); the rest is placed to fit.
+SETUP = {
+    12: "The 2\" run in photo c, on the measured valve stand and second stand; its south flange "
+        "bolted to spool 5. Position measured in photos a and c.",
+    5: "Bolted to spool 12's south flange: the corner and west leg in photo a, the test header on "
+       "its west flange. Position measured in photo a.",
+    4: "Lying on the floor east of spool 12 (photos a and c). Position measured in photos a and c.",
+    11: "Riser on the large stand at the left of photo c; its 1979 mm run leaves the photo's left "
+        "edge. Position measured in photo c.",
+    18: "Green test blind on its 10\" end, 2.1 m in front of photo b's camera; the run heads west "
+        "(photo c, top). Position measured in photos b and c.",
+}
+
 LAYOUT = {
     # Big-bore spread, main runs east-west (photos a and b)
-    18: dict(xy=(-0.4, 8.2), rot=(0, 0, 0), blinds=["green", "black", "rust"]),
+    # Spool 18 (heat AG2148 painted on it, green test blind on its 10" end) runs north from the
+    # blind, 2.1 m in front of photo b's camera (from the blind's 559 mm OD in the photo).
+    # Its 10" end and three vents face east, 2 m in front of photo b's camera; the run heads west
+    # (the second east-west 10" in the top of photo c).
+    18: dict(matrix=Matrix.Translation((2.30, 9.85, 0.66)) @ Matrix.Rotation(math.radians(-12), 4, "Z"),
+             stands=[(1.76, 9.96, 78.0, "star"), (0.39, 10.26, 78.0, "star")],
+             blinds=["green", "black", "rust"]),
     17: dict(xy=(-3.1, 10.6), rot=(90, 0, 0), blinds=["rust", "black", "black"]),
     8: dict(xy=(-2.6, 6.2), rot=(0, 0, 0)),
     1: dict(xy=(-3.5, 13.4), rot=(0, 0, 0)),
@@ -68,26 +94,26 @@ LAYOUT = {
     14: dict(xy=(-1.0, 13.9), rot=(0, 0, 0)),
     15: dict(xy=(-5.7, 5.0), rot=(0, 0, 90)),
     16: dict(xy=(-5.0, 12.2), rot=(0, 0, 0)),
-    6: dict(xy=(-1.6, 4.1), rot=(0, 0, 90)),
+    6: dict(xy=(-4.4, 2.9), rot=(0, 0, 90)),
     7: dict(xy=(-3.8, 3.6), rot=(0, 0, 90)),
     10: dict(xy=(-6.7, 16.3), rot=(0, 0, 0)),
     19: dict(xy=(-6.7, 18.6), rot=(0, 0, 0)),
-    # Small-bore runs north-south on cones (photos a and c)
-    4: dict(xy=(1.5, 6.25), rot=(0, 0, 180)),
-    12: dict(xy=(2.45, 8.6), rot=(0, 0, 90)),
-    11: dict(xy=(3.5, 5.4), rot=(0, 0, 0)),
-    3: dict(xy=(4.5, 10.4), rot=(0, 0, 0)),
-    5: dict(xy=(0.6, 4.9), rot=(0, 0, 0)),
-    13: dict(xy=(3.5, 13.4), rot=(0, 0, 0)),
+    # Small-bore (photos a and c): spools 12, 5 and 4 are placed by small_bore_line().
+    3: dict(xy=(5.1, 5.9), rot=(0, 0, 90)),
+    # Spool 11: riser on the big stand at the left of photo c, its 1979 mm run the pipe that
+    # leaves photo c's left edge and ends at a flange near the top.
+    11: dict(matrix=Matrix.Translation((0.62, 6.30, 0.58 + 1.213)) @ Matrix.Rotation(math.radians(171), 4, "Z"),
+             stands=[(0.66, 6.38, 81.0, "cone_y"), (0.9, 8.1, 81.0, "cone_y")]),
+    13: dict(xy=(4.7, 12.6), rot=(0, 0, 0)),
     20: dict(xy=(5.3, 6.8), rot=(0, 0, 90)),
     23: dict(xy=(6.1, 9.9), rot=(0, 0, 0)),
 }
 # Other work on the floor in the photos (not in Pack 1): generic spools at the same spots, so the
 # twin reads like the photographs. They carry one shared "not in this pack" record.
 OTHER = [
-    dict(name="Other-12in-run", nps=12, start="E", xy=(-0.9, 10.3), rot=(0, 0, 0),
-         route=[("flange",), ("pipe", 1500, [(500, "U", "vent")]), ("flange_pair",),
-                ("pipe", 1500, [(1000, "U", "vent")]), ("flange",)]),
+    # The first east-west 10" at the top of photo c, its east end curving round toward the camera
+    dict(name="Other-8in-run-2", nps=8, start="E", xy=(1.42, 9.5), rot=(0, 0, -15),
+         route=[("flange",), ("pipe", 1500, [(450, "U", "vent")]), ("elbow", "D"), ("flange",)]),
     dict(name="Other-10in-loop", nps=10, start="E", xy=(-1.2, 12.6), rot=(0, 0, 0),
          route=[("flange",), ("pipe", 900), ("elbow", "U"), ("pipe", 1350), ("elbow", "W"), ("pipe", 700),
                 ("flange",)]),
@@ -96,8 +122,15 @@ OTHER = [
                 ("pipe", 900), ("flange",)]),
     dict(name="Other-8in-run", nps=8, start="W", xy=(-2.4, 7.4), rot=(0, 0, 0),
          route=[("flange",), ("pipe", 3100, [(800, "U", "vent")]), ("elbow", "N"), ("flange",)]),
+    # The long 2" run on cones east of the spread (photo a, right; photo c, top right)
+    dict(name="Other-2in-long", nps=2, start="N", xy=(4.35, 9.75), rot=(0, 0, -6.5),
+         route=[("flange",), ("pipe", 4100), ("flange_pair",), ("pipe", 4100), ("flange",)]),
 ]
-TEST_LINE_X = 1.585   # the 1" test line shares spool 4's cones (photo c)
+# Line 720540-25H as it lay for the test: the 5.4 m run of spool 4 heading south toward the
+# camera of photo a, an elbow and flange pair turning west into spool 5's riser, and spool 3 at
+# the north end. RUN_START is the south end of spool 4's pipe; the run heads RUN_DIR.
+RUN_START = Vector((1.55, 5.15, 0.58))
+RUN_DIR = Vector((0.040, 1.0, 0.0)).normalized()
 PM = None             # prop materials (shared with helpers)
 
 
@@ -133,6 +166,8 @@ def piping_mats():
         "stud": material("stud_b7m", "#1b1b1b", roughness=0.55, metallic=0.5),
         "nut": material("nut_2hm", "#222220", roughness=0.5, metallic=0.5),
         "bore": material("bore_dark", "#0b0b0b", roughness=0.9),
+        "rust_pipe": material("pipe_rust", texture=texture("rust_c", grime(256, "#6b4630", "#3a2a20", 0.45, 13, 3)),
+                              texture_size=0.6, roughness=0.6, metallic=0.2),
     }
 
 
@@ -160,8 +195,8 @@ def prop_mats():
         "hole": material("stand_hole", "#1a1712", roughness=0.9),
         "bore": material("bore_dark", "#0b0b0b", roughness=0.9),
     }
-    for key, base, seed in (("yellow", "#cfc068", 1), ("grey", "#8b98a6", 2), ("red", "#c27058", 3),
-                            ("green", "#6a9a80", 4), ("yellow2", "#d9c96a", 5)):
+    for key, base, seed in (("yellow", "#c8bf86", 1), ("grey", "#8b98a6", 2), ("red", "#c27058", 3),
+                            ("green", "#6a9a80", 4), ("yellow2", "#c2b886", 5), ("blue", "#7f93ad", 6)):
         M[f"pe_{key}"] = material(f"pe_{key}", texture=props.stand_texture(f"pe_{key}", base, seed),
                                   texture_size=1.0, roughness=0.55)
     return M
@@ -175,17 +210,19 @@ def floor_texture():
     fine = fbm_noise((H, W), 160, 2, 42)
     stain = fbm_noise((H, W), 10, 5, 43)
     t = contrast(big, 0.35, 0.8) * 0.5 + (fine - 0.5) * 0.18
-    col = colorize(np.clip(t, 0, 1), "#a69c88", "#6b6052")
+    col = colorize(np.clip(t, 0, 1), "#8f877a", "#5a5349")
     yy, xx = np.mgrid[0:H, 0:W]
     ym = (H - yy) / H * shop.L                # metres along the bay (row 0 = far end)
     xm = xx / W * shop.W - shop.W / 2
     wet = np.zeros((H, W), np.float32)        # water stains where spools were filled and drained
-    for cx, cy, r in ((1.6, 9.4, 1.4), (-1.0, 6.0, 1.8), (-3.8, 9.5, 1.5), (3.4, 12.6, 0.9),
-                      (-0.2, 3.8, 1.2), (4.6, 7.0, 0.8)):
+    edge = fbm_noise((H, W), 40, 4, 45)       # breaks up the stains' outlines
+    for cx, cy, r in ((1.22, 6.5, 0.6), (0.95, 6.35, 0.32), (1.75, 6.68, 0.36), (1.3, 6.12, 0.3),
+                      (-3.8, 9.5, 1.5), (3.4, 12.6, 0.9), (-0.2, 3.8, 1.2)):
         d = np.sqrt((xm - cx) ** 2 + (ym - cy) ** 2) / r
-        wet = np.maximum(wet, np.clip(1.2 - d - (stain - 0.5) * 1.6, 0, 1))
-    wet = contrast(wet, 0.15, 0.5)
-    col = col * (1 - wet[..., None] * 0.42)
+        wet = np.maximum(wet, np.clip(1.2 - d - (stain - 0.5) * 1.6 - (edge - 0.5) * 0.9, 0, 1))
+    wet = contrast(wet, 0.2, 0.32)             # wet concrete: dark with a fairly crisp edge,
+    mottle = 0.32 + 0.28 * fbm_noise((H, W), 60, 3, 46)          # unevenly soaked
+    col = col * (1 - wet[..., None] * mottle[..., None]) + np.array([0.02, 0.012, 0.0]) * wet[..., None]
     spots = contrast(fbm_noise((H, W), 90, 2, 44), 0.8, 0.9)     # oil drips and scuffs
     col = col * (1 - spots[..., None] * 0.35)
     gx = np.abs(((xm + shop.W / 2) / 3.81 + 0.5) % 1 - 0.5) * 3.81   # saw-cut control joints
@@ -253,6 +290,81 @@ def test_series():
                 [c for _, _, c in g], events=ev)
 
 
+# ------------------------------------------------------------------ the small-bore line
+
+def small_bore_line(M):
+    """Placements for the small-bore spools around photo c, bolted the way photos a and c show.
+
+    Spool 12 (3453 mm, flanged both ends) is the 2" run in photo c, heading north from RUN_START
+    (its south flange face) to the flange where the run ends at the top of the photo. Spool 5 is
+    bolted to its south flange: 410 mm south, the corner elbow turning west, then the 860 mm leg
+    running west to the test header (photo a). Spool 4 (5397 mm) is the pipe lying on the floor
+    east of the run. Returns {ctrl: place} plus "header": spool 5's west flange (point, normal)."""
+    by = {sd["ctrl"]: sd for sd in pack.SPOOLS}
+
+    def probe(sd):
+        sp = piping.Spool("probe", sd["nps"], M, sch=sd["sch"])
+        sp.walk(sd["route"], direction=sd["start"])
+        for rec in sp.parts:
+            rec["mb"].bm.free()
+        return sp
+    g = piping.GASKET_T / 1000
+    s5 = probe(by[5])
+    yaw = Matrix.Rotation(math.atan2(-RUN_DIR.x, RUN_DIR.y), 4, "Z")
+    # Spool 12: drawing east -> along the run.
+    T12 = Matrix.Translation(RUN_START) @ yaw @ Matrix.Rotation(math.pi / 2, 4, "Z")
+    # Spool 5: drawing up -> north (its first flange faces spool 12), down -> south, west -> west.
+    R5 = yaw @ Matrix(((1, 0, 0), (0, 0, 1), (0, -1, 0))).to_4x4()
+    T5 = Matrix.Translation(RUN_START - RUN_DIR * g) @ R5
+    west = T5 @ s5.joints[-1]["pos"]
+    # Spool 4 lying on the floor: drawing south -> north, its elbow's 'down' -> east.
+    R4 = Matrix(((0, 0, -1), (0, -1, 0), (-1, 0, 0))).to_4x4()
+    T4 = Matrix.Translation((2.62, 5.55, 0.083)) @ Matrix.Rotation(math.radians(5), 4, "Z") @ R4
+
+    yaw_deg = math.degrees(math.atan2(-RUN_DIR.x, RUN_DIR.y))
+
+    def on_run(d, s=0.0, kind="cone"):
+        p = RUN_START + RUN_DIR * d + Vector((-RUN_DIR.y, RUN_DIR.x, 0)) * s
+        return (p.x, p.y, yaw_deg, kind)
+    corner_y = (T5 @ s5.joints[-1]["pos"]).y
+    return {
+        # Stands measured in photos a and c: the valve stand and the second stand under the run,
+        # the stand under the corner and the grey one under the west leg.
+        12: {"matrix": T12, "mated": {0: "bolt"},
+             "stands": [on_run(0.75, 0.08, "cone_y"), on_run(2.35, 0.06, "cone_y")]},
+        5: {"matrix": T5, "mated": {0: None, 1: "bolt"},
+            "stands": [(1.62, corner_y, yaw_deg + 90, "cone_y"), (0.92, corner_y, yaw_deg + 90, "cone_grey")]},
+        4: {"matrix": T4},
+        "header": (west, (T5.to_3x3() @ s5.joints[-1]["normal"]).normalized()),
+    }
+
+
+def test_header(M, joint, studs):
+    """The fill/vent header bolted to the west end of spool 5 (photo a): an elbow up, a riser to a
+    tee with a ball valve and plug on its branch, and a test blind on top (test equipment, not in
+    the pack). joint: (face point, outward normal) of the flange it bolts to."""
+    face, normal = joint
+    sp = piping.Spool("TestHeader", 2, M, sch="160")
+    sp.walk([("flange",), ("pipe", 60), ("elbow", "U"), ("pipe", 150),
+             ("tee", [("E", [("pipe", 60), ("valve",), ("plug",)]), ("U", [("pipe", 90), ("flange",)])])],
+            start=(0, 0, 0), direction="W")
+    j = sp.joints[-1]
+    piping.test_blind(sp, j["pos"], j["normal"], 2, M, paint="black", vent=True)
+    yaw = math.atan2(normal.y, normal.x) - math.pi     # drawing west -> along `normal`
+    root = sp.build(location=face + normal * (piping.GASKET_T / 1000), collection="Test station")
+    root.rotation_euler = (0, 0, yaw)
+    for rec in sp.parts:
+        if rec.get("obj"):
+            twin_tag(rec["obj"], "test-equipment")
+    twin_tag(root, "test-equipment")
+    import bpy
+    bpy.context.view_layer.update()
+    W = root.matrix_world
+    piping.bolt_joint(W @ j["pos"], (W.to_3x3() @ j["normal"]).normalized(), 2, studs[2],
+                      piping.CL600[2]["T"] / 1000, "Stud", collection="Bolting", twin="test-equipment")
+    return root
+
+
 # ------------------------------------------------------------------ world
 
 def build(ctx):
@@ -282,6 +394,9 @@ def build(ctx):
         "star": [props.star_stand(f"Star_{c}{i}", PM[f"pe_{c}"]) for i, c in
                  enumerate(("yellow", "yellow2", "yellow", "yellow2", "grey"))],
     }
+    stands["cone_blue"] = [props.cone_stand("Cone_blue", PM["pe_blue"], PM["hole"])]
+    stands["cone_y"] = [stands["cone"][i] for i in (0, 1, 3)]
+    stands["cone_grey"] = [props.cone_stand("Cone_grey", PM["pe_grey"], PM["hole"])]
     studs = {n: piping.stud_prefab(n, M) for n in (2, 6, 8, 10, 12, 16)}
 
     # Paint-marker labels for every spool, in one atlas
@@ -290,10 +405,15 @@ def build(ctx):
 
     def crib(xy, yaw):
         props.cribbing(PM, xy, yaw, 0.9)
+    line = small_bore_line(M)
     for sd in pack.SPOOLS:
-        spools.build_spool(sd, M, LAYOUT[sd["ctrl"]], studs, stands, atlas, rng, cribbing=crib)
+        place = line.get(sd["ctrl"]) or LAYOUT[sd["ctrl"]]
+        sd["setup"] = SETUP.get(sd["ctrl"], "Placed in the test spread to fit the photos (not "
+                                            "individually identifiable in them).")
+        spools.build_spool(sd, M, place, studs, stands, atlas, rng, cribbing=crib)
         spools.spool_record(sd)
     spools.test_equipment_record()
+    test_header(M, line["header"], studs)
     for od in OTHER:
         sd = dict(od, iso=od["name"], sch="80")
         spools.build_spool(sd, M, od, studs, stands, atlas, rng, cribbing=crib, sid="other-work")
@@ -313,28 +433,39 @@ def build(ctx):
     twin_tag(ts1["transmitters"], "inst-PT-1")
     ts2 = props.test_station(PM, "TS2", "TEST STATION #2", (-shop.W / 2 + 0.02, 4.8), (1, 0, 0), docs)
     twin_tag(ts2["panel"], "station-2")
-    twin_tag(props.deadweight(PM, "DDW-007", (1.0, 5.2, 0.0), 20, docs), "inst-DDW-007")
+    twin_tag(props.deadweight(PM, "DDW-007", (6.35, 7.7, 0.0), 20, docs), "inst-DDW-007")
     a = ts1["anchors"]
     twin_gauge("PT-1", a["PT-1"], "pt1", record="inst-PT-1")
     twin_gauge("TT-1", a["TT-1"], "tt1", record="inst-TT-1", digits=1)
-    twin_gauge("DDW-007", (1.0, 5.2, 0.25), "pt1", record="inst-DDW-007", digits=1)
+    twin_gauge("DDW-007", (6.35, 7.7, 0.25), "pt1", record="inst-DDW-007", digits=1)
 
-    # Test hoses: station to the spread and on into the big-bore spools; an air hose
-    props.hose(PM, "TestHose", [a["hose"], (6.6, 8.2, 0.0), (5.0, 7.4, 0.0), (2.6, 6.2, 0.0), (1.2, 5.6, 0.0),
-                                (1.0, 5.2, 0.05)], 0.011)
-    props.hose(PM, "TestHose2", [(1.0, 5.2, 0.05), (0.0, 5.6, 0.0), (-1.4, 6.0, 0.0), (-2.0, 6.4, 0.62)], 0.011)
-    props.hose(PM, "AirHose", [(-0.4, 2.2, 0), (0.6, 3.0, 0), (1.6, 2.7, 0), (2.0, 3.8, 0), (0.8, 4.4, 0),
-                               (-0.2, 3.6, 0), (-1.6, 3.2, 0)], 0.01, "hose_yellow")
-    # The long 1" test line on cones beside the 2" runs (photo c), with its valve, elbow and plug
+    # Test hoses: station to the deadweight and the small-bore line, on to the big-bore spread;
+    # the yellow air hose looping on the floor in front of photo b's camera
+    props.hose(PM, "TestHose", [a["hose"], (6.9, 8.0, 0.0), (6.35, 7.75, 0.04)], 0.011)
+    props.hose(PM, "TestHose2", [(6.35, 7.7, 0.04), (5.2, 7.1, 0.0), (3.4, 6.4, 0.0), (2.2, 5.2, 0.0),
+                                 (1.62, 4.6, 0.0), (1.55, 4.35, 0.45)], 0.011)
+    props.hose(PM, "TestHose3", [(1.2, 4.6, 0.0), (0.2, 5.5, 0.0), (-0.8, 6.6, 0.0), (-1.6, 7.6, 0.0),
+                                 (-1.9, 7.9, 0.52)], 0.011)
+    props.hose(PM, "AirHose", [(3.9, 11.3, 0), (3.3, 11.0, 0), (2.95, 10.55, 0), (3.2, 10.2, 0),
+                               (3.6, 10.45, 0), (3.3, 10.95, 0), (2.9, 11.4, 0), (2.7, 12.6, 0)], 0.01, "hose_yellow")
+    # The 1" test line resting in the same saddles, 0.1 m west of spool 4's run (photos a, c):
+    # valve, nipple, elbow and plug at its south end, a plug at the north end
     tl = piping.Spool("TestLine1in", 1, M)
-    lx = TEST_LINE_X
-    tl.mb.rod((lx, 3.62, 0.69), (lx, 13.2, 0.69), 0.0167, M["pipe"], 10)
-    p = tl.ball_valve(Vector((lx, 3.62, 0.69)), Vector((0, -1, 0)), 1, lever_dir=Vector((-1, 0, 0)))
-    p = tl.threaded_elbow(p, Vector((0, -1, 0)), Vector((0, 0, -1)), 1)
-    tl.plug(p, Vector((0, 0, -1)), 1)
-    twin_tag(tl.build(collection="Test station"), "station-1")
-    for y in (10.6, 12.6):
-        instance(stands["cone"][0], "PipeStand", (lx, y, 0.0), (0, 0, 0), collection="Pipe stands")
+    side = Vector((-RUN_DIR.y, RUN_DIR.x, 0)) * 0.10
+    a1 = RUN_START + RUN_DIR * 0.66 + side + Vector((0, 0, -0.013))
+    b1 = RUN_START + RUN_DIR * 3.75 + side + Vector((0, 0, -0.013))
+    tl.part("pipe", 1)
+    tl.mb.rod(a1, b1, 0.0167, M["rust_pipe"], 10)
+    p = tl.ball_valve(a1, -RUN_DIR, 1, lever_dir=Vector((-1, 0, 0.6)))
+    tl.part("nipple", 1)
+    tl.mb.rod(p, p - RUN_DIR * 0.15, 0.0167, M["olet"], 10)
+    out = Vector((-0.7, 0, -0.7)).normalized()
+    p = tl.threaded_elbow(p - RUN_DIR * 0.15, -RUN_DIR, out, 1)
+    tl.plug(p, out, 1)
+    p = tl.ball_valve(b1, RUN_DIR, 1, lever_dir=Vector((1, 0, 0.4)))   # its north end (photo c, top)
+    tl.plug(p, RUN_DIR, 1)
+    root = tl.build(collection="Test station")
+    twin_tag(root, "station-1")
 
     # Racks, pallets and shop furniture
     flanges = props.flange_prefabs(PM, rng)
@@ -342,13 +473,22 @@ def build(ctx):
     props.flange_rack(PM, flanges, rng, (-shop.W / 2 + 0.25, 2.5), 90, 1.8)
     props.flange_rack(PM, flanges, rng, (shop.W / 2 - 0.75, 13.2), 90, 4.4)
     props.flange_rack(PM, flanges, rng, (shop.W / 2 - 0.75, 18.4), 90, 4.4)
-    props.stud_pallet(PM, studs[10][0], (-0.3, 2.9), 8, rng)
-    props.stud_pallet(PM, studs[12][0], (2.6, 15.6), -4, rng, rows=1)
+    props.stud_pallet(PM, studs[10][0], (3.5, 7.4), 8, rng)                   # photo b, lower left
+    props.stud_pallet(PM, studs[12][0], (2.75, 9.5), -4, rng, rows=1)          # photo c, top
+    # Stands measured on the floor in photos a and c (feet, which both photos agree on). The ones
+    # in the foreground of photo a are a smaller type: 0.75 of the others, from their size there.
+    for x, y, yaw, kind, n, sc in ((2.0, 7.83, -100, "cone", 1, 1.0),        # photo c: the empty one
+                                   (-0.46, 4.29, 30, "cone", 3, 0.75), (-0.02, 4.31, 0, "cone_blue", 1, 0.75),
+                                   (0.39, 4.09, 20, "star", 1, 0.75), (1.0, 4.08, -103, "cone", 1, 0.75),
+                                   (3.1, 8.4, 0, "cone_grey", 1, 1.0)):
+        for k in range(n):
+            instance(stands[kind][0 if kind != "cone" else 3], "PipeStand", (x, y, k * 0.05 * sc), (0, 0, yaw),
+                     scale=sc, collection="Pipe stands")
     props.cribbing(PM, (-1.7, 3.4), 30)
     props.cribbing(PM, (-3.6, 7.4), 80, 1.1)
     props.grating(PM, (-1.6, 6.9), (1.0, 3.2), 0)
     props.grating(PM, (-3.9, 11.2), (1.0, 2.4), 90)
-    props.jack_stand(PM, (-0.1, 4.0), 0.9)
+    props.jack_stand(PM, (-1.3, 5.11), 0.9)
     props.booth(PM, (-5.6, 27.6), (3.4, 2.6, 2.7))
     props.cabinet(PM, (4.6, 29.9), 0)
     props.cabinet(PM, (-6.9, 6.0), 90, "enclosure", (0.8, 0.5, 1.0))
@@ -357,7 +497,7 @@ def build(ctx):
     props.welder(PM, (-2.8, 27.8), 0)
     props.welder(PM, (-4.4, 1.0), 90)
     spare = [(-6.3, 1.1), (-5.6, 1.0), (2.2, 1.2), (3.0, 1.3), (-1.8, 2.0), (6.6, 4.4), (6.7, 5.4),
-             (-0.6, 2.9), (0.1, 3.3), (2.6, 3.0), (3.4, 2.8), (4.4, 3.4),
+             (2.6, 3.0), (3.4, 2.8), (4.4, 3.4),
              (-6.7, 21.5), (-6.0, 22.2), (5.9, 17.0), (6.3, 16.0), (0.4, 18.6), (-0.6, 19.1), (2.4, 4.4)]
     for i, (x, y) in enumerate(spare):        # spare stands, some stacked, as in the photos
         kind = "cone" if i % 3 else "star"

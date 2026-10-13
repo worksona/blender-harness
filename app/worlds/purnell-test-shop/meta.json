@@ -51,7 +51,7 @@
     "bounds": {
       "min": [
         -7.895,
-        -0.01,
+        -0.0128,
         -30.63
       ],
       "max": [
@@ -1095,6 +1095,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -2308,6 +2312,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -3586,6 +3594,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -4353,6 +4365,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Lying on the floor east of spool 12 (photos a and c). Position measured in photos a and c."
             ]
           ],
           "tables": [
@@ -4791,92 +4807,6 @@
           "parent": "spool-5",
           "listed": false
         },
-        "spool-5/part-10": {
-          "id": "spool-5/part-10",
-          "title": "Gasket \u00b7 item 5",
-          "subtitle": "2\" \u00b7 heat - \u00b7 60.3-NG-CLS-720540-25H-C",
-          "group": "Components",
-          "fields": [
-            [
-              "Spool",
-              "60.3-NG-CLS-720540-25H-C"
-            ],
-            [
-              "BOM item",
-              "5"
-            ],
-            [
-              "Heat no.",
-              "not recorded"
-            ],
-            [
-              "Size",
-              "2\""
-            ],
-            [
-              "Description",
-              "GASKET, ASME 600 RF, 3.2mm, FLEXITALLIC 'FLEXICARB' CGI, 304L OR 316L SS WINDINGS AND INNER RING, FLEXIBLE GRAPHITE FILLER, ASME B16.20"
-            ],
-            [
-              "Material",
-              "per description"
-            ],
-            [
-              "Quantity on spool",
-              "1"
-            ]
-          ],
-          "tables": [],
-          "notes": [],
-          "color": "#7fd1ff",
-          "images": [],
-          "links": [],
-          "parent": "spool-5",
-          "listed": false
-        },
-        "spool-5/part-12": {
-          "id": "spool-5/part-12",
-          "title": "Gasket \u00b7 item 5",
-          "subtitle": "2\" \u00b7 heat - \u00b7 60.3-NG-CLS-720540-25H-C",
-          "group": "Components",
-          "fields": [
-            [
-              "Spool",
-              "60.3-NG-CLS-720540-25H-C"
-            ],
-            [
-              "BOM item",
-              "5"
-            ],
-            [
-              "Heat no.",
-              "not recorded"
-            ],
-            [
-              "Size",
-              "2\""
-            ],
-            [
-              "Description",
-              "GASKET, ASME 600 RF, 3.2mm, FLEXITALLIC 'FLEXICARB' CGI, 304L OR 316L SS WINDINGS AND INNER RING, FLEXIBLE GRAPHITE FILLER, ASME B16.20"
-            ],
-            [
-              "Material",
-              "per description"
-            ],
-            [
-              "Quantity on spool",
-              "1"
-            ]
-          ],
-          "tables": [],
-          "notes": [],
-          "color": "#7fd1ff",
-          "images": [],
-          "links": [],
-          "parent": "spool-5",
-          "listed": false
-        },
         "spool-5/weld-A": {
           "id": "spool-5/weld-A",
           "title": "Weld A \u00b7 XF-39",
@@ -5134,6 +5064,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Bolted to spool 12's south flange: the corner and west leg in photo a, the test header on its west flange. Position measured in photo a."
             ]
           ],
           "tables": [
@@ -5195,7 +5129,7 @@
                 "spool-5/part-7",
                 "spool-5/part-5",
                 "spool-5/part-1",
-                "spool-5/part-10",
+                null,
                 "spool-5/studs-6"
               ]
             },
@@ -5595,6 +5529,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -6518,6 +6456,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -7663,6 +7605,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -9486,6 +9432,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -9993,6 +9943,10 @@
             [
               "Result",
               "N/A"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -10840,6 +10794,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Riser on the large stand at the left of photo c; its 1979 mm run leaves the photo's left edge. Position measured in photo c."
             ]
           ],
           "tables": [
@@ -11357,6 +11315,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "The 2\" run in photo c, on the measured valve stand and second stand; its south flange bolted to spool 5. Position measured in photos a and c."
             ]
           ],
           "tables": [
@@ -12597,6 +12559,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -13916,6 +13882,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -14946,6 +14916,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -15545,6 +15519,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -16912,6 +16890,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -18707,6 +18689,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Green test blind on its 10\" end, 2.1 m in front of photo b's camera; the run heads west (photo c, top). Position measured in photos b and c."
             ]
           ],
           "tables": [
@@ -19255,6 +19241,10 @@
             [
               "Result",
               "N/A"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -19791,6 +19781,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -20942,6 +20936,10 @@
             [
               "Result",
               "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "On the test floor",
+              "Placed in the test spread to fit the photos (not individually identifiable in them)."
             ]
           ],
           "tables": [
@@ -21939,8 +21937,6 @@
         "spool-5/part-5",
         "spool-5/part-7",
         "spool-5/part-9",
-        "spool-5/part-10",
-        "spool-5/part-12",
         "spool-5/weld-A",
         "spool-5/weld-B",
         "spool-5/weld-C",
@@ -22552,9 +22548,9 @@
         {
           "label": "DDW-007",
           "position": [
-            1.0,
+            6.35,
             0.25,
-            -5.2
+            -7.7
           ],
           "series": "pt1",
           "record": "inst-DDW-007",
@@ -22568,12 +22564,12 @@
     "grade": null
   },
   "stats": {
-    "objects": 1888,
-    "unique_meshes": 625,
-    "triangles_drawn": 279814,
-    "triangles_stored": 135990,
-    "materials": 77,
-    "textures": 25,
+    "objects": 1909,
+    "unique_meshes": 654,
+    "triangles_drawn": 286934,
+    "triangles_stored": 142590,
+    "materials": 80,
+    "textures": 27,
     "bounds_min": [
       -7.89,
       -0.15,
@@ -22584,7 +22580,7 @@
       30.63,
       9.5
     ],
-    "glb_bytes": 6336288
+    "glb_bytes": 6514096
   },
   "built_with": "5.2.2 LTS"
 }

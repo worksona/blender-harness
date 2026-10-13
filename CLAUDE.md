@@ -125,7 +125,13 @@ Several photos of one place: add a `photo_camera(photo, location, target, focal_
 per photo. Phones store the 35 mm-equivalent focal length in EXIF. Each build writes
 `build/<slug>/compare-<photo>.jpg`; `--views a.jpg b.jpg` renders only those, `--no-views` none.
 Solve the cameras against each other: a feature seen in two photos pins both, and column
-spacing, door sizes and keystoning (how much verticals lean) give pitch and scale.
+spacing, door sizes and keystoning (how much verticals lean) give pitch and scale. Objects of
+known size measure distance: a pipe's OD in pixels at several points along it gives the camera's
+height and pitch (f_px = lens / 36 x image width). Then place things with
+`python3 tools/photo_measure.py <slug> <photo> --px u,v [--z h]`, which projects photo pixels onto
+the floor (or a plane at height h) through the solved camera (`--pt x,y,z` goes the other way;
+the build writes the cameras to `build/<slug>/cameras.json`). Floor contacts (stand feet, pipe
+ends lying down) are the most reliable; check a point seen in two photos against both.
 `worlds/purnell-test-shop` is the worked example: three photos plus a test pack of drawings
 (`worlds/purnell-spools` shows the same 21 spools on their own).
 
