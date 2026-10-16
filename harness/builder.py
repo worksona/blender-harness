@@ -44,6 +44,63 @@ def _template(kind, *params):
     return t
 
 
+def _rounded_template(size, radius, segments, puff, flat):
+    """Unit-free rounded box (cube-sphere corners, even bevel angles), optionally puffed: the flat
+    part of every face bulges out by `puff` meters at its centre, like a cushion."""
+    h = [s / 2 for s in size]
+    r = min(radius, min(h) * 0.98)
+    inner = [hk - r for hk in h]
+
+    def cuts(k):
+        edge = [-h[k] + r - r * math.tan(i / segments * math.pi / 4) for i in range(segments, 0, -1)]
+        mid = [-inner[k] + 2 * inner[k] * i / (flat + 1) for i in range(flat + 2)]
+        return edge + mid + [-e for e in reversed(edge)]
+    bm = bmesh.new()
+    index = {}
+
+    def vert(p):
+        key = tuple(round(c, 6) for c in p)
+        v = index.get(key)
+        if v is None:
+            v = index[key] = bm.verts.new(p)
+        return v
+    for axis in range(3):
+        a, b = (axis + 1) % 3, (axis + 2) % 3
+        us, vs = cuts(a), cuts(b)
+        for sign in (-1, 1):
+            grid = []
+            for u in us:
+                row = []
+                for v in vs:
+                    p = [0.0, 0.0, 0.0]
+                    p[axis], p[a], p[b] = sign * h[axis], u, v
+                    core = [max(-inner[k], min(inner[k], p[k])) for k in range(3)]
+                    off = Vector(p) - Vector(core)
+                    n = off.normalized() if off.length > 1e-9 else Vector([0, 0, 0])
+                    q = Vector(core) + n * r
+                    if puff:
+                        w = 1.0
+                        for k in (a, b):
+                            t = core[k] / inner[k] if inner[k] > 1e-6 else 0.0
+                            w *= max(0.0, 1.0 - t * t)
+                        q[axis] += sign * puff * w
+                    row.append(vert(q))
+                grid.append(row)
+            for i in range(len(us) - 1):
+                for j in range(len(vs) - 1):
+                    quad = [grid[i][j], grid[i + 1][j], grid[i + 1][j + 1], grid[i][j + 1]]
+                    if len(set(quad)) == 4:
+                        try:
+                            bm.faces.new(quad)
+                        except ValueError:
+                            pass
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.verts.index_update()
+    t = ([v.co.copy() for v in bm.verts], [tuple(v.index for v in f.verts) for f in bm.faces])
+    bm.free()
+    return t
+
+
 def _align_z(a, b):
     """Matrix that maps a unit Z-axis primitive centered on the origin onto segment a -> b."""
     a, b = Vector(a), Vector(b)
@@ -91,6 +148,85 @@ class MeshBuilder:
         m = (Matrix.Translation(center) @ Euler([math.radians(r) for r in rotation]).to_matrix().to_4x4()
              @ Matrix.Diagonal((sx, sy, sz, 1)))
         return self._stamp(_template("cube"), m, mat, False)
+
+    def rounded_box(self, center, size, mat, radius=0.02, segments=3, rotation=(0, 0, 0), puff=0.0,
+                    flat=None):
+        """Box with rounded edges and corners (furniture, upholstery, worktops, appliances).
+        puff: the faces bulge out by this many meters at their centres (cushions, mattresses,
+        pillows); flat: extra cuts across each flat face so the bulge is smooth (default 4 when
+        puffed, else 0). Shaded smooth. Identical sizes share one cached template."""
+        sx, sy, sz = size if isinstance(size, (tuple, list)) else (size,) * 3
+        flat = (4 if puff else 0) if flat is None else flat
+        key = ("rbox", round(sx, 4), round(sy, 4), round(sz, 4), round(radius, 4), segments,
+               round(puff, 4), flat)
+        t = _TEMPLATES.get(key)
+        if t is None:
+            t = _TEMPLATES[key] = _rounded_template((sx, sy, sz), radius, segments, puff, flat)
+        m = Matrix.Translation(center) @ Euler([math.radians(r) for r in rotation]).to_matrix().to_4x4()
+        return self._stamp(t, m, mat, "all")
+
+    def rounded_slab(self, center, size, corner, mat, segments=6, rotation=(0, 0, 0)):
+        """Slab whose corners are rounded in plan (table tops, rugs, mirrors, trays): size (x, y,
+        thickness), corner = plan radius. Edges stay crisp; centre is the middle of the slab."""
+        sx, sy, sz = size
+        c = min(corner, sx / 2 * 0.999, sy / 2 * 0.999)
+        ring = []
+        for cx, cy, a0 in ((sx / 2 - c, sy / 2 - c, 0), (-sx / 2 + c, sy / 2 - c, 90),
+                           (-sx / 2 + c, -sy / 2 + c, 180), (sx / 2 - c, -sy / 2 + c, 270)):
+            for i in range(segments + 1):
+                a = math.radians(a0 + 90 * i / segments)
+                ring.append((cx + c * math.cos(a), cy + c * math.sin(a)))
+        n = len(ring)
+        verts = [(x, y, -sz / 2) for x, y in ring] + [(x, y, sz / 2) for x, y in ring]
+        faces = [tuple(range(n - 1, -1, -1)), tuple(range(n, 2 * n))]
+        faces += [(i, (i + 1) % n, n + (i + 1) % n, n + i) for i in range(n)]
+        m = Matrix.Translation(center) @ Euler([math.radians(r) for r in rotation]).to_matrix().to_4x4()
+        return self._stamp(([Vector(v) for v in verts], faces), m, mat, False)
+
+    def lathe(self, base, profile, mat, segments=32, scale=(1, 1), rotation=(0, 0, 0), cap=True):
+        """Surface of revolution around a vertical axis standing on `base` (vases, lamp shades,
+        bowls, plates, glasses, table pedestals, basins). profile: [(radius, z), ...] from bottom
+        to top; a radius of 0 closes that end to a point. scale (sx, sy) stretches it into an
+        oval (bathtubs, oval tables). Open ends get flat caps unless cap=False. Shaded smooth:
+        build with sharp_angle to keep creases (rims, steps) crisp."""
+        sx, sy = scale
+        verts, faces, rings = [], [], []
+        for r, z in profile:
+            if r <= 1e-6:
+                rings.append([len(verts)])
+                verts.append(Vector((0, 0, z)))
+                continue
+            ring = []
+            for i in range(segments):
+                a = 2 * math.pi * i / segments
+                ring.append(len(verts))
+                verts.append(Vector((r * math.cos(a) * sx, r * math.sin(a) * sy, z)))
+            rings.append(ring)
+        for lo, hi in zip(rings, rings[1:]):
+            if len(lo) == 1 and len(hi) == 1:
+                continue
+            for i in range(segments):
+                j = (i + 1) % segments
+                if len(lo) == 1:
+                    faces.append((lo[0], hi[i], hi[j]))
+                elif len(hi) == 1:
+                    faces.append((lo[i], lo[j], hi[0]))
+                else:
+                    faces.append((lo[i], lo[j], hi[j], hi[i]))
+        m = Matrix.Translation(base) @ Euler([math.radians(r) for r in rotation]).to_matrix().to_4x4()
+        self._stamp((verts, faces), m, mat, "all")
+        for ring, flip in ((rings[0], True), (rings[-1], False)):
+            if cap and len(ring) > 1:   # separate verts, so the cap's edge stays crisp
+                face = tuple(range(len(ring)))
+                self._stamp(([verts[i] for i in ring], [face[::-1] if flip else face]), m, mat, False)
+        return self
+
+    def faces(self, verts, faces, mat, smooth=True, matrix=None):
+        """Raw geometry (leaves, drapes, custom shapes): vertex list + face index tuples, in the
+        builder's space (or transformed by `matrix`)."""
+        m = matrix or Matrix.Identity(4)
+        return self._stamp(([Vector(v) for v in verts], [tuple(f) for f in faces]), m, mat,
+                           "all" if smooth else False)
 
     def slab(self, x0, y0, x1, y1, z, thickness, mat):
         """Horizontal plate from corner (x0, y0) to (x1, y1), top surface at z."""
@@ -154,10 +290,12 @@ class MeshBuilder:
         return self
 
     def torus(self, center, major, minor, mat, major_segments=48, minor_segments=6, arc=360.0,
-              start=0.0):
+              start=0.0, rotation=(0, 0, 0)):
         """Ring in the XY plane (handrails, stiffener rings). arc < 360 makes an open ring
-        running from `start` degrees."""
-        cx, cy, cz = center
+        running from `start` degrees. rotation (degrees) tilts it about its centre (mirror
+        frames, fan guards)."""
+        tilt = Euler([math.radians(r) for r in rotation]).to_matrix()
+        c0 = Vector(center)
         closed = arc >= 360
         n = major_segments if closed else major_segments + 1
         rings = []
@@ -167,8 +305,8 @@ class MeshBuilder:
             for j in range(minor_segments):
                 v = 2 * math.pi * j / minor_segments
                 r = major + minor * math.cos(v)
-                ring.append(self.bm.verts.new((cx + r * math.cos(u), cy + r * math.sin(u),
-                                               cz + minor * math.sin(v))))
+                local = Vector((r * math.cos(u), r * math.sin(u), minor * math.sin(v)))
+                ring.append(self.bm.verts.new(c0 + tilt @ local))
             rings.append(ring)
         idx = self._mat_index(mat)
         for i in range(major_segments if closed else n - 1):
@@ -352,11 +490,15 @@ class MeshBuilder:
 
     # ------------------------------------------------------------ output
 
-    def build(self, location=(0, 0, 0), rotation=(0, 0, 0), collection=None):
+    def build(self, location=(0, 0, 0), rotation=(0, 0, 0), collection=None, sharp_angle=None):
+        """sharp_angle (degrees): smooth-shaded faces meeting at more than this angle get a crisp
+        edge (lathe rims, rounded_box seams on puffed cushions); the .glb keeps the split normals."""
         me = bpy.data.meshes.new(self.name)
         self.bm.normal_update()
         self.bm.to_mesh(me)
         self.bm.free()
+        if sharp_angle is not None:
+            me.set_sharp_from_angle(angle=math.radians(sharp_angle))
         for m in self.materials:
             me.materials.append(m)
         obj = bpy.data.objects.new(self.name, me)

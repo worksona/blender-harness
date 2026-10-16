@@ -42,7 +42,8 @@ To build without rendering, add `--no-render`.
 | Textures | `texture(name, pixels, data=)` turns numpy pixels into an image that is embedded in the .glb. Generators: `fbm_noise`, `value_noise`, `grime`, `height_normal`, `colorize`, `contrast`, `blur`, `make_tileable`, `photo_patch(photo, box)` (tileable crop of a reference photo), `text_image`/`text_mask`/`text_atlas` (lettering in Blender's font). `decal(name, image, size, ..., wrap_radius=, uv=)` places lettering, signs or labels, flat or wrapped around a pipe |
 | Primitives | `box`, `sphere`, `cylinder`, `cone`, `plane`, `mesh(verts, faces)` |
 | Prefabs | `join(name, parts)` merges parts into one mesh, `prefab(obj)` hides the template, `instance(prefab, ...)` places linked copies that cost nothing extra in the .glb |
-| Detailed structures | `MeshBuilder(name)` assembles hundreds of parts into one object: `box`, `slab`, `beam(a, b)`, `rod(a, b)`, `cylinder`, `sphere`, `dome`, `torus`, `pipe(points)` (ball elbows), `tube(points, bend_radius=)` (smooth real pipe bends), `flange`, `handwheel`, `ladder(cage=True)`, `railing`, `ring_platform`, then `.build()`. Use it for frames, pipework, and vessels. `worlds/oil-refinery` shows it at scale |
+| Detailed structures | `MeshBuilder(name)` assembles hundreds of parts into one object: `box`, `slab`, `beam(a, b)`, `rod(a, b)`, `cylinder`, `sphere`, `dome`, `torus(rotation=)`, `pipe(points)` (ball elbows), `tube(points, bend_radius=)` (smooth real pipe bends), `flange`, `handwheel`, `ladder(cage=True)`, `railing`, `ring_platform`, then `.build(sharp_angle=)`. Use it for frames, pipework, and vessels. `worlds/oil-refinery` shows it at scale |
+| Furniture and products | `MeshBuilder` also has `rounded_box(center, size, mat, radius, puff=)` (bevelled cabinets, worktops; `puff` bulges cushions, mattresses, pillows), `rounded_slab(center, size, corner)` (round-cornered tops, rugs), `lathe(base, [(r, z), ...], scale=)` (vases, shades, bowls, glasses, basins, oval tubs) and `faces(verts, faces)` (leaves, drapes). Build with `sharp_angle=50` so lathe rims stay crisp. `worlds/haven-home` is the worked example |
 | Terrain | `terrain(name, size, resolution, height=f(x, y), bands=[(max_z, mat), ...], center=, backdrop=)`, `fbm`, `island_falloff`, `scatter(rng, n, area, height, accept, min_dist)`, `slope` |
 | Water | `ocean(level, waves='calm'|'moderate'|'rough', wind, color, shallow, foam, clarity)`, `bob(obj, amount, draft)` makes an object float on the viewer's waves |
 | Time of day | `atmosphere(time="18:40", latitude, day, north, haze, visibility, exposure, lamps)`: real solar position, sun colour from atmospheric extinction, a physical sky, distance haze, automatic exposure, and lamps that switch on at dusk. Prefer it over manual `sun`/`sky`/`fog` |
@@ -137,6 +138,15 @@ the build writes the cameras to `build/<slug>/cameras.json`). Floor contacts (st
 ends lying down) are the most reliable; check a point seen in two photos against both.
 `worlds/purnell-test-shop` is the worked example: three photos plus a test pack of drawings
 (`worlds/purnell-spools` shows the same 21 spools on their own).
+
+## Haven (Home Assistant dashboard)
+
+`haven/` is the Haven Home Assistant dashboard, which shows `worlds/haven-home` live: its lamps, TV,
+blinds and fan follow Home Assistant state. The world tags those parts with glTF extras
+(`haven_room`, `haven_light`, `haven_glow`, `haven_role`, `haven_cutaway`; see `haven/README.md`),
+and the plan uses the dashboard's room coordinates (Blender y = -Haven z). After changing the world,
+`make haven` writes the deployable folder and zip to `build/haven/`. Keep its export Draco-free
+(`META["export"]["draco"] = False`): the panel ships no Draco decoder.
 
 ## Web app
 

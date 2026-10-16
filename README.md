@@ -73,6 +73,7 @@ make new NAME="Desert Canyon" # scaffold worlds/desert-canyon/world.py
 make world W=desert-canyon    # build one world (+ top-down view)
 make worlds                   # build all
 make serve                    # app at http://localhost:8000
+make haven                    # Haven Home Assistant bundle with the haven-home model
 ```
 
 ## Writing a world
@@ -130,9 +131,10 @@ also committed, so the app works straight from a clone with `make serve`.
 
 ```
 harness/      world-building API (core, terrain, water, env, output)
-tools/        build_world.py, manifest.py, new_world.py, doctor.py
+tools/        build_world.py, manifest.py, new_world.py, doctor.py, haven_bundle.py
 worlds/       one folder per world; _template/ is the scaffold
 app/          index.html, app.js (gallery + viewer), ocean.js, sky.js, worlds/ (built output)
+haven/        Haven Home Assistant dashboard that shows worlds/haven-home live (haven/README.md)
 scripts/      setup.sh (installer), bl (Blender runner), session-start.sh (cloud hook)
 .claude/      settings.json (hook + permissions), skills/build-world, launch.json
 ```

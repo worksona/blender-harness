@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b111d" />
+<title>HAVEN REALTIME / Architectural Smart Home</title>
+<style>
+:root{color-scheme:dark;--bg:#0b111d;--panel:#121b2b;--panel2:#182338;--line:rgba(174,194,231,.12);--text:#f6f6fb;--muted:#95a4bb;--gold:#f9bd78;--blue:#7baaff;--green:#7ddebd;--danger:#ff8d90;--radius:22px;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html,body{min-height:100%;margin:0}body{background:radial-gradient(ellipse 70% 55% at 47% 0%,#25334c 0%,#111b2a 57%,#090e18 100%);color:var(--text);font-size:14px}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}button:disabled{cursor:not-allowed;opacity:.45}
+.app{max-width:1640px;margin:0 auto;padding:22px clamp(14px,2.7vw,42px) 34px;min-height:100vh}
+.topbar{display:flex;align-items:center;gap:20px;min-height:52px;margin-bottom:22px}.brand{display:flex;align-items:center;gap:11px;white-space:nowrap}.brandmark{width:37px;height:37px;border-radius:13px;background:linear-gradient(140deg,#d9c6ff 0%,#8faeff 55%,#6383d3 100%);display:grid;place-items:center;color:#111729;box-shadow:0 0 30px #8c9aff44}.brandmark svg{width:21px;height:21px}.brand-name{font-size:16px;font-weight:750;letter-spacing:-.55px}.brand-desc{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#9caac2;margin-top:2px}.header-divider{height:24px;width:1px;background:var(--line);margin-left:4px}.address{display:flex;align-items:center;gap:8px;color:#bec9df}.address svg{width:16px;height:16px;color:#a5b6d0}.header-spacer{flex:1}.clock{font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:.3px;color:#e4eaf7}.date-label{color:#8796b0;font-size:12px}.status-pill{border:1px solid var(--line);background:#152137aa;border-radius:30px;padding:9px 12px;display:inline-flex;gap:8px;align-items:center;font-size:12px;color:#c0cce0;white-space:nowrap}.dot{width:7px;height:7px;background:var(--gold);border-radius:50%;box-shadow:0 0 0 3px #f9bd781a}.status-pill.connected .dot{background:var(--green);box-shadow:0 0 0 3px #7ddebd22}.icon-btn{border:1px solid var(--line);background:#19253b9c;color:#c8d5ee;border-radius:12px;width:38px;height:38px;display:grid;place-items:center;transition:.2s}.icon-btn:hover{background:#253753;color:white}.icon-btn svg{width:17px;height:17px;stroke-width:1.8}
+.main{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(330px,.9fr);gap:20px;align-items:stretch}.panel{background:linear-gradient(150deg,#172135e8,#101726ef);border:1px solid var(--line);box-shadow:0 16px 60px #060b146b, inset 0 1px #ffffff06;border-radius:var(--radius)}.stage{position:relative;overflow:hidden;min-height:620px;display:flex;flex-direction:column;isolation:isolate}.stage:before{content:"";position:absolute;inset:-15%;z-index:-1;background:radial-gradient(ellipse at 50% 43%,#4b4e6655 0,#202b4030 28%,transparent 62%),radial-gradient(ellipse at 22% 22%,#ba91792b,transparent 48%);pointer-events:none}.stage:after{content:"";position:absolute;inset:0;z-index:-1;opacity:.13;background-image:radial-gradient(#bbd1ff 0.7px,transparent .7px);background-size:20px 20px;mask-image:linear-gradient(to bottom,transparent 10%,black 70%);pointer-events:none}.stage-heading{position:relative;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;padding:24px 26px 0;gap:16px;pointer-events:none}.eyebrow{color:#94a9c7;text-transform:uppercase;letter-spacing:2px;font-size:10px;font-weight:800}.stage-title{font-size:clamp(25px,3vw,36px);font-weight:650;letter-spacing:-1.35px;margin:8px 0 6px}.stage-subtitle{color:#a5b2c9;font-size:13px}.occupancy{border:1px solid #a5b7d42e;background:#1e2a3d9e;border-radius:24px;display:flex;align-items:center;gap:8px;padding:9px 12px;white-space:nowrap;color:#ccd7e7;font-size:12px}.occupancy .dot{background:var(--green)}
+.viewport-wrap{flex:1;min-height:365px;position:relative;z-index:1}.viewport{width:100%;height:100%;position:absolute;inset:0;touch-action:none;cursor:grab}.viewport:active{cursor:grabbing}.viewport canvas{display:block;width:100%;height:100%;outline:none}.viewport-fallback{position:absolute;inset:0;display:grid;place-items:center;z-index:0;color:#9faec6}.viewport-fallback svg{width:78%;height:78%;max-height:450px;filter:drop-shadow(0 30px 28px #0007)}.viewport-fallback.hidden{display:none}.haven-realtime-canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}.haven-room-overlay{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden}.haven-room-chip{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;background:#151c27c7;border:1px solid #d5c9ad55;border-radius:10px;color:#f6ede1;font-size:10px;font-weight:650;padding:6px 10px;box-shadow:0 4px 16px #0008;backdrop-filter:blur(10px);transition:border .2s,background .2s;white-space:nowrap}.haven-room-chip:hover,.haven-room-chip.chosen{background:#c4a074ee;color:#18202a;border-color:#ffe0ad}.viewport-toolbar{position:absolute;right:22px;top:16px;z-index:4;display:flex;flex-direction:column;gap:7px}.viewbutton{border:1px solid #b6c4e033;background:#1a283cde;backdrop-filter:blur(12px);border-radius:12px;color:#d0daea;width:36px;height:36px;display:grid;place-items:center}.viewbutton:hover,.viewbutton.active{color:white;background:#344761}.viewbutton svg{width:16px;height:16px}.room-callout{position:absolute;z-index:3;left:22px;bottom:18px;display:flex;align-items:center;gap:10px;background:#101d31d9;border:1px solid #9fb0d02b;border-radius:13px;padding:9px 13px;backdrop-filter:blur(14px);box-shadow:0 9px 24px #0003;pointer-events:none}.callout-icon{color:#ffca88;background:#ffc68818;padding:7px;border-radius:9px;display:grid;place-items:center}.callout-icon svg{width:18px;height:18px}.callout-title{font-weight:700;font-size:12px}.callout-desc{color:#91a4c0;font-size:11px;margin-top:3px}.drag-tip{position:absolute;right:22px;bottom:23px;z-index:2;color:#8598b3;font-size:11px;display:flex;gap:5px;align-items:center;pointer-events:none}
+.stage-footer{border-top:1px solid #ffffff0d;padding:15px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#1018268a;z-index:2}.stage-footer-note{color:#98a9c5;font-size:12px;display:flex;align-items:center;gap:9px}.stage-footer-note svg{width:15px;height:15px;color:#a7bbd9}.mini-chip{border:1px solid var(--line);border-radius:10px;padding:7px 10px;color:#cbd5e5;background:#1a2a40bd;font-size:11px;white-space:nowrap}
+.sidebar{display:flex;flex-direction:column;gap:16px;min-width:0}.sidebar>section{min-width:0}.scenes-panel,.rooms-panel,.devices-panel{padding:20px}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px}.section-heading h2{font-size:14px;font-weight:700;letter-spacing:-.1px;margin:0}.section-heading span{color:#91a3bd;font-size:11px}.scenes-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.scene-btn{border:1px solid #ffffff0c;background:#202b3d;border-radius:13px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#b7c5db;padding:13px 3px 11px;transition:background .2s,border .2s,transform .2s}.scene-btn svg{width:20px;height:20px;stroke-width:1.5}.scene-btn span{font-size:10px;font-weight:630}.scene-btn:hover{transform:translateY(-2px);background:#2c3d55}.scene-btn.selected{background:linear-gradient(155deg,#314f78,#263957);color:#f2f6ff;border-color:#84aaff77;box-shadow:inset 0 0 17px #80a9fa0e}.scene-btn.selected svg{color:#bad3ff;filter:drop-shadow(0 0 5px #93b9ff99)}
+.rooms-panel{padding-bottom:18px}.room-tabs{display:flex;gap:7px;overflow-x:auto;min-width:0;max-width:100%;scrollbar-width:none;padding-bottom:3px}.room-tabs::-webkit-scrollbar{display:none}.room-tab{white-space:nowrap;border:1px solid transparent;background:#22304790;color:#9baec7;font-size:11px;font-weight:650;padding:10px 13px;border-radius:24px}.room-tab:hover{background:#2b3b57}.room-tab.active{background:#c4d6ff;color:#17233b;border-color:#e0e9ff}.room-summary{display:flex;justify-content:space-between;align-items:center;margin-top:16px;gap:10px}.room-summary strong{font-weight:700;font-size:13px}.room-summary small{font-size:11px;color:#a3b2c8}.text-action{background:none;border:0;color:#b1caff;font-size:11px;font-weight:700;padding:7px}.text-action:hover{color:#fff}
+.devices-panel{flex:1;min-height:0}.devices-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.devices-header h2{margin:0;font-size:14px}.device-count{font-size:11px;color:#91a6c3;background:#23324a;padding:6px 9px;border-radius:20px}.device-list{display:grid;grid-template-columns:1fr 1fr;gap:9px}.device{border:1px solid #ffffff10;border-radius:14px;background:#1d293b;padding:12px;min-height:97px;position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:10px;transition:border .2s,background .2s}.device.on{background:linear-gradient(150deg,#50433c 0%,#282c39 85%);border-color:#e9b77838}.device.climate-card{grid-column:span 2;min-height:88px;background:#243048;flex-direction:row;align-items:center}.device-topline{display:flex;align-items:center;justify-content:space-between;width:100%;gap:5px}.device-icon{height:33px;width:33px;background:#ffffff0e;border-radius:11px;display:grid;place-items:center;color:#bfcce3}.device.on .device-icon{background:#f7bd77;color:#593c21;box-shadow:0 2px 22px #f7bd7750}.device-icon svg{width:16px;height:16px}.switch{width:32px;height:19px;background:#4c5767;border:0;border-radius:16px;padding:3px;position:relative;flex-shrink:0}.switch:before{content:"";height:13px;width:13px;display:block;background:#e7edf8;border-radius:50%;transition:transform .2s}.switch.on{background:#e9b66f}.switch.on:before{transform:translateX(13px);background:#493525}.device-name{font-size:12px;font-weight:700;line-height:1.25}.device-sub{color:#96a6bc;font-size:10px;margin-top:3px}.device.on .device-sub{color:#ddbea1}.device-title{min-width:0}.device-icon-climate{background:#354767;color:#b6d5ff}.climate-control{margin-left:auto;display:flex;align-items:center;gap:6px}.temp-btn{border:0;border-radius:9px;background:#35445e;color:#e0e7f5;height:30px;width:30px;display:grid;place-items:center;font-size:20px}.temp-readout{font-size:18px;font-variant-numeric:tabular-nums;font-weight:750;min-width:47px;text-align:center}.device-empty{color:#8395b0;grid-column:span 2;padding:18px 3px;font-size:12px}.devices-panel .caption{color:#71839d;font-size:10px;margin-top:13px;line-height:1.5}.quick-dimmer{display:flex;gap:10px;align-items:center;grid-column:span 2;margin-top:-1px;margin-bottom:5px;padding:2px 4px}.quick-dimmer span{font-size:11px;color:#a8b7cf;min-width:76px}.quick-dimmer input{flex:1;min-width:0;accent-color:#f3bf82}.quick-dimmer strong{font-size:11px;color:#b8c7dd;min-width:34px;text-align:right}.connection-banner{display:flex;gap:8px;padding:11px 12px;margin-top:14px;border-radius:11px;background:#2636507a;color:#a9bddd;font-size:11px;line-height:1.45}.connection-banner svg{width:17px;flex-shrink:0;color:#7fa6f2}
+.bottom-note{padding:20px 3px 0;color:#8290a6;font-size:11px;display:flex;justify-content:space-between;gap:15px}.bottom-note a{color:#b7c8e6;text-decoration:none}
+.toast-host{position:fixed;left:50%;bottom:22px;z-index:80;transform:translateX(-50%);pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:8px}.toast{max-width:min(430px,94vw);background:#27364e;border:1px solid #a1b6da5c;box-shadow:0 14px 36px #02081399;border-radius:13px;padding:11px 17px;color:#f0f5ff;font-size:12px;line-height:1.4;animation:pop .2s ease-out}@keyframes pop{from{transform:translateY(7px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-backdrop{display:none;position:fixed;inset:0;z-index:50;background:#030912c9;backdrop-filter:blur(9px);padding:20px;overflow:auto;align-items:center;justify-content:center}.modal-backdrop.open{display:flex}.modal{width:min(690px,100%);max-height:calc(100vh - 40px);overflow:auto;background:linear-gradient(160deg,#202d43,#101b2c);border:1px solid #8da4c93e;border-radius:24px;box-shadow:0 40px 95px #0009;padding:26px}.modal-header{display:flex;gap:15px;justify-content:space-between;align-items:flex-start;margin-bottom:21px}.modal-header h2{font-size:24px;letter-spacing:-.8px;margin:5px 0 7px}.modal-header p{font-size:12px;color:#9dadc6;margin:0;line-height:1.6;max-width:550px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:7px}.field.span-2{grid-column:span 2}.field label{font-size:11px;font-weight:700;color:#c3d0e3}.field input{background:#101a2b;border:1px solid #8ca1c537;border-radius:10px;padding:11px 12px;color:#eff4ff;min-width:0;width:100%;font-size:12px}.field input::placeholder{color:#667c98}.helper{font-size:11px;color:#8fa3c0;line-height:1.55}.modal-divider{border:0;border-top:1px solid #ffffff12;margin:20px 0}.mapping-title{display:flex;justify-content:space-between;align-items:center;gap:12px}.mapping-title h3{margin:0;font-size:13px}.mapping-title small{color:#8698b5}.mapping-list{max-height:235px;overflow:auto;margin-top:11px;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:2px}.mapping-list .field label{font-size:10px;color:#aabbd1}.mapping-list .field input{padding:9px;font-size:11px}.settings-actions{margin-top:22px;display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}.action-btn{border:1px solid #ffffff19;background:#26344a;border-radius:11px;padding:10px 15px;color:#ebf2ff;font-weight:700;font-size:12px}.action-btn.primary{background:#abc8ff;color:#1c2d44;border-color:#abc8ff}.action-btn.danger{background:#4c2935;color:#ffb3bd}.notice{padding:10px 12px;border-radius:10px;background:#293950a3;border:1px solid #a0b5d520;color:#a9b8cd;font-size:11px;line-height:1.6;margin-top:13px}.settings-status{font-size:11px;color:#b5c7e3;flex:1;align-self:center}
+@media(max-width:1180px){.main{grid-template-columns:minmax(0,1.5fr) minmax(310px,.95fr)}.stage{min-height:570px}.scenes-panel,.rooms-panel,.devices-panel{padding:16px}.scene-btn{padding:12px 2px}.scenes-grid{gap:5px}.device-list{grid-template-columns:1fr 1fr}.device{padding:10px}}
+@media(max-width:900px){.app{max-width:780px;padding-top:14px}.topbar{margin-bottom:15px}.main{grid-template-columns:1fr}.stage{min-height:530px}.viewport-wrap{min-height:370px}.sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.devices-panel{grid-column:span 2}.scenes-panel,.rooms-panel,.devices-panel{padding:18px}.scene-btn{padding:11px 3px}.device-list{grid-template-columns:repeat(3,1fr)}.device.climate-card{grid-column:span 2}.quick-dimmer{grid-column:span 3}.header-divider,.address{display:none}}
+@media(max-width:600px){.app{padding:10px 10px 26px}.topbar{gap:8px;margin-bottom:10px}.brandmark{width:33px;height:33px;border-radius:11px}.brand-name{font-size:14px}.brand-desc{font-size:9px;letter-spacing:1.5px}.date-label{display:none}.clock{font-size:11px;white-space:nowrap}.status-pill{font-size:10px;padding:8px 9px}.topbar .icon-btn{width:34px;height:34px}.main{gap:11px}.stage{min-height:0;border-radius:18px}.stage-heading{padding:18px 17px 0}.stage-title{font-size:25px;margin:6px 0 4px}.stage-subtitle{font-size:11px}.occupancy{display:none}.viewport-wrap{min-height:345px;height:49vh;max-height:520px}.viewport-toolbar{right:11px;top:10px}.viewbutton{width:32px;height:32px}.room-callout{bottom:9px;left:10px;padding:8px 9px}.callout-title{font-size:11px}.callout-desc{font-size:10px}.drag-tip{right:10px;bottom:18px;font-size:0}.drag-tip svg{width:14px;height:14px}.stage-footer{padding:11px 14px}.stage-footer-note{font-size:10px}.mini-chip{font-size:10px;padding:6px 8px}.sidebar{grid-template-columns:minmax(0,1fr);gap:11px}.devices-panel{grid-column:auto}.scenes-panel,.rooms-panel,.devices-panel{padding:15px;border-radius:17px}.scenes-grid{gap:7px}.scene-btn{gap:6px;padding:12px 2px 10px}.scene-btn svg{width:19px;height:19px}.room-summary{margin-top:10px}.device-list{grid-template-columns:1fr 1fr}.device.climate-card{grid-column:span 2}.quick-dimmer{grid-column:span 2}.bottom-note{flex-direction:column;gap:4px;padding:16px 7px}.modal-backdrop{padding:8px}.modal{padding:17px;max-height:calc(100dvh - 16px);border-radius:16px}.modal-header h2{font-size:20px}.form-grid{grid-template-columns:1fr}.field.span-2{grid-column:span 1}.mapping-list{grid-template-columns:1fr}.settings-status{width:100%}}
+@media(max-width:370px){.clock{display:none}.scene-btn span{font-size:9px}.device{padding:9px}.scene-btn{border-radius:10px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+:root{--bg:#070e16;--panel:#111b27;--gold:#eab47c;--line:rgba(193,210,239,.13)}
+body{background:radial-gradient(ellipse at 35% -20%,#293a53 0%,#0b121d 60%,#080c12 100%)}
+.stage{min-height:700px;background:radial-gradient(ellipse at 55% 44%,#32425755,#101827 66%,#0f1723)}
+.viewport-wrap{min-height:395px}.stage-heading{padding-top:28px}.viewport canvas{filter:saturate(1.08)}
+.cinema-controls{position:relative;z-index:3;margin:0 20px 14px;padding:14px 16px 13px;border-radius:16px;border:1px solid #d8d6cc25;background:linear-gradient(110deg,#1a2638c9,#1923349c);backdrop-filter:blur(20px)}
+.cinema-label{display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:9px;font-weight:800;letter-spacing:1.65px;color:#b3c2d5}.cinema-label span#timeValue{margin-left:auto;font-size:11px;letter-spacing:.1px;text-transform:none;color:#efd7b4}.small-star{color:#eec68f;font-size:14px}
+.cinema-controls input[type=range]{width:100%;accent-color:#ebc28c;margin:11px 0 13px;cursor:pointer}
+.cinema-actions{display:flex;gap:8px;flex-wrap:wrap}.cinema-actions .mini-chip{font-size:9px;letter-spacing:1px;font-weight:750;padding:9px 11px;background:#29364a85;border-color:#778da133}.cinema-actions .mini-chip.active{background:#604b3a;border-color:#dfb27c88;color:#fff0d7}
+.device-search,.entity-toolbar input{width:100%;margin-bottom:12px;background:#111d2d;border:1px solid #ffffff1a;border-radius:10px;color:#edf4ff;padding:11px 13px;font-size:12px;outline:none}.device-search:focus,.entity-toolbar input:focus{border-color:#90b4f9}
+.entity-toolbar{display:flex;gap:10px;align-items:flex-start}.entity-toolbar input{flex:1;min-width:0}.entity-toolbar .action-btn{white-space:nowrap;min-height:38px}
+.live-mapping{max-height:340px;overflow-y:auto;display:grid;grid-template-columns:1fr;gap:7px;padding-right:4px}.assignment{background:#172337;border:1px solid #ffffff0b;border-radius:11px;padding:10px 12px;display:flex;gap:12px;align-items:center;justify-content:space-between;min-width:0}.assignment-main{min-width:0}.assignment strong{font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:285px}.assignment small{color:#8ca2bb;font-size:10px;display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis}.assignment select{min-width:105px;max-width:130px;background:#25364e;color:#e5eefb;border:1px solid #ffffff1b;border-radius:9px;padding:8px;font-size:11px}
+.device-dim{width:100%;margin-top:-2px}.device-dim input{width:100%;accent-color:#eab47c;height:13px;cursor:pointer}.device.readonly{opacity:.86}.sensor-reading{font-size:14px;font-weight:800;color:#d6f1e4}.device.pending{opacity:.57;pointer-events:none}.device.unavailable{filter:grayscale(.6);opacity:.5}.device button:disabled{opacity:.4}.device-sub{overflow-wrap:anywhere}.device-title{max-width:100%}
+.connection-banner{line-height:1.55}#houseStatus{font-weight:650}.modal{max-height:90vh;overflow-y:auto}
+@media(max-width:600px){.clock{display:none}.topbar{min-width:0}.topbar .brand{min-width:0}.brand-desc{letter-spacing:.95px}.status-pill{padding:7px 8px;flex-shrink:0}.header-spacer{min-width:0}.topbar .icon-btn{flex-shrink:0}}
+@media(max-width:680px){.stage{min-height:0}.viewport-wrap{min-height:350px}.cinema-controls{margin:0 9px 9px;padding:10px 12px}.cinema-actions{gap:5px}.cinema-actions .mini-chip{padding:8px;font-size:8px}.cinema-label{font-size:8px}.device-search{margin-bottom:9px}.assignment strong{max-width:155px}}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/examples/jsm/"}}</script>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="brandmark" data-icon="home"></div><div><div class="brand-name">haven<span style="color:#9eadd0">.</span></div><div class="brand-desc">LIVE SPATIAL CONTROL · REALTIME</div></div></div>
+    <div class="header-divider"></div><div class="address"><span data-icon="map-pin"></span> The Residence <span style="color:#647892">/</span> Main floor</div>
+    <div class="header-spacer"></div><div id="clock" class="clock">--:--</div><div id="dateLabel" class="date-label"></div>
+    <button id="connectionStatus" class="status-pill" title="Connect to Home Assistant"><i class="dot"></i><span id="connectionText">Preview · Not connected</span></button>
+    <button class="icon-btn" id="settingsOpen" title="Home Assistant settings" aria-label="Settings"><span data-icon="settings"></span></button>
+  </header>
+  <main class="main">
+    <section class="stage panel" aria-label="Interactive 3D home model">
+      <div class="stage-heading"><div><div class="eyebrow">ARCHITECTURAL DIGITAL TWIN · V3.0</div><h1 class="stage-title">Living architecture<span style="color:#d3b994">.</span></h1><div class="stage-subtitle">Your home, rendered in real time.</div></div><div class="occupancy"><i class="dot"></i><span id="houseStatus">Preview environment</span></div></div>
+      <div class="viewport-wrap" id="viewportWrap">
+        <div id="fallback" class="viewport-fallback" aria-hidden="true"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="base" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7280a2"/><stop offset="1" stop-color="#32435e"/></linearGradient></defs><path d="M305 24 575 157 299 338 32 198Z" fill="#172235" stroke="#7887a4" stroke-width="4"/><path d="M305 37 552 157 299 317 53 196Z" fill="url(#base)"/><path d="M171 127 298 189 176 265 51 198Z" fill="#a9a2a0"/><path d="M302 42 422 102 298 179 172 117Z" fill="#dbd6ce"/><path d="M426 108 550 159 417 244 303 184Z" fill="#d3c9c1"/><path d="M176 116 176 251M299 44 300 307M421 104 421 238" stroke="#dddfe5" stroke-width="10" opacity=".6"/><path d="M120 160 170 184 129 210 81 184Z" fill="#596a89"/><path d="M210 103 260 127 236 147 188 124Z" fill="#f2ece6"/><path d="M353 160 413 188 369 216 313 188Z" fill="#f1eee8"/><path d="M80 188 130 212M198 129 244 153M330 186 375 210" stroke="#fff8dc" stroke-width="5" opacity=".8"/></svg></div>
+        <div id="viewport" class="viewport" role="img" aria-label="Rotate and tap the interactive 3D apartment to select rooms"></div>
+        <div class="viewport-toolbar"><button id="resetView" class="viewbutton" title="Reset camera" aria-label="Reset camera"><span data-icon="scan"></span></button><button id="topView" class="viewbutton" title="Switch overhead view" aria-label="Switch overhead view"><span data-icon="layers"></span></button><button id="rotateView" class="viewbutton" title="Auto rotate" aria-label="Toggle auto rotation"><span data-icon="rotate"></span></button></div>
+        <div class="room-callout"><div class="callout-icon"><span id="selectedRoomIcon" data-icon="house"></span></div><div><div class="callout-title" id="selectedRoomName">Whole home</div><div class="callout-desc" id="selectedRoomInfo">Tap any room to explore</div></div></div>
+        <div class="drag-tip"><span data-icon="move"></span> Orbit · Select · Zoom</div>
+      </div>
+      <div class="cinema-controls"><div class="cinema-label"><span class="small-star">✦</span> ATMOSPHERE <span id="timeValue">Golden hour · 17:00</span></div><input id="timeSlider" type="range" min="0" max="24" step="0.25" value="17" aria-label="Time of day"><div class="cinema-actions"><button id="animateDay" class="mini-chip" aria-pressed="false">▶ DAY CYCLE</button><button id="qualityToggle" class="mini-chip" aria-pressed="true">✧ ULTRA DETAIL</button><button id="cinemaToggle" class="mini-chip" aria-pressed="true">✦ CINEMATIC</button></div></div><div class="stage-footer"><div class="stage-footer-note"><span data-icon="sparkles"></span><span id="footerInfo">Architectural overview · Real-time cinematic WebGL2</span></div><button id="resetCameraFooter" class="mini-chip">View all rooms ↗</button></div>
+    </section>
+    <aside class="sidebar">
+      <section class="scenes-panel panel"><div class="section-heading"><h2>Set the mood</h2><span>SCENES</span></div><div class="scenes-grid" id="sceneGrid"></div></section>
+      <section class="rooms-panel panel"><div class="section-heading"><h2>Explore rooms</h2><span id="activeCount">5 lights on</span></div><div class="room-tabs" id="roomTabs"></div><div class="room-summary"><div><strong id="roomSummaryTitle">Whole home</strong><br><small id="roomSummarySub">Every room, at a glance</small></div><button class="text-action" id="allLightsToggle">Turn all off</button></div></section>
+      <section class="devices-panel panel"><div class="devices-header"><h2 id="devicesHeading">Living room devices</h2><div class="device-count" id="devicesCount">4 devices</div></div><input type="search" id="deviceSearch" class="device-search" placeholder="Search devices & sensors…" aria-label="Search devices"><div class="device-list" id="deviceList"></div><div class="connection-banner" id="connectBanner"><span data-icon="info"></span><span>Preview mode. Connect to Home Assistant to discover real entities and enable device control.</span></div><div class="caption" id="deviceCaption">Preview only · no physical devices are controlled.</div></section>
+    </aside>
+  </main>
+  <footer class="bottom-note"><span>HAVEN REALTIME · SELF-CONTAINED WEBGL2 · HOME ASSISTANT CLIENT</span><span>Responsive desktop + tablet + mobile · <a href="https://www.home-assistant.io/" target="_blank" rel="noopener">Home Assistant</a></span></footer>
+</div>
+<div id="toastHost" class="toast-host" aria-live="polite"></div>
+<div id="settingsModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Home Assistant connection settings">
+  <div class="modal"><div class="modal-header"><div><div class="eyebrow">Integration</div><h2>Connect your smart home</h2><p>Connect directly to your Home Assistant server over its WebSocket API. Discover devices and sensors, assign them to model rooms, then use the live controls.</p></div><button id="settingsClose" class="icon-btn" aria-label="Close settings"><span data-icon="x"></span></button></div>
+    <div class="form-grid"><div class="field span-2"><label for="haUrl">Home Assistant URL</label><input id="haUrl" type="url" placeholder="https://home.example.com or http://homeassistant.local:8123" autocomplete="url"><div class="helper">Use a browser-reachable URL. From an HTTPS page, your Home Assistant endpoint must also use HTTPS/WSS.</div></div><div class="field span-2"><label for="haToken">Long-lived access token</label><input id="haToken" type="password" placeholder="Paste your Home Assistant token" autocomplete="off"><div class="helper">Create under Home Assistant → Profile → Security → Long-lived access tokens. The token is held in memory for this page session, not saved to disk. Never share it or publish it with this HTML file.</div></div></div>
+    <div class="notice">For the most straightforward deployment, serve this file from Home Assistant's <strong>/config/www</strong> folder (available at <strong>/local/...</strong>) or use a secure HTTPS host that can reach your Home Assistant server. The browser connects directly; no third-party service handles your token.</div>
+    <hr class="modal-divider"><div class="mapping-title"><h3>Discovered devices & room assignments</h3><small id="discoveredCount">Connect to discover entities</small></div><div class="entity-toolbar"><input id="mappingSearch" type="search" placeholder="Find an entity to place into a room"><button class="action-btn" id="refreshEntities" type="button">↻ Refresh</button></div><div id="mappingList" class="mapping-list live-mapping"></div><div class="mapping-title" style="margin-top:18px"><h3>Native Home Assistant scenes</h3><small>Optional: map each mood button</small></div><div id="sceneMappingList" class="mapping-list"></div>
+    <div class="settings-actions"><span id="settingsStatus" class="settings-status">Not connected</span><button class="action-btn" id="disconnectBtn">Disconnect</button><button class="action-btn primary" id="connectBtn">Save &amp; connect</button></div>
+    <hr class="modal-divider"><div class="helper">When live, commands are sent to Home Assistant and the 3D model changes only after the server reports the new state. Unavailable entities cannot be controlled. Preview mode remains completely simulated. Unlock requires explicit confirmation.</div>
+  </div>
+</div>
+<script type="module" id="appScript">
+const $ = (sel) => document.querySelector(sel);
+const iconPaths = {
+  home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-8h6v8"/>',
+  house:'<path d="m3 10 9-7 9 7v10H3z"/><path d="M9 21v-7h6v7"/>',
+  'map-pin':'<path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+  settings:'<path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6 7 7m10 10 1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.7"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>',
+  coffee:'<path d="M4 7h13v8a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4Z"/><path d="M17 8h2a3 3 0 0 1 0 6h-2M3 22h17M8 3v2m4-2v2"/>',
+  film:'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 10h18M7 5l4 5M14 5l4 5M8 14h8"/>',
+  moon:'<path d="M20.8 14A9 9 0 0 1 10 3.2 9 9 0 1 0 20.8 14Z"/>',
+  away:'<path d="M9 11V5a3 3 0 0 1 6 0v6"/><rect x="6" y="11" width="12" height="10" rx="2"/><path d="M12 15v3"/>',
+  'lightbulb':'<path d="M9 18h6m-5 3h4m-2-19a7 7 0 0 0-4 13c1.2 1 1 2 1 3h6c0-1 0-2 1-3a7 7 0 0 0-4-13Z"/>',
+  lamp:'<path d="m8 3-4 9h16l-4-9zm4 9v9m-4 0h8"/>',
+  tv:'<rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 22h8m-4-4v4m-5-13h10"/>',
+  snow:'<path d="M12 2v20M4 6l16 12M4 18 20 6M9 5l3-3 3 3M9 19l3 3 3-3M4 10l-1-4 4 1m10 10 4 1-1-4M7 17l-4 1 1-4m13-7 4-1-1 4"/>',
+  sparkle:'<path d="m12 2 2.3 7.7L22 12l-7.7 2.3L12 22l-2.3-7.7L2 12l7.7-2.3z"/>',
+  sparkles:'<path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7zM19 17l.7 1.3L21 19l-1.3.7L19 21l-.7-1.3L17 19l1.3-.7z"/>',
+  scan:'<path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/><circle cx="12" cy="12" r="4"/>',
+  layers:'<path d="m12 2 9 5-9 5-9-5zM3 12l9 5 9-5M3 17l9 5 9-5"/>',
+  rotate:'<path d="M3 12a9 9 0 0 1 15-6l2 2V3m0 5h-5M21 12a9 9 0 0 1-15 6l-2-2v5m0-5h5"/>',
+  move:'<path d="m12 2-3 3m3-3 3 3m-3-3v20m0 0-3-3m3 3 3-3M2 12l3-3m-3 3 3 3m-3-3h20m0 0-3-3m3 3-3 3"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v6m0-10h.01"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  blinds:'<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M4 8h16M4 13h16M4 18h16"/>',
+  fan:'<circle cx="12" cy="12" r="2"/><path d="M12 10c-5-7-9-2-5 2m7 0c8-3 4-9-1-6m-2 8c-2 9 5 10 6 3"/>',
+  activity:'<path d="M2 12h4l3-7 6 14 3-7h4"/>',
+  thermometer:'<path d="M10 15.5V5a2 2 0 0 1 4 0v10.5a4 4 0 1 1-4 0Z"/>',
+};
+function icon(name) {return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[name] || iconPaths.sparkle}</svg>`;}
+function mountIcons(node=document){node.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon));}
+mountIcons();
+const rooms = [
+ {id:'living',name:'Living',full:'Living room',subtitle:'Where everyone gathers',icon:'tv',x:-4.42,z:2.43,w:4.75,d:4.55},
+ {id:'dining',name:'Dining',full:'Dining room',subtitle:'Gather around the table',icon:'coffee',x:-4.42,z:-2.33,w:4.75,d:4.7},
+ {id:'kitchen',name:'Kitchen',full:'Kitchen',subtitle:'Fresh ideas are cooking',icon:'coffee',x:-.61,z:-2.33,w:2.78,d:4.7},
+ {id:'hall',name:'Hall',full:'Hallway',subtitle:'The heart of the home',icon:'house',x:-.61,z:2.43,w:2.78,d:4.55},
+ {id:'bedroom',name:'Bedroom',full:'Main bedroom',subtitle:'Your personal retreat',icon:'moon',x:3.77,z:-1.81,w:5.86,d:5.74},
+ {id:'bath',name:'Bath',full:'Bathroom',subtitle:'Refresh and recharge',icon:'snow',x:2.25,z:2.98,w:2.82,d:3.5},
+ {id:'office',name:'Office',full:'Home office',subtitle:'Your space to create',icon:'activity',x:5.21,z:2.98,w:2.84,d:3.5},
+];
+const seedDevices = [
+ {id:'living_ceiling',label:'Ceiling',room:'living',icon:'lightbulb',domain:'light',on:true,brightness:93},
+ {id:'living_floor',label:'Floor lamp',room:'living',icon:'lamp',domain:'light',on:true,brightness:74},
+ {id:'living_tv',label:'Living room TV',room:'living',icon:'tv',domain:'media_player',on:false},
+ {id:'living_ac',label:'Living climate',room:'living',icon:'snow',domain:'climate',on:true,temp:22},
+ {id:'dining_light',label:'Pendant lights',room:'dining',icon:'lightbulb',domain:'light',on:true,brightness:75},
+ {id:'kitchen_light',label:'Kitchen lights',room:'kitchen',icon:'lightbulb',domain:'light',on:true,brightness:95},
+ {id:'hall_light',label:'Hall lights',room:'hall',icon:'lightbulb',domain:'light',on:true,brightness:60},
+ {id:'bedroom_light',label:'Bedside lamps',room:'bedroom',icon:'lamp',domain:'light',on:true,brightness:55},
+ {id:'bedroom_blinds',label:'Bedroom blinds',room:'bedroom',icon:'blinds',domain:'cover',on:false},
+ {id:'bath_light',label:'Vanity lights',room:'bath',icon:'lightbulb',domain:'light',on:true,brightness:80},
+ {id:'office_light',label:'Desk lamp',room:'office',icon:'lamp',domain:'light',on:true,brightness:80},
+ {id:'front_lock',label:'Front door',room:'hall',icon:'lock',domain:'lock',on:true},
+];
+const scenes = [
+ {id:'bright',label:'Bright',icon:'sun',brightness:100},
+ {id:'cozy',label:'Cozy',icon:'coffee',brightness:42},
+ {id:'movie',label:'Movie',icon:'film',brightness:17},
+ {id:'night',label:'Night',icon:'moon',brightness:14},
+ {id:'away',label:'Away',icon:'away',brightness:0},
+];
+const allowedDomains=new Set(['light','switch','fan','cover','lock','climate','media_player','input_boolean','sensor','binary_sensor','number','scene','script']);
+const readableDomains=new Set(['sensor','binary_sensor','number']);
+const iconDomain={light:'lightbulb',switch:'activity',fan:'fan',cover:'blinds',lock:'lock',climate:'snow',media_player:'tv',input_boolean:'activity',sensor:'activity',binary_sensor:'activity',number:'thermometer',scene:'sparkles',script:'sparkles'};
+const safeGet=(type,key)=>{try{return window[type].getItem(key)}catch{return null}};
+const safeSet=(type,key,value)=>{try{window[type].setItem(key,value)}catch{}};
+const parseJson=(v,f)=>{try{return JSON.parse(v)||f}catch{return f}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let devices=seedDevices.map(x=>({...x})),selectedRoom='living',activeScene='bright',topDown=false,threeApi=null,fallbackApi=null,modelReady=false;
+let connectionState='demo',ws=null,wsAuthed=false,wsSeq=1,wsPending=new Map(),wsTimeout=null,shouldReconnect=false,retries=0,connSerial=0;
+let haUrl=safeGet('localStorage','haven:url')||'',haToken='';
+let roomOverrides=parseJson(safeGet('localStorage','haven:roomOverrides'),{}),sceneMappings=parseJson(safeGet('localStorage','haven:sceneMappings'),{});
+let entityRegistry=[],areaRegistry=[],deviceRegistry=[],entityStates=new Map(),entitySearch='',deviceSearch='';
+let pendingDevices=new Set(),lastError='';
+const panelMode=new URLSearchParams(location.search).get('haven_panel')==='1';let panelSeq=1,panelPending=new Map();
+function toast(message){const host=$('#toastHost'),el=document.createElement('div');el.className='toast';el.textContent=message;host.append(el);setTimeout(()=>el.remove(),4200);if(host.childElementCount>4)host.firstChild.remove();}
+function countOn(){return devices.filter(d=>d.domain==='light'&&d.on).length;}
+function updateHeader(){const now=new Date();$('#clock').textContent=now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});$('#dateLabel').textContent=now.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'});}
+updateHeader();setInterval(updateHeader,20000);
+function devicesOfRoom(){return selectedRoom==='all'?devices:devices.filter(d=>d.room===selectedRoom);}
+function renderScenes(){const c=$('#sceneGrid');c.innerHTML=scenes.map(s=>`<button class="scene-btn ${activeScene===s.id?'selected':''}" data-scene="${s.id}" title="Activate ${s.label} scene" aria-pressed="${activeScene===s.id}">${icon(s.icon)}<span>${s.label}</span></button>`).join('');c.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>activateScene(b.dataset.scene));}
+function renderRooms(){const c=$('#roomTabs');const extras=connectionState==='connected'?[{id:'unassigned',name:'Other'}]:[];c.innerHTML=`<button class="room-tab ${selectedRoom==='all'?'active':''}" data-room="all">All</button>`+[...rooms,...extras].map(r=>`<button class="room-tab ${selectedRoom===r.id?'active':''}" data-room="${r.id}">${esc(r.name)}</button>`).join('');c.querySelectorAll('[data-room]').forEach(b=>b.onclick=()=>selectRoom(b.dataset.room,true));const r=rooms.find(x=>x.id===selectedRoom);$('#activeCount').textContent=`${countOn()} lights on`;
+ $('#roomSummaryTitle').textContent=r?r.full:selectedRoom==='unassigned'?'Other devices':'Whole home';$('#roomSummarySub').textContent=r?r.subtitle:selectedRoom==='unassigned'?'Assign these in settings':'Every room, at a glance';$('#selectedRoomName').textContent=r?r.full:'Whole home';const dr=devicesOfRoom();$('#selectedRoomInfo').textContent=`${dr.filter(x=>x.domain==='light'&&x.on).length} lights active · ${dr.length} entities`;$('#selectedRoomIcon').innerHTML=icon(r?r.icon:'house');const roomLightCount=devicesOfRoom().filter(d=>d.domain==='light'&&d.on).length;$('#allLightsToggle').textContent=roomLightCount?`Turn ${selectedRoom==='all'?'all':'room'} off`:`Turn ${selectedRoom==='all'?'all':'room'} on`;}
+function stateLine(d){if(d.unavailable)return 'Unavailable in Home Assistant';if(d.domain==='light')return d.on?`On · ${d.brightness}% brightness`:'Off';if(d.domain==='climate')return `${d.state||'off'} · ${d.temp??'—'}°${d.unit||'C'}`;if(d.domain==='media_player')return d.state||'Off';if(d.domain==='cover')return d.state||'Closed';if(d.domain==='lock')return d.on?'Locked':'Unlocked';if(d.domain==='sensor')return `${d.state??'—'} ${d.unit||''}`;if(d.domain==='binary_sensor')return `${d.state||'unknown'}`;return d.state|| (d.on?'On':'Off');}
+function renderDevices(){const list=$('#deviceList'),r=rooms.find(x=>x.id===selectedRoom);const filtered=devicesOfRoom().filter(d=>(d.label+' '+(d.entityId||'')).toLowerCase().includes(deviceSearch));$('#devicesHeading').textContent=r?`${r.full} devices`:selectedRoom==='unassigned'?'Other devices':'All entities';$('#devicesCount').textContent=`${filtered.length} devices`;
+ list.innerHTML=filtered.map(d=>{const busy=pendingDevices.has(d.id),ro=readableDomains.has(d.domain),disabled=(connectionState==='connected'&&(d.unavailable||busy))||(connectionState==='connecting'||connectionState==='error');const disabledStr=disabled?'disabled':'';const status=esc(stateLine(d));
+ if(d.domain==='climate')return `<div class="device climate-card ${busy?'pending':''} ${d.unavailable?'unavailable':''}"><div class="device-icon device-icon-climate">${icon(d.icon)}</div><div class="device-title"><div class="device-name">${esc(d.label)}</div><div class="device-sub">${status}</div></div><div class="climate-control"><button class="temp-btn" data-temp="-1" data-id="${d.id}" ${disabledStr}>−</button><strong class="temp-readout">${esc(d.temp??'—')}°</strong><button class="temp-btn" data-temp="1" data-id="${d.id}" ${disabledStr}>+</button></div><button class="switch ${d.on?'on':''}" data-switch="${d.id}" aria-label="Toggle ${esc(d.label)}" ${disabledStr}></button></div>`;
+ return `<div class="device ${d.on?'on':''} ${ro?'readonly':''} ${busy?'pending':''} ${d.unavailable?'unavailable':''}"><div class="device-topline"><div class="device-icon">${icon(d.icon)}</div>${ro?`<span class="sensor-reading">${esc(d.state)}${d.unit?' '+esc(d.unit):''}</span>`:`<button class="switch ${d.on?'on':''}" data-switch="${d.id}" aria-label="Toggle ${esc(d.label)}" aria-pressed="${d.on}" ${disabledStr}></button>`}</div><div class="device-title"><div class="device-name">${esc(d.label)}</div><div class="device-sub">${status}</div></div>${d.domain==='light'?`<div class="device-dim"><input type="range" min="0" max="100" value="${d.on?d.brightness:0}" data-light-dimmer="${d.id}" aria-label="Dim ${esc(d.label)}" ${disabledStr}></div>`:''}</div>`;}).join('')||`<div class="device-empty">No ${connectionState==='connected'?'entities':'sample devices'} in this view.</div>`;
+ const lights=filtered.filter(d=>d.domain==='light'&&!d.unavailable);if(lights.length){const lit=lights.filter(d=>d.on);const val=lit.length?Math.round(lit.reduce((sum,d)=>sum+d.brightness,0)/lit.length):0;const dimmer=document.createElement('div');dimmer.className='quick-dimmer';dimmer.innerHTML=`<span>Room light dimmer</span><input id="brightnessSlider" type="range" min="0" max="100" value="${val}" ${connectionState==='connecting'||connectionState==='error'?'disabled':''} aria-label="Adjust brightness"><strong id="brightnessReadout">${val}%</strong>`;list.append(dimmer);const slider=dimmer.querySelector('input');slider.oninput=e=>{dimmer.querySelector('strong').textContent=e.target.value+'%'};slider.onchange=async e=>{const b=Number(e.target.value);activeScene='';if(connectionState!=='connected'){lights.forEach(d=>{d.on=b>0;d.brightness=b;});renderAll();updateModel();return;}await runBatch(lights.map(d=>({d,service:b?'turn_on':'turn_off',data:b?{brightness_pct:b}:{}})));};}
+ list.querySelectorAll('[data-switch]').forEach(b=>b.onclick=()=>toggleDevice(b.dataset.switch));
+ list.querySelectorAll('[data-light-dimmer]').forEach(el=>el.onchange=async()=>{const d=devices.find(d=>d.id===el.dataset.lightDimmer);if(!d)return;const v=Number(el.value);if(connectionState!=='connected'){d.brightness=v;d.on=v>0;renderAll();updateModel();return;}try{await sendDevice(d,v?'turn_on':'turn_off',v?{brightness_pct:v}:{});}catch(e){toast(e.message);}});list.querySelectorAll('[data-temp]').forEach(b=>b.onclick=()=>stepTemperature(b.dataset.id,Number(b.dataset.temp)));
+ $('#deviceCaption').textContent=connectionState==='connected'?'Live states come from Home Assistant. Commands update controls only after the server reports their new state.':connectionState==='demo'?'Preview only · controls are simulated and do not touch real devices.':'Offline · commands are unavailable until connected.';
+ $('#connectBanner').style.display=connectionState==='connected'?'none':'flex';$('#connectBanner').querySelector('span:last-child').textContent=connectionState==='demo'?'PREVIEW ONLY · Connect in Settings to discover and control actual Home Assistant entities.':'Connection inactive · reconnect in Settings.';}
+function renderAll(){renderScenes();renderRooms();renderDevices();}
+function updateModel(){threeApi?.sync();fallbackApi?.sync();}
+function selectRoom(id,animate=false){selectedRoom=id;renderRooms();renderDevices();threeApi?.select(id,animate);fallbackApi?.select(id,animate);}
+function setConnectionState(state,desc){connectionState=state;const pill=$('#connectionStatus');pill.classList.toggle('connected',state==='connected');$('#connectionText').textContent={connected:'HA · LIVE',connecting:'RECONNECTING…',error:'HA · OFFLINE',demo:'PREVIEW ONLY'}[state];$('#houseStatus').textContent=state==='connected'?`${devices.length} connected entities`:state==='demo'?'Preview environment':'Connection interrupted';$('#settingsStatus').textContent=desc||({connected:'Connected',demo:'Preview · Not connected',connecting:'Connecting…',error:'Offline'}[state]);if(state==='connected'&&devices.length)$('#occupancyNote')?.remove();renderAll();updateModel();}
+function wsUrl(base){const url=new URL(base.trim());if(!['http:','https:'].includes(url.protocol))throw Error('Use an http:// or https:// Home Assistant URL');url.protocol=url.protocol==='https:'?'wss:':'ws:';url.pathname=url.pathname.replace(/\/$/,'')+'/api/websocket';url.search='';url.hash='';return url.toString();}
+function wsCommand(payload){if(!ws||ws.readyState!==WebSocket.OPEN||!wsAuthed)return Promise.reject(Error('Not connected to Home Assistant'));return new Promise((resolve,reject)=>{const id=wsSeq++,t=setTimeout(()=>{wsPending.delete(id);reject(Error('Home Assistant request timed out'))},15000);wsPending.set(id,{resolve,reject,t});ws.send(JSON.stringify({...payload,id}));});}
+function wsCall(domain,service,entityId,data={}){if(panelMode){return new Promise((resolve,reject)=>{const id=panelSeq++;const t=setTimeout(()=>{panelPending.delete(id);reject(Error('Panel command timed out'))},12000);panelPending.set(id,{resolve,reject,t});window.parent.postMessage({type:'haven:call',id,domain,service,entity_id:entityId,data},location.origin);});}return wsCommand({type:'call_service',domain,service,service_data:data,target:{entity_id:entityId}});}
+function onOff(d){if(d.domain==='lock')return {service:d.on?'unlock':'lock',data:{}};if(d.domain==='cover')return {service:d.on?'close_cover':'open_cover',data:{}};if(d.domain==='climate'){const modes=d.attributes?.hvac_modes||[];return {service:'set_hvac_mode',data:{hvac_mode:d.on?'off':(['heat_cool','auto','heat','cool'].find(m=>modes.includes(m))||modes.find(m=>m!=='off')||'heat')}};}if(d.domain==='scene'||d.domain==='script')return {service:'turn_on',data:{}};return {service:d.on?'turn_off':'turn_on',data:{}};}
+async function sendDevice(d,service,data={}){if(connectionState!=='connected'||!d.entityId)throw Error('Device not connected');if(d.unavailable)throw Error('Entity is unavailable');if(readableDomains.has(d.domain))throw Error('This entity is read only');const domain=d.domain==='input_boolean'?'input_boolean':d.domain;pendingDevices.add(d.id);renderDevices();try{await wsCall(domain,service,d.entityId,data);}finally{pendingDevices.delete(d.id);renderDevices();}}
+async function toggleDevice(id){const d=devices.find(x=>x.id===id);if(!d)return;if(connectionState==='connecting'||connectionState==='error')return toast('Home Assistant is offline');if(connectionState!=='connected'){d.on=!d.on;d.state=d.on?'on':'off';renderAll();updateModel();toast(`${d.label} · preview only`);return;}if(d.domain==='lock'&&d.on&&!window.confirm(`Unlock ${d.label}? This operates a physical lock.`))return;const {service,data}=onOff(d);try{await sendDevice(d,service,data);toast(`${d.label} · request sent`);}catch(e){toast(`${d.label}: ${e.message}`);}}
+async function stepTemperature(id,delta){const d=devices.find(x=>x.id===id);if(!d)return;const t=Math.round((Math.max(10,Math.min(35,(Number(d.temp)||22)+delta)))*2)/2;if(connectionState!=='connected'){d.temp=t;d.on=true;renderDevices();return;}try{await sendDevice(d,'set_temperature',{temperature:t});toast(`${d.label} · ${t}° requested`);}catch(e){toast(e.message);}}
+async function runBatch(commands){if(connectionState!=='connected')return;let ok=0;let fail=0;for(let i=0;i<commands.length;i+=5){const batch=commands.slice(i,i+5);const results=await Promise.allSettled(batch.map(({d,service,data})=>sendDevice(d,service,data)));ok+=results.filter(r=>r.status==='fulfilled').length;fail+=results.length-results.filter(r=>r.status==='fulfilled').length;}toast(`${ok} commands accepted${fail?` · ${fail} failed`:''} · awaiting live state`);}
+async function activateScene(id){const s=scenes.find(x=>x.id===id);if(!s)return;activeScene=s.id;renderScenes();if(connectionState==='connecting'||connectionState==='error')return toast('Home Assistant is offline');if(connectionState!=='connected'){const lamps=devices.filter(d=>d.domain==='light');lamps.forEach(d=>{d.on=id==='bright'||(id==='cozy'&&['living','dining','bedroom'].includes(d.room))||(id==='movie'&&d.room==='living')||(id==='night'&&['hall','bedroom'].includes(d.room));if(d.on)d.brightness=s.brightness;});renderAll();updateModel();return toast(`${s.label} · preview scene`);}
+ const mapped=(sceneMappings[id]||'').trim();if(mapped){try{await wsCall('scene','turn_on',mapped);toast(`Scene ${s.label} requested · syncing…`);}catch(e){toast('Scene error: '+e.message)}return;}
+ const lights=devices.filter(d=>d.domain==='light'&&!d.unavailable);const commands=lights.map(d=>{const on=id==='bright'||(id==='cozy'&&['living','dining','bedroom'].includes(d.room))||(id==='movie'&&d.room==='living')||(id==='night'&&['hall','bedroom'].includes(d.room));return {d,service:on?'turn_on':'turn_off',data:on?{brightness_pct:s.brightness}:{}};});await runBatch(commands);}
+$('#allLightsToggle').onclick=async()=>{const lights=devicesOfRoom().filter(d=>d.domain==='light'&&!d.unavailable);const on=lights.every(d=>!d.on);if(connectionState==='connecting'||connectionState==='error')return toast('Not connected');if(connectionState!=='connected'){lights.forEach(d=>{d.on=on;d.brightness=on?85:0});renderAll();updateModel();return;}await runBatch(lights.map(d=>({d,service:on?'turn_on':'turn_off',data:on?{brightness_pct:85}:{}})));};
+$('#deviceSearch').oninput=e=>{deviceSearch=e.target.value.trim().toLowerCase();renderDevices();};
+function normalizeRoom(s){const str=(s||'').toLowerCase();if(/liv|loung|family/.test(str))return 'living';if(/dining|eat/.test(str))return 'dining';if(/kitchen|pantry/.test(str))return 'kitchen';if(/hall|entry|foyer|stair|entrance|front door/.test(str))return 'hall';if(/bed|sleep|master/.test(str))return 'bedroom';if(/bath|washroom|toilet|wc/.test(str))return 'bath';if(/office|study|desk|work/.test(str))return 'office';return 'unassigned';}
+function assignedRoom(entity,st){if(roomOverrides[entity])return roomOverrides[entity];const reg=entityRegistry.find(x=>x.entity_id===entity);const dev=deviceRegistry.find(x=>x.id===reg?.device_id);const areaId=reg?.area_id||dev?.area_id;const area=areaRegistry.find(x=>x.area_id===areaId);return normalizeRoom(area?.name||st?.attributes?.friendly_name||entity);}
+function rebuildDevices(){devices=[...entityStates.values()].filter(s=>allowedDomains.has(s.entity_id?.split('.')[0])&&s.attributes).map(s=>{const domain=s.entity_id.split('.')[0];const u=['unavailable','unknown'].includes(s.state);const on=domain==='lock'?s.state==='locked':domain==='cover'?['open','opening'].includes(s.state):domain==='climate'?s.state!=='off':domain==='media_player'?!['off','standby'].includes(s.state):domain==='scene'||domain==='script'?false:s.state==='on';return {id:'live_'+s.entity_id.replace(/[^\w-]/g,'_'),entityId:s.entity_id,label:s.attributes.friendly_name||s.entity_id,domain,room:assignedRoom(s.entity_id,s),icon:iconDomain[domain]||'activity',on,unavailable:u,state:s.state,attributes:s.attributes,unit:s.attributes.unit_of_measurement||'',brightness:Math.round((s.attributes.brightness??204)/255*100),temp:s.attributes.temperature??null};}).sort((a,b)=>a.label.localeCompare(b.label));renderAll();updateModel();}
+function ingestStates(states,full=false){if(!Array.isArray(states))return;if(full)entityStates.clear();for(const st of states)if(st?.entity_id){entityStates.set(st.entity_id,st);}if(connectionState==='connected')rebuildDevices();}
+function renderAssignments(){const list=$('#mappingList'),q=entitySearch;const entries=devices.filter(d=>(d.label+' '+d.entityId).toLowerCase().includes(q));$('#discoveredCount').textContent=connectionState==='connected'?`${devices.length} available entity records`:'Connect to discover entities';list.innerHTML=connectionState==='connected'?entries.slice(0,350).map(d=>`<div class="assignment"><div class="assignment-main"><strong title="${esc(d.label)}">${esc(d.label)}</strong><small title="${esc(d.entityId)}">${esc(d.entityId)}</small></div><select data-entity="${esc(d.entityId)}" aria-label="Model room for ${esc(d.label)}"><option value="unassigned">Other / unmapped</option>${rooms.map(r=>`<option value="${r.id}" ${d.room===r.id?'selected':''}>${esc(r.name)}</option>`).join('')}</select></div>`).join('')||'<div class="helper">No matching entities</div>':'<div class="helper">Connect to Home Assistant and your real entities will appear here.</div>';list.querySelectorAll('[data-entity]').forEach(sel=>sel.onchange=()=>{roomOverrides[sel.dataset.entity]=sel.value;safeSet('localStorage','haven:roomOverrides',JSON.stringify(roomOverrides));rebuildDevices();renderAssignments();});
+ const sceneList=$('#sceneMappingList');const candidates=devices.filter(d=>d.domain==='scene');sceneList.innerHTML=scenes.map(s=>`<div class="field"><label for="scene_map_${s.id}">${s.label}</label><input data-scene-map="${s.id}" id="scene_map_${s.id}" list="haSceneOptions" value="${esc(sceneMappings[s.id]||'')}" placeholder="scene.${s.id}"></div>`).join('')+`<datalist id="haSceneOptions">${candidates.map(d=>`<option value="${esc(d.entityId)}"></option>`).join('')}</datalist>`;sceneList.querySelectorAll('[data-scene-map]').forEach(i=>i.onchange=()=>{sceneMappings[i.dataset.sceneMap]=i.value.trim();safeSet('localStorage','haven:sceneMappings',JSON.stringify(sceneMappings));});}
+function clearSocket(){clearTimeout(wsTimeout);wsAuthed=false;for(const p of wsPending.values()){clearTimeout(p.t);p.reject(Error('Disconnected'));}wsPending.clear();if(ws){const old=ws;ws=null;old.onclose=null;old.close();}}
+function disconnect(silent=false){if(panelMode){toast('This panel inherits its Home Assistant session.');return;}shouldReconnect=false;connSerial++;clearSocket();entityStates.clear();entityRegistry=[];areaRegistry=[];deviceRegistry=[];devices=seedDevices.map(x=>({...x}));selectedRoom='living';setConnectionState('demo','Disconnected · Preview mode');renderAssignments();if(!silent)toast('Disconnected · preview only');}
+async function discover(){if(connectionState!=='connected'||panelMode)return;try{const states=await wsCommand({type:'get_states'});let [areas,entities,devs]=await Promise.allSettled([wsCommand({type:'config/area_registry/list'}),wsCommand({type:'config/entity_registry/list'}),wsCommand({type:'config/device_registry/list'})]);areaRegistry=areas.status==='fulfilled'?areas.value:[];entityRegistry=entities.status==='fulfilled'?entities.value:[];deviceRegistry=devs.status==='fulfilled'?devs.value:[];ingestStates(states,true);renderAssignments();$('#settingsStatus').textContent=`Live · ${devices.length} entities, ${areaRegistry.length} areas`;}catch(e){toast(`Discovery failed: ${e.message}`);}}
+function connect(reconnect=false){if(panelMode)return toast('Connected through the Home Assistant panel. Authentication is inherited.');if(!reconnect){haUrl=$('#haUrl').value.trim().replace(/\/$/,'');haToken=$('#haToken').value.trim();safeSet('localStorage','haven:url',haUrl);}clearSocket();if(!haUrl||!haToken){setConnectionState('error','Enter both a URL and a token');return;}let endpoint;try{endpoint=wsUrl(haUrl);if(location.protocol==='https:'&&endpoint.startsWith('ws:'))throw Error('Use HTTPS Home Assistant when this page uses HTTPS');}catch(e){setConnectionState('error',e.message);return;}shouldReconnect=true;const serial=++connSerial;setConnectionState('connecting',reconnect?'Reconnecting to Home Assistant…':'Connecting to Home Assistant…');try{const socket=new WebSocket(endpoint);ws=socket;let settled=false;
+ socket.onmessage=async ev=>{if(serial!==connSerial)return;let msg;try{msg=JSON.parse(ev.data);}catch{return;}if(msg.type==='auth_required'){socket.send(JSON.stringify({type:'auth',access_token:haToken}));return;}if(msg.type==='auth_invalid'){shouldReconnect=false;lastError='Invalid token';setConnectionState('error','Authentication rejected');socket.close();toast('Invalid Home Assistant token');return;}if(msg.type==='auth_ok'){settled=true;wsAuthed=true;retries=0;setConnectionState('connected','Authenticated · discovering entities');wsCommand({type:'subscribe_events',event_type:'state_changed'}).catch(e=>toast(`Live updates unavailable: ${e.message}`));await discover();toast('Connected to Home Assistant · live');return;}if(msg.type==='result'){const p=wsPending.get(msg.id);if(p){clearTimeout(p.t);wsPending.delete(msg.id);msg.success?p.resolve(msg.result):p.reject(Error(msg.error?.message||'Home Assistant rejected the command'));}return;}if(msg.type==='event'&&msg.event?.event_type==='state_changed'){const st=msg.event.data?.new_state,old=msg.event.data?.old_state;if(st)ingestStates([st]);else if(old?.entity_id){entityStates.delete(old.entity_id);rebuildDevices();}return;}};
+ socket.onerror=()=>{if(!settled)setConnectionState('error','Connection refused or blocked · check URL/TLS');};socket.onclose=()=>{if(serial!==connSerial||ws!==socket)return;ws=null;wsAuthed=false;for(const p of wsPending.values()){clearTimeout(p.t);p.reject(Error('Connection closed'));}wsPending.clear();if(shouldReconnect){setConnectionState('connecting','Connection interrupted · retrying…');const delay=Math.min(30000,1500*2**Math.min(5,retries++));wsTimeout=setTimeout(()=>connect(true),delay);}else if(connectionState!=='error')setConnectionState('demo','Disconnected');};
+ }catch(e){setConnectionState('error',e.message);}}
+function initSettings(){const modal=$('#settingsModal');$('#haUrl').value=haUrl;const open=()=>{$('#haUrl').value=haUrl;$('#haToken').value=haToken;renderAssignments();modal.classList.add('open');},close=()=>modal.classList.remove('open');$('#settingsOpen').onclick=open;$('#connectionStatus').onclick=open;$('#settingsClose').onclick=close;modal.onclick=e=>{if(e.target===modal)close();};document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});$('#connectBtn').onclick=()=>connect();$('#disconnectBtn').onclick=()=>disconnect();$('#refreshEntities').onclick=()=>discover();$('#mappingSearch').oninput=e=>{entitySearch=e.target.value.toLowerCase().trim();renderAssignments();};}
+initSettings();renderAll();setConnectionState('demo');renderAssignments();
+if(panelMode){
+ $('#haUrl').closest('.field').style.display='none';$('#haToken').closest('.field').style.display='none';$('#connectBtn').style.display='none';$('#disconnectBtn').style.display='none';$('#refreshEntities').onclick=()=>window.parent.postMessage({type:'haven:refresh'},location.origin);
+ $('#settingsModal .modal-header p').textContent='Connected directly to the Home Assistant session. Discover and assign real entities to the architectural rooms. No separate token is required.';
+ setConnectionState('connecting','Waiting for the Home Assistant panel…');
+ window.addEventListener('message',ev=>{if(ev.origin!==location.origin||ev.source!==window.parent)return;const m=ev.data||{};
+  if(m.type==='haven:sync'&&Array.isArray(m.states)){
+    if(Array.isArray(m.areas))areaRegistry=m.areas;
+    if(Array.isArray(m.entities))entityRegistry=m.entities;
+    if(Array.isArray(m.devices))deviceRegistry=m.devices;
+    if(connectionState!=='connected')setConnectionState('connected','Panel session · no token required');
+    ingestStates(m.states,true);renderAssignments();$('#settingsStatus').textContent=`Home Assistant · ${devices.length} entities`;
+  }
+  if(m.type==='haven:call_result'){const job=panelPending.get(m.id);if(job){clearTimeout(job.t);panelPending.delete(m.id);m.ok?job.resolve():job.reject(Error(m.error||'Service call failed'));}}
+  if(m.type==='haven:disconnected')setConnectionState('error','Home Assistant is unavailable');
+ });
+ window.parent.postMessage({type:'haven:ready'},location.origin);
+}
+// HAVEN REALTIME is a dependency-free, shader-powered 3D view.
+// The original lightweight isometric fallback remains available for older GPUs.
+(async function load3D(){
+ try{
+  threeApi=createRealtimeModel();modelReady=true;$('#fallback').classList.add('hidden');
+  $('#footerInfo').textContent='HAVEN REALTIME · WebGL2 · live architectural controls';
+ }catch(err){
+  console.error('WebGL2 initialization failed:',err);fallbackApi=enableIsoFallback();
+  toast('This device cannot start WebGL2; loaded the lightweight isometric view.');
+ }
+ // Upgrade to the production model (haven-home.glb, built in Blender) once it has loaded.
+ // ?engine=procedural keeps the built-in renderer; ?model=<url> loads another .glb.
+ const params=new URLSearchParams(location.search);
+ if(params.get('engine')==='procedural')return;
+ try{
+  const {createGlbModel}=await import('./haven-glb.js');
+  const api=await createGlbModel({host:$('#viewport'),shell:$('#viewport').parentElement,rooms,$,
+   getDevices:()=>devices,getSelected:()=>selectedRoom,selectRoom,url:params.get('model')||'haven-home.glb',
+   onProgress:p=>{$('#footerInfo').textContent=`HAVEN REALTIME · loading production model ${Math.round(p*100)}%`;}});
+  threeApi?.dispose?.();fallbackApi?.dispose?.();fallbackApi=null;
+  threeApi=api;modelReady=true;$('#fallback').classList.add('hidden');api.sync();
+  $('#footerInfo').textContent='HAVEN REALTIME · production model · live architectural controls';
+ }catch(err){
+  console.info('Production model unavailable; keeping the built-in renderer.',err);
+  if(threeApi)$('#footerInfo').textContent='HAVEN REALTIME · WebGL2 · live architectural controls';
+ }
+})();
+
+function enableIsoFallback(){
+ const holder=$('#fallback'),front=$('#viewport');holder.innerHTML='';holder.classList.remove('hidden');holder.style.display='block';holder.setAttribute('aria-hidden','false');front.style.pointerEvents='none';
+ const canvas=document.createElement('canvas');canvas.setAttribute('role','img');canvas.setAttribute('aria-label','Interactive isometric apartment plan. Tap a room to select it.');canvas.style.cssText='height:100%;width:100%;display:block;cursor:pointer;';holder.append(canvas);
+ const ctx=canvas.getContext('2d');let W=300,H=300,DPR=1,scale=1,turn=0,top=false,rotating=false,hit=[],fallbackRunning=true,isoTime=17,isoCycle=false,isoCinematic=true,isoUltra=true;
+ const roomColors={living:'#c8bfc5',dining:'#d2b7a1',kitchen:'#d5d9d4',hall:'#bfb2a6',bedroom:'#e1c3b0',bath:'#c6dadd',office:'#a8b8c4'};
+ const isLighted=room=>devices.some(d=>d.room===room&&d.domain==='light'&&d.on);
+ function resize(){const r=holder.getBoundingClientRect();W=Math.max(r.width,250);H=Math.max(r.height,250);DPR=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);scale=Math.min((W-18)/630,(H-8)/380)*1.1;}
+ function project(x,z,y=0){const cs=Math.cos(turn),sn=Math.sin(turn);const a=x*cs-z*sn,b=x*sn+z*cs;return {x:W*.5+(top?a*28:(a-b)*22.6)*scale,y:H*.54+(top?b*23:(a+b)*10.8)*scale-y*28*scale};}
+ function polygon(vertices,color,stroke=null,width=1,opacity=1){const path=new Path2D();vertices.forEach(([x,z,y],i)=>{const p=project(x,z,y||0);if(!i)path.moveTo(p.x,p.y);else path.lineTo(p.x,p.y)});path.closePath();ctx.globalAlpha=opacity;ctx.fillStyle=color;ctx.fill(path);if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width*scale;ctx.stroke(path)}ctx.globalAlpha=1;return path;}
+ function quad(x1,z1,x2,z2,y,color){return polygon([[x1,z1,y],[x2,z1,y],[x2,z2,y],[x1,z2,y]],color)}
+ function box(x,z,w,d,h,color){const x1=x-w/2,x2=x+w/2,z1=z-d/2,z2=z+d/2;const side1=darken(color,.66),side2=darken(color,.79);
+ polygon([[x1,z2,0],[x2,z2,0],[x2,z2,h],[x1,z2,h]],side1);
+ polygon([[x2,z1,0],[x2,z2,0],[x2,z2,h],[x2,z1,h]],side2);
+ polygon([[x1,z1,h],[x2,z1,h],[x2,z2,h],[x1,z2,h]],color,'#fff8',.35);
+ }
+ function darken(hex,f){let m=hex.match(/\w\w/g);if(!m)return hex;return '#'+m.map(v=>Math.round(parseInt(v,16)*f).toString(16).padStart(2,'0')).join('');}
+ function orb(x,z,y,r,c,alpha=1){const p=project(x,z,y);ctx.beginPath();ctx.arc(p.x,p.y,Math.max(1,r*scale),0,Math.PI*2);ctx.globalAlpha=alpha;ctx.fillStyle=c;ctx.fill();ctx.globalAlpha=1;}
+ function line(coords,col='#f9f0e1',width=1,alpha=1){ctx.beginPath();coords.forEach(([x,z,y],i)=>{const p=project(x,z,y||0);if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y)});ctx.strokeStyle=col;ctx.lineWidth=width*scale;ctx.globalAlpha=alpha;ctx.stroke();ctx.globalAlpha=1;}
+ function lightGlow(x,z,room,phase){if(!isLighted(room)||!isoCinematic)return;const p=project(x,z,1.2);const radius=72*scale;const radial=ctx.createRadialGradient(p.x,p.y,2,p.x,p.y,radius);radial.addColorStop(0,'rgba(255,231,177,.64)');radial.addColorStop(.18,'rgba(255,195,123,.19)');radial.addColorStop(1,'rgba(255,184,101,0)');ctx.globalAlpha=.92+Math.sin(phase)*.06;ctx.fillStyle=radial;ctx.beginPath();ctx.arc(p.x,p.y,radius,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;orb(x,z,1.25,5.2,'#fff4ce');}
+ function roomLabel(r){const p=project(r.x,r.z,1.95);const width=(r.name.length*6.8+22)*Math.min(scale,1.55),height=23*Math.min(scale,1.3);ctx.fillStyle='#1c2d44e8';ctx.strokeStyle=selectedRoom===r.id?'#d2e3ff':'#a8bfd455';ctx.lineWidth=selectedRoom===r.id?1.6:1;ctx.beginPath();ctx.roundRect(p.x-width/2,p.y-height/2,width,height,Math.min(8,7*scale));ctx.fill();ctx.stroke();ctx.font=`${Math.min(13,11*scale)}px system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#f6f8ff';ctx.fillText(r.name,p.x,p.y+.4);}
+ function draw(t){if(!fallbackRunning)return;if(rotating)turn+=.0018;if(isoCycle){isoTime=(isoTime+.0042)%24;$('#timeSlider').value=isoTime;updateLabel();}ctx.clearRect(0,0,W,H);
+ const bg=ctx.createRadialGradient(W/2,H*.53,5,W/2,H*.53,W*.5);bg.addColorStop(0,'#61739114');bg.addColorStop(1,'transparent');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+ // floating foundation and a soft graphite pedestal
+ box(0,0,14.52,10.50,.40,'#3f4d64');box(0,0,14.25,10.25,.28,'#b9a28c');box(0,0,14.13,10.08,.07,'#e6d3be');
+ hit=[];const ordered=[...rooms].sort((a,b)=>a.x+a.z-(b.x+b.z));for(const r of ordered){const x1=r.x-r.w/2,x2=r.x+r.w/2,z1=r.z-r.d/2,z2=r.z+r.d/2;
+ const p=polygon([[x1,z1,.09],[x2,z1,.09],[x2,z2,.09],[x1,z2,.09]],roomColors[r.id],selectedRoom===r.id?'#b8d0ff':'#eee3d0',selectedRoom===r.id?3.3:1.1);hit.push({id:r.id,path:p});
+ // narrow planks or tile grout
+ if(['bath','kitchen'].includes(r.id)){for(let z=z1+.32;z<z2;z+=.42)line([[x1,z,.1],[x2,z,.1]],'#f5f5f3',.55,.37)}else{for(let z=z1+.2;z<z2;z+=.35)line([[x1,z,.1],[x2,z,.1]],'#8e817d',.5,.22)}
+ }
+ // miniature furniture isometric boxes, created in front-to-back order
+ // dining and kitchen
+ box(-4.52,-2.4,2.8,2.35,.09,'#918b8a');box(-4.5,-2.44,1.9,1.1,.78,'#bb956d');
+ for(const [x,z] of [[-4.3,-4],[-4.3,-.9],[-6.1,-2.4],[-2.9,-2.4]])box(x,z,.5,.55,.5,'#ded4ca');
+ box(-.6,-4.4,2.36,.72,.83,'#eae1d8');box(.4,-2.9,.49,2.3,.83,'#eeeae3');box(-.8,-2.0,1.58,.85,.9,'#eee5dc');box(-.8,-2.0,.7,.45,.93,'#8a989d');
+ for(const x of [-1.2,-.7,-.2])box(x,-1.16,.38,.33,.53,'#ad806d');
+ // lounge: rug, upholstered sofa, chaise, table, TV wall
+ box(-4.4,2.55,3.55,2.65,.08,'#727e9c');box(-4.65,3.6,2.8,.75,.56,'#7589a5');box(-5.77,2.85,.7,1.95,.57,'#7083a1');box(-4.65,3.93,2.8,.22,.88,'#97a4b6');
+ for(const x of [-5.45,-4.7,-3.95])box(x,3.48,.63,.57,.67,'#a9b2bf');box(-4.25,2.16,1.46,.82,.41,'#826f64');box(-2.47,2.43,.18,1.74,1.18,'#324563');
+ // hall and bathroom
+ box(-.6,2.4,1.8,2.8,.05,'#967f78');box(-1.31,3.56,.49,1.15,.49,'#ac917c');box(1.5,3.6,.7,1.38,.79,'#c2a99a');box(2.54,2.66,1.18,1.9,.66,'#ebf4f3');box(2.54,2.66,.82,1.52,.69,'#bfd2d4');
+ // bedroom mattress, duvet, padded pillows, cabinets
+ box(3.82,-1.5,4.43,3.95,.075,'#b39c98');box(3.87,-2.05,3.2,3.3,.43,'#bb9c8d');box(3.87,-2.05,3.04,3.0,.6,'#f1ece8');box(3.87,-1.45,3.05,1.62,.69,'#d6cec7');
+ for(const x of [3.2,4.6])box(x,-3.04,1.04,.6,.72,'#faf7f1');for(const x of [1.85,5.86]){box(x,-3.1,.74,.7,.62,'#ab917d');orb(x,-3.1,1,7,'#fff3d5');}
+ box(6.37,-1.56,.44,2.3,1.45,'#ab998c');
+ // office furniture and screen
+ box(5.15,2.95,2.4,2.6,.065,'#84949f');box(5.15,2.35,2.2,.74,.84,'#9b826e');box(5.15,2.28,.86,.12,1.52,'#23354e');box(5.12,3.54,.75,.65,.53,'#657c98');box(6.39,4,.46,.63,1.2,'#ab9078');
+ // Glass walls and sliced perimeter partitions
+ const Wm='#e8e4dfc2';
+ function section(x1,z1,x2,z2,height=1.25,col=Wm){polygon([[x1,z1,.08],[x2,z2,.08],[x2,z2,height],[x1,z1,height]],col,'#ffffff64',.5)}
+ section(-7,-5,7,-5,1.48,'#f7ebdb88');section(-7,-5,-7,5,1.6,'#e2d7d3b0');section(7,-5,7,5,1.38,'#f1e5df91');
+ section(-2.02,-5,-2.02,-2.1,1.21);section(-2.02,-1.02,-2.02,1.45,1.21);section(-2.02,2.77,-2.02,5,.8);
+ section(.82,-5,.82,-2.53,1.22);section(.82,-1.3,.82,1.7,1.22);section(.82,2.85,.82,5,.75);
+ section(3.68,1.2,3.68,2.2,1.09);section(3.68,3.4,3.68,5,.88);
+ section(-7,.2,-5,.2,1.24);section(-3.85,.2,-2.03,.2,1.24);section(.85,1.2,1.77,1.2,1.22);section(2.87,1.2,4.9,1.2,1.22);section(5.7,1.2,7,1.2,1.22);
+ // Time-of-day changes the architectural palette and preserves illuminated rooms.
+ const daytime=Math.max(0,Math.sin((isoTime-6)/24*Math.PI*2));ctx.fillStyle=`rgba(7,17,34,${Math.min(.48,(1-daytime)*.48)})`;ctx.fillRect(0,0,W,H);
+ // room lighting halos and luminous sources
+ for(const [x,z,room] of [[-4.72,2.7,'living'],[-5.96,3.67,'living'],[-4.5,-2.4,'dining'],[-.62,-2.1,'kitchen'],[-.4,2.8,'hall'],[3.8,-2.45,'bedroom'],[1.55,3.5,'bath'],[5.15,2.55,'office']])lightGlow(x,z,room,t/800);
+ for(const r of rooms)roomLabel(r);
+ requestAnimationFrame(draw);
+ }
+ function pick(e){const bound=canvas.getBoundingClientRect(),x=e.clientX-bound.left,y=e.clientY-bound.top;for(const obj of [...hit].reverse())if(ctx.isPointInPath(obj.path,x,y)){selectRoom(obj.id,false);return;}}
+ function updateLabel(){const hr=Math.floor(isoTime),mm=String(Math.round((isoTime-hr)*60)).padStart(2,'0');$('#timeValue').textContent=`${isoTime>=6&&isoTime<17?'Daylight':isoTime>=17&&isoTime<20?'Golden hour':'Night'} · ${String(hr).padStart(2,'0')}:${mm}`;}
+ const onSlider=e=>{isoTime=Number(e.target.value);isoCycle=false;$('#animateDay').classList.remove('active');$('#animateDay').textContent='▶ DAY CYCLE';updateLabel();};
+ const onCycle=()=>{isoCycle=!isoCycle;$('#animateDay').classList.toggle('active',isoCycle);$('#animateDay').textContent=isoCycle?'Ⅱ PAUSE CYCLE':'▶ DAY CYCLE';};
+ const onQuality=()=>{isoUltra=!isoUltra;DPR=isoUltra?Math.min(devicePixelRatio||1,2):1;$('#qualityToggle').classList.toggle('active',isoUltra);resize();};
+ const onCinema=()=>{isoCinematic=!isoCinematic;$('#cinemaToggle').classList.toggle('active',isoCinematic);};
+ $('#timeSlider').addEventListener('input',onSlider);$('#animateDay').addEventListener('click',onCycle);$('#qualityToggle').addEventListener('click',onQuality);$('#cinemaToggle').addEventListener('click',onCinema);$('#qualityToggle').classList.add('active');$('#cinemaToggle').classList.add('active');
+ canvas.addEventListener('click',pick);const resizeObs=new ResizeObserver(resize);resizeObs.observe(holder);resize();requestAnimationFrame(draw);
+ $('#resetView').addEventListener('click',()=>{turn=0;top=false;$('#topView').classList.remove('active');selectRoom('all',false);});
+ $('#resetCameraFooter').addEventListener('click',()=>{turn=0;top=false;$('#topView').classList.remove('active');selectRoom('all',false);});
+ $('#topView').addEventListener('click',()=>{top=!top;$('#topView').classList.toggle('active',top);});
+ $('#rotateView').addEventListener('click',()=>{rotating=!rotating;$('#rotateView').classList.toggle('active',rotating);});
+ return {select(){},sync(){},dispose(){fallbackRunning=false;resizeObs.disconnect();canvas.remove();$('#timeSlider').removeEventListener('input',onSlider);$('#animateDay').removeEventListener('click',onCycle);$('#qualityToggle').removeEventListener('click',onQuality);$('#cinemaToggle').removeEventListener('click',onCinema);}};
+}
+
+function createHomeModel(T,OrbitControls,RoundedBoxGeometry){
+ const viewport=$('#viewport');let w=viewport.clientWidth,h=viewport.clientHeight;const scene=new T.Scene();scene.fog=new T.FogExp2(0x111b2c,.012);const camera=new T.PerspectiveCamera(32,Math.max(1,w)/Math.max(1,h),.1,110);
+ const renderer=new T.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance',preserveDrawingBuffer:false});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setSize(w,h);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.43;renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;viewport.appendChild(renderer.domElement);
+ const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.07;controls.minDistance=14;controls.maxDistance=45;controls.maxPolarAngle=Math.PI/2.25;controls.minPolarAngle=.25;controls.enablePan=false;controls.target.set(0,0,0);camera.position.set(22,25,29);controls.update();
+ const mat=(color,rough=.8,metal=0)=>new T.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+ const wood=mat(0xc5a789),darkWood=mat(0x76695f),white=mat(0xf0ede9),warmWhite=mat(0xfff5ea),stone=mat(0xb7b6b8),blue=mat(0x7e91b0),deepBlue=mat(0x475a79),blueSteel=mat(0x64799c,.55,.15),black=mat(0x2b3445),gold=mat(0xe2ac74,.42,.3),glass=new T.MeshPhysicalMaterial({color:0x9abbd1,metalness:.08,roughness:.07,transmission:.78,thickness:.15,transparent:true,opacity:.45,side:T.DoubleSide});
+ const emissiveScreen=new T.MeshStandardMaterial({color:0x131e31,emissive:0x35599a,emissiveIntensity:.6,roughness:.2});
+ const floorsGroup=new T.Group(),house=new T.Group();scene.add(house);house.add(floorsGroup);
+ const interactables=[],highlights=[],lighting=[];
+ function addBox(parent,x,y,z,sx,sy,sz,m,room,cast=true){const mesh=new T.Mesh(new T.BoxGeometry(sx,sy,sz),m);mesh.position.set(x,y,z);mesh.castShadow=cast;mesh.receiveShadow=true;if(room){mesh.userData.room=room;interactables.push(mesh);}parent.add(mesh);return mesh;}
+ function sphere(parent,x,y,z,r,m,room){const mesh=new T.Mesh(new T.SphereGeometry(r,12,8),m);mesh.position.set(x,y,z);if(room){mesh.userData.room=room;interactables.push(mesh);}parent.add(mesh);mesh.castShadow=true;return mesh;}
+ function cyl(parent,x,y,z,r,depth,m,room,r2=r){const mesh=new T.Mesh(new T.CylinderGeometry(r2,r,depth,18),m);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;if(room){mesh.userData.room=room;interactables.push(mesh);}parent.add(mesh);return mesh;}
+ function plane(parent,x,y,z,sx,sz,m,room){const mesh=new T.Mesh(new T.PlaneGeometry(sx,sz),m);mesh.rotation.x=-Math.PI/2;mesh.position.set(x,y,z);mesh.receiveShadow=true;if(room){mesh.userData.room=room;interactables.push(mesh);}parent.add(mesh);return mesh;}
+ const ambient=new T.AmbientLight(0xd3e5ff,.54);scene.add(ambient);const hemi=new T.HemisphereLight(0xeaf2ff,0x4a4c6b,1.43);scene.add(hemi);const sun=new T.DirectionalLight(0xffe9d8,3.0);sun.position.set(-12,22,8);sun.castShadow=true;sun.shadow.mapSize.set(3072,3072);sun.shadow.camera.left=-17;sun.shadow.camera.right=17;sun.shadow.camera.top=17;sun.shadow.camera.bottom=-17;sun.shadow.normalBias=.035;sun.shadow.bias=-.0001;sun.shadow.radius=4;scene.add(sun);
+ const landscape=new T.Mesh(new T.PlaneGeometry(140,140),new T.MeshStandardMaterial({color:0x202c37,roughness:1}));landscape.rotation.x=-Math.PI/2;landscape.position.y=-.42;landscape.receiveShadow=true;scene.add(landscape);
+ const base=addBox(house,0,-.24,0,14.2,.44,10.16,mat(0x647083,.9,.18),null,false);const bottom=addBox(house,0,-.48,0,14.55,.13,10.5,mat(0x101a2b,.9),null,false);
+ const baseTrim=addBox(house,0,-.04,0,14.08,.08,10.04,mat(0xb9a99c),null,false);
+ // Individually selectable floors have differentiated materials and thin illuminated borders.
+ const floorMats={living:mat(0xc2ada0),dining:mat(0xbda995),kitchen:mat(0xc8c5be),hall:mat(0xbbb1a9),bedroom:mat(0xd2b6a7),bath:mat(0xc8d2d6),office:mat(0xa7a9a3)};
+ for(const r of rooms){const floor=addBox(floorsGroup,r.x,-.005,r.z,r.w,.085,r.d,floorMats[r.id],r.id,false);floor.name=r.id;
+  const shape=new T.Shape();const x1=r.x-r.w/2+.07,x2=r.x+r.w/2-.07,z1=r.z-r.d/2+.07,z2=r.z+r.d/2-.07;shape.moveTo(x1,z1);shape.lineTo(x2,z1);shape.lineTo(x2,z2);shape.lineTo(x1,z2);shape.lineTo(x1,z1);
+  const linePoints=[new T.Vector3(x1,.057,z1),new T.Vector3(x2,.057,z1),new T.Vector3(x2,.057,z2),new T.Vector3(x1,.057,z2),new T.Vector3(x1,.057,z1)];const geom=new T.BufferGeometry().setFromPoints(linePoints);const line=new T.Line(geom,new T.LineBasicMaterial({color:0xb5d0ff,transparent:true,opacity:0}));line.userData.room=r.id;house.add(line);highlights.push(line);
+ }
+ // Flooring thin inlaid board lines create detailed texture without externally hosted assets.
+ const groutMat=new T.LineBasicMaterial({color:0x7c736c,transparent:true,opacity:.12});
+ for(const r of rooms){if(['bath','kitchen'].includes(r.id))continue;const vertices=[];for(let zz=r.z-r.d/2+.23;zz<r.z+r.d/2;zz+=.31){vertices.push(r.x-r.w/2+.03,.042,zz,r.x+r.w/2-.03,.042,zz);}const lg=new T.BufferGeometry();lg.setAttribute('position',new T.Float32BufferAttribute(vertices,3));house.add(new T.LineSegments(lg,groutMat));}
+ function wall(x,z,w,d,height=1.9,material=white){return addBox(house,x,height/2,z,w,height,d,material,null);}
+ // Cutaway perimeter walls; the open low front allows full visual access from the default camera.
+ wall(0,-5.04,14.13,.18,1.85);wall(-7.06,0,.18,10.2,1.92);wall(7.06,0,.18,10.2,1.76);wall(0,5.04,14.15,.18,.24);
+ // Perimeter glazed sections and window trim.
+ function backWindow(x,w){const frame=mat(0xddd9d6);wall(x,-5.02,w,.075,1.2,glass);addBox(house,x,1.57,-4.88,w,.08,.12,frame);addBox(house,x,.68,-4.88,w,.08,.12,frame);addBox(house,x,1.13,-4.88,.055,1,.12,frame);}
+ backWindow(-4.6,2.7);backWindow(3.25,2.8);
+ // Room division walls with interrupted doorway openings.
+ const wallMat=mat(0xdedbd9,.93),lowWall=mat(0xd4cfca,.95);
+ function vz(x,z1,z2,height=1.35){wall(x,(z1+z2)/2,.12,Math.abs(z2-z1),height,wallMat)}
+ function hz(z,x1,x2,height=1.32){wall((x1+x2)/2,z,Math.abs(x2-x1),.12,height,wallMat)}
+ vz(-2.03,-4.95,-2.1);vz(-2.03,-.95,1.5);vz(-2.03,2.75,4.95,.9);
+ vz(.82,-4.95,-2.55);vz(.82,-1.35,1.63);vz(.82,2.9,4.95,.8);
+ vz(3.67,1.15,2.18);vz(3.67,3.34,4.95,.95);
+ hz(.22,-6.98,-5.0);hz(.22,-3.88,-2.05);hz(.22,-1.99,-.87);hz(.22,.17,.79);
+ hz(1.18,.86,1.75);hz(1.18,2.8,4.9);hz(1.18,5.75,7.0);
+ // Frosted cutaway side trim and glass balustrade near front.
+ addBox(house,-3.74,.21,4.94,3.4,.33,.1,glass);addBox(house,5.25,.24,4.94,3.1,.34,.1,glass);
+ function rug(room,x,z,w,d,color){const m=mat(color);return addBox(house,x,.085,z,w,.042,d,m,room,false);}
+ function tableTop(room,x,y,z,w,d,m){addBox(house,x,y,z,w,.12,d,m,room);for(const dx of [-w*.39,w*.39])for(const dz of [-d*.36,d*.36])addBox(house,x+dx,y*.52,z+dz,.065,y,d===0?m:mat(0x736761),room);}
+ function plant(room,x,z,scale=1){cyl(house,x,.18*scale,z,.19*scale,.32*scale,mat(0xd0b8a0),room,.24*scale);for(let i=0;i<7;i++){const a=i*2.4;const yy=.43*scale+(i%3)*.13*scale;const leaf=sphere(house,x+Math.cos(a)*.18*scale,yy,z+Math.sin(a)*.18*scale,.145*scale,mat(i%2?0x4d6758:0x75866d),room);leaf.scale.set(.8,1.45,.75);}}
+ function lamp(room,x,z,y=1.15){cyl(house,x,.055,z,.19,.1,gold,room);cyl(house,x,y/2,z,.026,y,black,room);const shade=cyl(house,x,y,z,.25,.21,mat(0xfff5dc,.65),room,.16);return light(room,x,y+.16,z,shade,.95);}
+ function light(room,x,y,z,obj,power=1){const point=new T.PointLight(0xffd6a0,4.3*power,5.0,2);point.position.set(x,y,z);point.castShadow=false;scene.add(point);const bulb=sphere(house,x,y,z,.07,new T.MeshStandardMaterial({color:0xfff6df,emissive:0xffd99b,emissiveIntensity:2}),room);bulb.castShadow=false;
+ // additive billboard glow
+ const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const cx=canvas.getContext('2d');const grad=cx.createRadialGradient(32,32,0,32,32,32);grad.addColorStop(0,'rgba(255,242,196,.68)');grad.addColorStop(.22,'rgba(255,211,150,.22)');grad.addColorStop(1,'rgba(255,188,101,0)');cx.fillStyle=grad;cx.fillRect(0,0,64,64);const sprite=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(canvas),transparent:true,depthWrite:false,blending:T.AdditiveBlending}));sprite.position.set(x,y,z);sprite.scale.set(1.18,1.18,1);house.add(sprite);lighting.push({room,point,bulb,sprite,base:power});return point;}
+
+ // HAVEN ULTRA ARCHITECTURE — all textures and meshes are generated locally.
+ const subtleMetal=new T.MeshPhysicalMaterial({color:0xb2a58e,metalness:.67,roughness:.28,clearcoat:.42});
+ const porcelain=new T.MeshPhysicalMaterial({color:0xece9e1,roughness:.18,metalness:.03,clearcoat:.9,clearcoatRoughness:.14});
+ const velvet=new T.MeshStandardMaterial({color:0x77849c,roughness:.94});
+ const accent=new T.MeshStandardMaterial({color:0xa97a65,roughness:.82});
+ const linen=new T.MeshStandardMaterial({color:0xdfd8cb,roughness:1});
+ const green1=new T.MeshStandardMaterial({color:0x334d37,roughness:.84,side:T.DoubleSide});
+ const green2=new T.MeshStandardMaterial({color:0x69856d,roughness:.77,side:T.DoubleSide});
+ const blueLight=new T.MeshStandardMaterial({color:0x5f7a9d,emissive:0x3676ab,emissiveIntensity:.35,roughness:.3});
+ const bakedArt=[];
+ function softBox(parent,x,y,z,w,h,d,m,room,radius=.065){const geo=new RoundedBoxGeometry(w,h,d,3,Math.min(radius,w*.3,h*.3,d*.3));const mesh=new T.Mesh(geo,m);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.room=room;parent.add(mesh);if(room)interactables.push(mesh);return mesh;}
+ function tube(parent,points,radius,material){const curve=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p)));const mesh=new T.Mesh(new T.TubeGeometry(curve,Math.max(12,points.length*7),radius,7,false),material);mesh.castShadow=true;parent.add(mesh);return mesh;}
+ function makeTexture(kind){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;const ctx=canvas.getContext('2d');const rand=(i)=>(Math.sin(i*78.233+10.928)*43758.5453)%1;const noise=i=>Math.abs(rand(i));
+  if(kind==='oak'){ctx.fillStyle='#cfb59a';ctx.fillRect(0,0,512,512);for(let i=0;i<110;i++){const y=(i*49)%512;ctx.strokeStyle=i%3?'rgba(99,62,42,.13)':'rgba(255,255,232,.22)';ctx.lineWidth=i%5?1:2;ctx.beginPath();ctx.moveTo(0,y);for(let x=0;x<=512;x+=16)ctx.lineTo(x,y+Math.sin(x*.04+i)*1.8);ctx.stroke()}for(let i=0;i<85;i++){const x=(i*83)%512;ctx.fillStyle='rgba(255,244,217,.08)';ctx.fillRect(x,0,2,512)}}
+  if(kind==='marble'){ctx.fillStyle='#c5c5c3';ctx.fillRect(0,0,512,512);for(let i=0;i<32;i++){ctx.beginPath();let y=i*19-40;ctx.moveTo(-20,y);for(let x=0;x<=540;x+=12)ctx.lineTo(x,y+Math.sin(x*.028+i*.6)*8+Math.cos(x*.011+i)*7);ctx.strokeStyle=i%3?'rgba(91,96,99,.095)':'rgba(255,255,255,.5)';ctx.lineWidth=1+(i%4)*.5;ctx.stroke()}}
+  if(kind==='fabric'){ctx.fillStyle='#808da0';ctx.fillRect(0,0,512,512);for(let i=0;i<512;i+=3){ctx.fillStyle='rgba(236,241,239,.048)';ctx.fillRect(i,0,1,512);ctx.fillRect(0,i,512,1)}}
+  if(kind==='tile'){ctx.fillStyle='#d8dddf';ctx.fillRect(0,0,512,512);ctx.strokeStyle='rgba(90,114,128,.24)';ctx.lineWidth=6;for(let i=0;i<=512;i+=128){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,512);ctx.moveTo(0,i);ctx.lineTo(512,i);ctx.stroke()}}
+  for(let i=0;i<2300;i++){const x=noise(i+123)*512,y=noise(i+312)*512;ctx.fillStyle=`rgba(15,15,19,${noise(i+321)*.035})`;ctx.fillRect(x,y,1.6,1.6)}
+  const tex=new T.CanvasTexture(canvas);tex.colorSpace=T.SRGBColorSpace;tex.wrapS=tex.wrapT=T.RepeatWrapping;tex.anisotropy=8;tex.repeat.set(kind==='tile'?1:1.8,kind==='tile'?1:1.8);return tex;}
+ const oakTex=makeTexture('oak'),marbleTex=makeTexture('marble'),fabricTex=makeTexture('fabric'),tileTex=makeTexture('tile');
+ for(const r of rooms){const fl=floorsGroup.children.find(o=>o.name===r.id);if(!fl)continue;let tex=['bath','kitchen'].includes(r.id)?(r.id==='bath'?tileTex:marbleTex):oakTex;fl.material=new T.MeshStandardMaterial({map:tex,roughness:r.id==='bath'?.43:.72,metalness:0});}
+ // Crisp double reveal around the floating architectural slab.
+ for(const y of [-.32,-.11]){const trim=mat(y<-.2?0x151c29:0xc4aa8d,y<-.2?.45:.3,.35);addBox(house,0,y,5.084,14.28,.035,.04,trim,null,false);addBox(house,0,y,-5.083,14.28,.035,.04,trim,null,false);addBox(house,7.1,y,0,.04,.035,10.2,trim,null,false);addBox(house,-7.1,y,0,.04,.035,10.2,trim,null,false);}
+ // Architectural wall reveals, window ledges, copper details, glass mullions.
+ for(const x of [-4.6,3.25]){const width=x<0?2.7:2.8;addBox(house,x,1.77,-4.91,width+.2,.06,.24,porcelain,null);addBox(house,x,.59,-4.92,width+.2,.045,.26,wood,null);for(const dx of [-width*.47,width*.47])addBox(house,x+dx,1.18,-4.88,.038,1.19,.045,subtleMetal,null);}
+ for(let i=0;i<4;i++){let z=-4.3+i*2.6;addBox(house,-7.01,.1,z,.028,.12,2.1,mat(0xffffff,.92),null,false);addBox(house,7.01,.1,z,.028,.12,2.1,mat(0xffffff,.92),null,false);}
+ // Textured sculptural sofas, upholstered piping and stacked cushions.
+ for(const [x,z,w,d] of [[-5.44,3.56,.83,.58],[-4.56,3.56,.82,.58],[-3.7,3.56,.82,.58],[-5.77,2.73,.58,.76]]){
+   softBox(house,x,.63,z,w,.17,d,velvet,'living',.085);softBox(house,x,.73,z+.35,w*.88,.25,.14,velvet,'living',.06);
+   tube(house,[[x-w*.43,.68,z-d*.46],[x,.69,z-d*.47],[x+w*.43,.68,z-d*.46]],.012,linen);
+ }
+ for(const [x,z,c] of [[-5.55,3.65,accent],[-4.8,3.73,linen],[-5.77,2.25,mat(0x9aa6b5)]]){
+   const pillow=softBox(house,x,.77,z,.42,.3,.12,c,'living',.055);pillow.rotation.y=x<-5.6?.35:-.2;}
+ // A books + collectible arrangement across the living coffee table.
+ for(let i=0;i<3;i++){const bk=softBox(house,-4.39,.38+i*.035,2.26,.48,.04,.34,mat([0xc2c1b5,0x7b8b99,0xdbc3a9][i],.8),'living',.01);bk.rotation.y=.12;}
+ cyl(house,-3.8,.40,2.29,.075,.19,porcelain,'living');
+ // Dining is set for four: warm dishes, cutlery, glass vases, suspended pendant rings.
+ for(let i=0;i<4;i++){const a=i*Math.PI/2;const x=-4.49+Math.sin(a)*.7,z=-2.43+Math.cos(a)*.7;cyl(house,x,.735,z,.17,.018,porcelain,'dining');cyl(house,x,.753,z,.1,.012,linen,'dining');addBox(house,x+.18,.74,z,.012,.015,.22,subtleMetal,'dining');}
+ const diningHalo=new T.Mesh(new T.TorusGeometry(.36,.018,8,50),subtleMetal);diningHalo.rotation.x=Math.PI/2;diningHalo.position.set(-4.49,1.72,-2.43);house.add(diningHalo);
+ tube(house,[[-4.49,1.72,-2.43],[-4.49,2.1,-2.43]],.012,black);
+ // Kitchen with beveled countertops, cabinet separation, handles and stainless fixtures.
+ softBox(house,-.64,.875,-2.05,1.81,.08,.97,porcelain,'kitchen',.055);
+ softBox(house,-.61,.829,-4.5,2.52,.06,.69,new T.MeshStandardMaterial({map:marbleTex,roughness:.3}),'kitchen',.02);
+ for(const x of [-1.52,-.90,-.26,.35]){addBox(house,x,.45,-4.17,.015,.54,.018,wood,'kitchen');addBox(house,x+.14,.54,-4.13,.22,.022,.031,subtleMetal,'kitchen');}
+ for(let i=0;i<3;i++){const x=-1.1+i*.56;softBox(house,x,.17,-2.05,.48,.25,.72,mat(0xb7a18e),'kitchen',.03);addBox(house,x,.41,-1.62,.22,.025,.04,subtleMetal,'kitchen');}
+ for(const dx of [-.31,.31])for(const dz of [-.16,.16]){const burner=new T.Mesh(new T.TorusGeometry(.09,.012,5,26),mat(0x26303a,.32,.4));burner.rotation.x=Math.PI/2;burner.position.set(-.7+dx,.897,-2.05+dz);house.add(burner);}
+ tube(house,[[-1.1,.85,-4.54],[-1.1,1.08,-4.54],[-.99,1.16,-4.54],[-.87,1.06,-4.54]],.018,subtleMetal);
+ // Bed linen with rounded upholstered pillows and contrasting quilt roll.
+ softBox(house,3.87,.694,-1.68,3.08,.14,1.86,linen,'bedroom',.1);
+ for(const x of [3.18,4.54]){const p=softBox(house,x,.80,-3.12,1.07,.23,.55,porcelain,'bedroom',.1);p.rotation.y=x<4?-.07:.08;}
+ softBox(house,3.87,.774,-.88,3.00,.14,.35,velvet,'bedroom',.075);
+ for(const xx of [3.1,4.52])softBox(house,xx,.85,-2.75,.38,.28,.13,accent,'bedroom',.08);
+ // Sculptural glass shower enclosure with chromium fixtures + towels.
+ softBox(house,2.64,.675,2.9,.79,.11,1.43,porcelain,'bath',.06);
+ tube(house,[[3.16,.59,2.33],[3.16,1.64,2.33],[2.88,1.64,2.33]],.017,subtleMetal);
+ cyl(house,2.89,1.63,2.33,.18,.028,subtleMetal,'bath');
+ for(let i=0;i<2;i++)softBox(house,1.75,.95+i*.09,4.18,.35,.08,.48,mat(i?0xead9c6:0xb4bdc0),'bath',.02);
+ // Office: keyboard, mouse, task light, monitors + real book spines.
+ addBox(house,5.17,.82,2.66,.79,.035,.22,mat(0x929da9,.55,.15),'office');
+ for(let i=0;i<17;i++)addBox(house,4.79+i*.043,.847,2.66,.029,.009,.13,mat(i%3?0x353a45:0x676d76),'office');
+ cyl(house,5.78,.82,2.7,.07,.04,porcelain,'office');
+ tube(house,[[5.98,.79,2.27],[6.13,1.18,2.27],[5.84,1.32,2.27]],.024,subtleMetal);
+ const taskShade=new T.Mesh(new T.ConeGeometry(.17,.23,24),black);taskShade.rotation.z=-.4;taskShade.position.set(5.82,1.34,2.27);house.add(taskShade);
+ for(let i=0;i<18;i++){const h=.18+.1*Math.abs(Math.sin(i*19));addBox(house,6.38+(i%3)*.105,.4+Math.floor(i/3)*.28,4.1, .075,h,.22,mat([0x837b74,0x5f7384,0xc3a58f,0xaaaeb0][i%4]),'office');}
+ // Beautiful procedural decorative art — framed canvases and lacquered ceramic sculptures.
+ function framedArt(x,y,z,w,h,room,palette){const can=document.createElement('canvas');can.width=256;can.height=256;const cx=can.getContext('2d');cx.fillStyle=palette[0];cx.fillRect(0,0,256,256);for(let i=0;i<9;i++){cx.fillStyle=palette[(i%3)+1];cx.beginPath();cx.ellipse(127+Math.sin(i*3)*79,110+Math.cos(i*7)*75,65-i*4,48+i*3,i*.63,0,7);cx.fill()}const tx=new T.CanvasTexture(can);tx.colorSpace=T.SRGBColorSpace;const art=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:tx,side:T.DoubleSide}));art.position.set(x,y,z);house.add(art);bakedArt.push(art);softBox(house,x,y,z-.019,w+.10,h+.10,.05,mat(0x584d49,.4),'',.02);}
+ framedArt(-5.7,1.16,-4.87,.9,.53,'dining',['#eee1d3','#b4a598','#555f75','#b4a598']);
+ framedArt(4.55,1.22,-4.87,.9,.58,'bedroom',['#e8e1d6','#a88b76','#777f8d','#a88b76']);
+ // Physically placed leaves with independent wind-sway pivots.
+ const foliage=[];for(const [x,z,scale,room] of [[-6.32,.95,.95,'living'],[-6.43,-4.1,.78,'dining'],[6.55,-3.88,.7,'bedroom'],[3.98,4.29,.58,'office']]){
+  const pivot=new T.Group();pivot.position.set(x,.42*scale,z);house.add(pivot);
+  for(let j=0;j<9;j++){const a=j*2.399,r=.2+(j%3)*.078;const leaf=new T.Mesh(new T.SphereGeometry(1,10,8),j%2?green1:green2);leaf.scale.set(.07*scale,.24*scale,.12*scale);leaf.rotation.z=Math.sin(a)*.43;leaf.position.set(Math.sin(a)*r*scale,.13*scale+(j%5)*.115*scale,Math.cos(a)*r*scale);pivot.add(leaf);}foliage.push({pivot,phase:foliage.length*1.6});}
+ // Air circulation fan (subtle 3D animation, not a decorative GIF).
+ const fanRig=new T.Group();fanRig.position.set(-.57,1.93,2.44);house.add(fanRig);
+ cyl(fanRig,0,0,0,.13,.07,subtleMetal,null);
+ for(let i=0;i<4;i++){const blade=softBox(fanRig,.39,0,0,.72,.045,.17,mat(0xc8b6a6,.4),null,.07);blade.rotation.y=i*Math.PI/2;blade.position.x=Math.cos(i*Math.PI/2)*.41;blade.position.z=Math.sin(i*Math.PI/2)*.41;}
+ // Animated blind slats in the bedroom; reflects actual cover entity when available.
+ const blindSlats=[];for(let i=0;i<7;i++){const slat=softBox(house,2.25,1.51-i*.125,-4.87,1.6,.08,.043,linen,'bedroom',.015);blindSlats.push(slat);}
+ // Candle light layers and warm under-cabinet LED strips.
+ const ledMat=new T.MeshBasicMaterial({color:0xffce8f,transparent:true,opacity:.42,depthWrite:false});
+ const leds=[];for(const [x,z,w,room] of [[-.6,-4.13,2.2,'kitchen'],[-.63,-2.1,1.55,'kitchen'],[5.19,2.54,.85,'office']]){const strip=addBox(house,x,.80,z,w,.026,.03,ledMat.clone(),null,false);leds.push({mesh:strip,room});}
+ // Floating dust particles catch the afternoon light in front of the model.
+ const dustGeo=new T.BufferGeometry(),dustPos=[],dustPhase=[];for(let i=0;i<180;i++){let fx=Math.sin(i*128.3)*43758.7,fz=Math.sin(i*74.2)*31961.1,fy=Math.sin(i*27.45)*14593.2;fx=fx-Math.floor(fx);fz=fz-Math.floor(fz);fy=fy-Math.floor(fy);dustPos.push((fx-.5)*14.3,.1+fy*2.6,(fz-.5)*9.8);dustPhase.push(fy*8);}dustGeo.setAttribute('position',new T.Float32BufferAttribute(dustPos,3));const dust=new T.Points(dustGeo,new T.PointsMaterial({color:0xffedca,size:.028,opacity:.48,transparent:true,depthWrite:false,sizeAttenuation:true}));house.add(dust);
+ // Elegant low-level garden context and soft architectural plinth lighting.
+ for(let i=0;i<9;i++){let x=-10.4+i*2.6;const stone=softBox(scene,x,-.37,7.35,.8,.07,1.03,mat(0x405061),null,.09);stone.rotation.y=Math.sin(i*1.4)*.18;}
+ const edgeGlo=new T.PointLight(0x8fa6d7,.4,22,2);edgeGlo.position.set(0,-.3,6);scene.add(edgeGlo);
+ const glowRim=new T.DirectionalLight(0xa4bfe8,1.5);glowRim.position.set(9,13,-16);scene.add(glowRim);
+ // LIVING — sectional couch, cushion detail, coffee table, television, media shelf, plants.
+ rug('living',-4.59,2.5,3.7,2.65,0x75839d);
+ addBox(house,-5.7,.34,2.96,.83,.48,2.17,deepBlue,'living');addBox(house,-5.56,.54,2.96,.24,.66,2.17,blue,'living');
+ addBox(house,-4.7,.33,3.75,2.65,.48,.77,deepBlue,'living');addBox(house,-4.7,.58,4.04,2.62,.54,.21,blue,'living');
+ for(let i=0;i<3;i++)addBox(house,-5.44+i*.82,.61,3.54,.7,.13,.52,mat(i===1?0x9aa9bd:0xb2b9c8),'living');
+ addBox(house,-4.2,.28,2.21,1.4,.14,.75,darkWood,'living');addBox(house,-4.68,.13,2.21,.075,.22,.6,black,'living');addBox(house,-3.72,.13,2.21,.075,.22,.6,black,'living');
+ addBox(house,-2.5,.41,2.45,.15,.6,1.6,black,'living');addBox(house,-2.59,.68,2.45,.09,.9,1.46,emissiveScreen,'living');
+ addBox(house,-2.51,.15,2.42,.3,.24,1.83,wood,'living');plant('living',-6.44,.75,.8);lamp('living',-3.12,4.14,1.05);
+ // DINING — circular timber table, cloth runner, four chairs and warm pendant.
+ rug('dining',-4.48,-2.52,3.72,3.45,0xb1a293);
+ cyl(house,-4.49,.63,-2.43,1.04,.12,wood,'dining');cyl(house,-4.49,.31,-2.43,.11,.56,darkWood,'dining');cyl(house,-4.49,.08,-2.43,.48,.09,darkWood,'dining');
+ for(let i=0;i<4;i++){const a=i*Math.PI/2;const xx=-4.49+Math.cos(a)*1.55,zz=-2.43+Math.sin(a)*1.55;const seat=cyl(house,xx,.4,zz,.34,.11,mat(0xcebdad),'dining');const back=addBox(house,xx+Math.cos(a)*.25,.67,zz+Math.sin(a)*.25,.55,.46,.11,wood,'dining');back.rotation.y=-a;}
+ cyl(house,-4.49,1.6,-2.43,.33,.26,mat(0xe6bfa0,.7),'dining',.23);light('dining',-4.49,1.41,-2.43,null,1.2);plant('dining',-6.28,-4.16,.72);
+ // KITCHEN — counters, island, cooktop, brass faucet and barstools.
+ addBox(house,-.6,.39,-4.5,2.4,.72,.55,white,'kitchen');addBox(house,-.6,.79,-4.5,2.5,.08,.67,stone,'kitchen');
+ addBox(house,.43,.37,-2.8,.5,.69,2.45,white,'kitchen');addBox(house,.43,.74,-2.8,.64,.07,2.48,stone,'kitchen');
+ addBox(house,-.64,.43,-2.05,1.61,.77,.8,wood,'kitchen');addBox(house,-.64,.83,-2.05,1.76,.08,.91,white,'kitchen');
+ for(const dx of [-.31,.31])for(const dz of [-.16,.16]){cyl(house,-.7+dx,.885,-2.05+dz,.1,.009,black,'kitchen');}
+ for(const x of [-1.21,-.66,-.11]){cyl(house,x,.31,-1.17,.29,.09,mat(0xc3a486),'kitchen');cyl(house,x,.15,-1.17,.04,.28,black,'kitchen');}
+ addBox(house,-1.12,.83,-4.5,.45,.019,.3,mat(0x859cac,.35,.6),'kitchen');cyl(house,-1.1,.97,-4.54,.021,.27,gold,'kitchen');addBox(house,-1,.1,-3.63,.95,.08,.88,mat(0xc4baa6),'kitchen',false);
+ light('kitchen',-.72,1.58,-2.48,null,1.1);light('kitchen',-.42,1.62,-4.14,null,.7);
+ // HALL — bench and entry console.
+ rug('hall',-.64,2.37,1.8,3,0xac8f7f);
+ addBox(house,-1.28,.32,3.42,.52,.52,1.3,wood,'hall');addBox(house,-1.28,.66,3.42,.13,.2,1.3,white,'hall');addBox(house,-.25,.36,1.65,.68,.65,.35,darkWood,'hall');
+ plant('hall',.28,4.14,.7);light('hall',-.55,1.42,2.62,null,.76);
+ // BEDROOM — broad platform, soft bedding, pillows, nightstands, wardrobe.
+ rug('bedroom',3.92,-1.66,4.7,4.15,0xbcb0aa);
+ addBox(house,3.87,.23,-2.05,3.2,.39,3.28,wood,'bedroom');addBox(house,3.88,.54,-3.38,3.28,.9,.23,mat(0xa9a8b3),'bedroom');
+ addBox(house,3.87,.52,-2.05,3.04,.16,3.0,white,'bedroom');addBox(house,3.87,.67,-1.47,3.0,.13,1.66,mat(0xe0d8d0),'bedroom');
+ for(const x of [3.2,4.55])addBox(house,x,.7,-3.02,1.04,.17,.53,mat(0xece6e1),'bedroom');
+ for(const x of [1.82,5.87]){addBox(house,x,.31,-3.17,.75,.55,.68,darkWood,'bedroom');addBox(house,x,.63,-3.17,.78,.08,.7,wood,'bedroom');lamp('bedroom',x,-3.17,.92);}
+ addBox(house,6.43,.86,-1.55,.47,1.6,2.7,wood,'bedroom');
+ for(let i=0;i<3;i++)addBox(house,6.14,.82,-2.42+i*.86,.018,1.45,.025,mat(0x7c6b5f),'bedroom');
+ plant('bedroom',1.45,.43,.8);
+ // BATHROOM — vanity, bathtub, glass shower, porcelain fittings.
+ rug('bath',2.24,3,1.74,1.32,0xd4e0dc);
+ addBox(house,1.5,.5,3.75,.6,.67,1.65,wood,'bath');addBox(house,1.5,.84,3.75,.64,.07,1.7,white,'bath');
+ cyl(house,1.49,.89,3.75,.26,.065,white,'bath');cyl(house,1.49,1.03,3.75,.024,.23,gold,'bath');
+ addBox(house,2.64,.35,2.9,.93,.54,1.66,white,'bath');addBox(house,2.64,.68,2.9,.7,.05,1.4,mat(0xd5e9f0,.3),'bath');
+ addBox(house,3.4,.69,3.2,.05,1.3,1.3,glass,'bath');light('bath',1.65,1.38,3.73,null,.73);
+ // OFFICE — desk, computer, swivel seat, bookshelf and plant.
+ rug('office',5.15,2.97,2.31,2.52,0x939dab);
+ addBox(house,5.18,.74,2.42,2.14,.13,.77,darkWood,'office');for(const xx of [4.25,6.05])addBox(house,xx,.36,2.42,.09,.72,.65,black,'office');
+ addBox(house,5.19,1.21,2.29,.91,.67,.075,black,'office');addBox(house,5.19,1.23,2.24,.8,.54,.01,emissiveScreen,'office');
+ cyl(house,5.16,.47,3.51,.44,.15,blue,'office');addBox(house,5.16,.8,3.86,.8,.73,.16,deepBlue,'office');cyl(house,5.16,.21,3.5,.05,.44,black,'office');
+ addBox(house,6.44,.89,4.12,.42,1.65,.64,wood,'office');for(let y=.3;y<1.7;y+=.35)addBox(house,6.44,y,4.12,.43,.065,.65,darkWood,'office');plant('office',3.99,4.4,.54);light('office',5.5,1.5,2.5,null,.61);
+ // Canvas-backed room captions displayed as subtle floating place labels.
+ const roomLabels=[];for(const r of rooms){const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;const cx=canvas.getContext('2d');cx.fillStyle='rgba(26,39,58,.84)';cx.beginPath();cx.roundRect(1,3,254,58,15);cx.fill();cx.strokeStyle='rgba(236,240,250,.40)';cx.stroke();cx.textAlign='center';cx.textBaseline='middle';cx.fillStyle='#f6f8ff';cx.font='600 24px system-ui';cx.fillText(r.name,128,33);const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;const spr=new T.Sprite(new T.SpriteMaterial({map:texture,transparent:true,depthTest:false,opacity:.85}));spr.position.set(r.x,1.94,r.z);spr.scale.set(r.id==='hall'?1.1:1.5,.38,1);house.add(spr);roomLabels.push(spr);}
+ const raycaster=new T.Raycaster(),pointer=new T.Vector2();let down=null,desiredTarget=new T.Vector3(0,0,0),desiredCamera=new T.Vector3(22,25,29),easeCamera=false;
+ function setCamera(id,smooth=true){if(id==='all'){desiredTarget.set(0,0,0);desiredCamera.set(22,25,29);}else{const r=rooms.find(x=>x.id===id);if(!r)return;desiredTarget.set(r.x*.48,0,r.z*.48);desiredCamera.set(19+r.x*.48,22,23+r.z*.48);}easeCamera=smooth;if(!smooth){camera.position.copy(desiredCamera);controls.target.copy(desiredTarget);controls.update();}}
+ function select(id,animated=false){highlights.forEach(line=>{line.material.opacity=(id!=='all'&&line.userData.room===id)?.92:0});setCamera(id==='unassigned'?'all':id,animated);}
+ function sync(){for(const obj of lighting){const d=devices.filter(x=>x.room===obj.room&&x.domain==='light');const on=d.some(x=>x.on);const avg=d.filter(x=>x.on).reduce((sum,x)=>sum+(x.brightness||80),0)/(d.filter(x=>x.on).length||1);const brightness=on?Math.max(.15,avg/100):0;obj.target=on?obj.base*5.8*brightness:0;obj.spriteTarget=on?Math.max(.25,brightness*.84):0;obj.bulbTarget=on?2.65*brightness:.035;}
+ for(const l of leds){const lit=devices.some(d=>d.room===l.room&&d.domain==='light'&&d.on);l.mesh.material.opacity=lit?.6:.045;}
+ const blinds=devices.find(d=>d.domain==='cover'&&d.room==='bedroom');blindSlats.forEach((slat,i)=>{slat.visible=!blinds||!blinds.on;});
+ const tv=house.children.find(m=>m.isMesh&&m.material===emissiveScreen);emissiveScreen.emissiveIntensity=devices.some(d=>d.domain==='media_player'&&d.room==='living'&&d.on)?1.6:.15;
+ }
+ function pick(ev){const rect=renderer.domElement.getBoundingClientRect();pointer.x=(ev.clientX-rect.left)/rect.width*2-1;pointer.y=-(ev.clientY-rect.top)/rect.height*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(interactables,false);if(hits.length){const id=hits[0].object.userData.room;if(id)selectRoom(id,false);}}
+ renderer.domElement.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,time:Date.now()};});renderer.domElement.addEventListener('pointerup',e=>{if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<7&&Date.now()-down.time<700)pick(e);down=null;});
+ $('#resetView').addEventListener('click',()=>{topDown=false;$('#topView').classList.remove('active');selectRoom('all',true);});$('#resetCameraFooter').addEventListener('click',()=>{topDown=false;$('#topView').classList.remove('active');selectRoom('all',true);});
+ $('#topView').addEventListener('click',()=>{topDown=!topDown;$('#topView').classList.toggle('active',topDown);easeCamera=true;desiredTarget.set(0,0,0);desiredCamera.set(topDown?0:22,topDown?27:25,topDown?.01:29);});
+ $('#rotateView').addEventListener('click',()=>{autoRotate=!autoRotate;controls.autoRotate=autoRotate;controls.autoRotateSpeed=.4;$('#rotateView').classList.toggle('active',autoRotate);});
+ const observer=new ResizeObserver(()=>{w=viewport.clientWidth;h=viewport.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);if(typeof fxComposer!=='undefined'&&fxComposer)fxComposer.setSize(w,h);});observer.observe(viewport);
+ const animationClock=new T.Clock();let frame=0,seconds=0,dayTime=17,playDay=false,cinematic=true,ultra=true;
+ let fxComposer=null,bloom=null,nightTint=.0;
+ const saveStageBackground=$('.stage').style.background;
+ function atmosphere(hours){dayTime=((hours%24)+24)%24;const label=dayTime>=5&&dayTime<10?'Morning':dayTime>=10&&dayTime<16?'Daylight':dayTime>=16&&dayTime<20?'Golden hour':'Night';$('#timeValue').textContent=`${label} · ${String(Math.floor(dayTime)).padStart(2,'0')}:${String(Math.round((dayTime%1)*60)).padStart(2,'0')}`;$('#timeSlider').value=dayTime;
+  const a=(dayTime-6)/24*Math.PI*2,up=Math.max(0,Math.sin(a)),warm=Math.max(0,1-Math.abs(dayTime-18)/4),night=1-up;
+  sun.position.set(Math.cos(a)*-22,Math.max(-3,up*28),Math.sin(a)*-22);sun.intensity=.22+up*3.7;sun.color.setRGB(1,.94-warm*.14,.89-warm*.34);sun.target.position.set(0,0,0);
+  hemi.intensity=.52+up*.92;ambient.intensity=.36+up*.31;glowRim.intensity=.4+up*.8;scene.fog.color.setRGB(.035+up*.04,.059+up*.06,.09+up*.08);
+  renderer.toneMappingExposure=1.2+up*.28+warm*.08;
+  $('.stage').style.background=`radial-gradient(ellipse at 45% 51%,rgba(${Math.round(55+warm*24)},${Math.round(67+warm*12)},${Math.round(91-up*6)},.42),#101827 72%,#0c1320)`;
+  nightTint=night;
+ }
+ $('#timeSlider').addEventListener('input',e=>{playDay=false;$('#animateDay').classList.remove('active');$('#animateDay').textContent='▶ DAY CYCLE';atmosphere(Number(e.target.value));});
+ $('#animateDay').addEventListener('click',()=>{playDay=!playDay;$('#animateDay').classList.toggle('active',playDay);$('#animateDay').textContent=playDay?'Ⅱ PAUSE CYCLE':'▶ DAY CYCLE';});
+ $('#cinemaToggle').classList.add('active');$('#qualityToggle').classList.add('active');
+ $('#cinemaToggle').onclick=()=>{cinematic=!cinematic;$('#cinemaToggle').classList.toggle('active',cinematic);if(bloom)bloom.enabled=cinematic;};
+ $('#qualityToggle').onclick=()=>{ultra=!ultra;$('#qualityToggle').classList.toggle('active',ultra);renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,ultra?2:1));sun.shadow.mapSize.set(ultra?3072:1024,ultra?3072:1024);sun.shadow.map?.dispose();sun.shadow.map=null;renderer.setSize(w,h,false);if(fxComposer)fxComposer.setSize(w,h);};
+ const canBloom=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+ if(canBloom){(async()=>{try{const [{EffectComposer},{RenderPass},{UnrealBloomPass},{OutputPass}]=await Promise.all([import('three/addons/postprocessing/EffectComposer.js'),import('three/addons/postprocessing/RenderPass.js'),import('three/addons/postprocessing/UnrealBloomPass.js'),import('three/addons/postprocessing/OutputPass.js')]);const comp=new EffectComposer(renderer);comp.addPass(new RenderPass(scene,camera));const gl=new UnrealBloomPass(new T.Vector2(Math.max(1,w),Math.max(1,h)),.22,.45,.86);comp.addPass(gl);comp.addPass(new OutputPass());bloom=gl;fxComposer=comp;fxComposer.setSize(w,h);}catch(err){console.info('Postprocessing skipped',err.message)}})();}
+ function animate(){frame=requestAnimationFrame(animate);const dt=Math.min(animationClock.getDelta(),.08);seconds+=dt;
+  if(playDay){dayTime=(dayTime+dt*.39)%24;atmosphere(dayTime);}
+  if(easeCamera){camera.position.lerp(desiredCamera,1-Math.exp(-dt*4.5));controls.target.lerp(desiredTarget,1-Math.exp(-dt*4.5));if(camera.position.distanceTo(desiredCamera)<.04)easeCamera=false;}
+  for(const l of lighting){if(l.target!==undefined){l.point.intensity+=(l.target-l.point.intensity)*Math.min(1,dt*4.7);l.sprite.material.opacity+=(l.spriteTarget-l.sprite.material.opacity)*Math.min(1,dt*4.3);l.bulb.material.emissiveIntensity+=(l.bulbTarget-l.bulb.material.emissiveIntensity)*Math.min(1,dt*4.5);}}
+  if(canBloom){fanRig.rotation.y+=dt*.53;for(const f of foliage){f.pivot.rotation.z=Math.sin(seconds*.63+f.phase)*.035;f.pivot.rotation.x=Math.sin(seconds*.9+f.phase)*.026;}dust.rotation.y=Math.sin(seconds*.12)*.019;for(let i=0;i<blindSlats.length;i++){const slat=blindSlats[i];slat.rotation.x=Math.sin(seconds*.3+i*.13)*.014;}}
+  emissiveScreen.emissiveIntensity+=Math.sin(seconds*.88)*.0006;
+  controls.update();if(fxComposer&&cinematic)fxComposer.render();else renderer.render(scene,camera);
+ }
+ atmosphere(17);
+ select(selectedRoom,false);sync();animate();return {select,sync,reset(){setCamera('all',true)}};
+}
+
+
+/* HAVEN REALTIME / self-contained WebGL2 architectural renderer.
+ * No remote modules, models, textures, or shader services required.
+ * Geometry is programmatic and lighting follows verified Home Assistant state.
+ */
+function createRealtimeModel(){
+ const host=$('#viewport'), shell=host.parentElement;
+ const canvas=document.createElement('canvas');canvas.className='haven-realtime-canvas';canvas.setAttribute('aria-label','Interactive 3D home. Drag to orbit; scroll to zoom; click a room to inspect devices.');
+ const gl=canvas.getContext('webgl2',{antialias:true,alpha:true,depth:true,powerPreference:'high-performance',stencil:false});
+ if(!gl)throw new Error('WebGL2 is unavailable.');
+ host.append(canvas);host.style.pointerEvents='auto';
+ const V=(x=0,y=0,z=0)=>[x,y,z],sub=(a,b)=>a.map((x,i)=>x-b[i]),add=(a,b)=>a.map((x,i)=>x+b[i]),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=(v)=>{const d=Math.hypot(...v)||1;return v.map(x=>x/d)},scale=(a,s)=>a.map(x=>x*s);
+ const mult=(a,b)=>{const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o};
+ function lookAt(eye,at,up=[0,1,0]){let z=unit(sub(eye,at)),x=unit(cross(up,z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1]);}
+ function perspective(fov,asp,n,f){const q=1/Math.tan(fov/2);return new Float32Array([q/asp,0,0,0,0,q,0,0,0,0,(f+n)/(n-f),-1,0,0,2*f*n/(n-f),0]);}
+ function ortho(l,r,b,t,n,f){return new Float32Array([2/(r-l),0,0,0,0,2/(t-b),0,0,0,0,-2/(f-n),0,-(r+l)/(r-l),-(t+b)/(t-b),-(f+n)/(f-n),1]);}
+ const hex=h=>[(h>>16&255)/255,(h>>8&255)/255,(h&255)/255];
+ const PAL={ivory:0xeadfce,wall:0xcac4bb,clay:0xa7907b,oak:0xa67d5b,oak2:0x8e6a52,walnut:0x5a4039,cream:0xdbd4c7,stone:0xb8b5a9,marble:0xd1cec6,bronze:0xb58b54,gold:0xf6c787,glass:0xb5daea,blue:0x54697a,ink:0x202932,screen:0x162d3b,tile:0xbac9c9,moss:0x687a61,forest:0x415846,plant:0x446849,leaf:0x789a71,rug:0xa8a69a,linen:0xe5e0d3,rust:0xa7705c,black:0x34373a,water:0x8cb6c0,ceiling:0xfcdfaa};
+ const MAT={plain:0,wood:1,marble:2,fabric:3,tile:4,rug:5,glow:6,leaf:7,metal:8,stone:9,glass:10,blind:11,screen:12,fan:13};
+ const solid={p:[],i:[]},transparent={p:[],i:[]},emissive={p:[],i:[]};const pstride=11;
+ function buildVertex(out,pos,n,c,type,rough,met,em){out.p.push(pos[0],pos[1],pos[2],n[0],n[1],n[2],...hex(c),type,Math.min(1,Math.max(0,rough)),Math.min(1,Math.max(0,met)),em||0)}
+ // 13 floats per vertex: XYZ / normal / albedo / material type / rough / metallic / emissive
+ const STRIDE=13;
+ function quad(out,a,b,c,d,col,type=0,rough=.83,met=0,em=0,normal=null){let n=normal||unit(cross(sub(b,a),sub(c,a)));let s=out.p.length/STRIDE;for(let pos of [a,b,c,d])buildVertex(out,pos,n,col,type,rough,met,em);out.i.push(s,s+1,s+2,s,s+2,s+3);}
+ function tri(out,a,b,c,col,type=0,rough=.83,met=0,em=0){const n=unit(cross(sub(b,a),sub(c,a)));let s=out.p.length/STRIDE;for(let pos of [a,b,c])buildVertex(out,pos,n,col,type,rough,met,em);out.i.push(s,s+1,s+2)}
+ function box(x,y,z,w,h,d,col=PAL.wall,type=0,opts={}){
+  const target=opts.glass?transparent:opts.em?emissive:solid,rot=opts.rot||0,r=opts.round||0,rough=opts.rough??.82,met=opts.metal??0,em=opts.em||0;
+  const rx=(point)=>[point[0]*Math.cos(rot)-point[2]*Math.sin(rot)+x,point[1]+y,point[0]*Math.sin(rot)+point[2]*Math.cos(rot)+z];
+  let hs=[w/2,h/2,d/2];const coords=[[ -1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+  // Bevelled edges with per-pixel smoothed normals. Every face subdivides only near rounded boundaries.
+  for(let axis=0;axis<3;axis++)for(let sign of [-1,1]){
+   let a=(axis+1)%3,b=(axis+2)%3,ha=hs[a],hb=hs[b],rad=Math.min(r,Math.min(...hs)*.8);
+   const cuts=(half)=>rad>0?[-half,-half+rad*.30,-half+rad,half-rad,half-rad*.30,half]:[-half,half];
+   const us=cuts(ha),vs=cuts(hb);const side=target.p.length/STRIDE;
+   for(let i=0;i<us.length;i++)for(let j=0;j<vs.length;j++){
+    const pos=[0,0,0];pos[axis]=sign*hs[axis];pos[a]=us[i];pos[b]=vs[j];
+    let normal=[0,0,0];normal[axis]=sign;const orig=[...pos];
+    if(rad){const inner=pos.map((v,k)=>Math.max(-hs[k]+rad,Math.min(hs[k]-rad,v)));const offset=sub(pos,inner);const v=unit(offset);for(let k=0;k<3;k++){pos[k]=inner[k]+v[k]*rad;normal[k]=v[k];}}
+    const world=rx(pos);const nn=[normal[0]*Math.cos(rot)-normal[2]*Math.sin(rot),normal[1],normal[0]*Math.sin(rot)+normal[2]*Math.cos(rot)];buildVertex(target,world,nn,col,type,rough,met,em);
+   }
+   for(let i=0;i<us.length-1;i++)for(let j=0;j<vs.length-1;j++){
+    const a1=side+i*vs.length+j,b1=side+(i+1)*vs.length+j,c1=b1+1,d1=a1+1;
+    if((axis===1?-sign:sign)>0)target.i.push(a1,b1,c1,a1,c1,d1);else target.i.push(a1,c1,b1,a1,d1,c1);
+   }
+  }
+ }
+ function cyl(x,y,z,r,h,col=PAL.oak,type=MAT.wood,options={}){const seg=options.seg||18,upper=options.top??r,rough=options.rough??.8,metal=options.metal||0,em=options.em||0,out=em?emissive:options.glass?transparent:solid,rad=options.rot||0;
+  const rr=(a)=>[x+Math.cos(a+rad)*r,z+Math.sin(a+rad)*r],ru=(a)=>[x+Math.cos(a+rad)*upper,z+Math.sin(a+rad)*upper];
+  for(let k=0;k<seg;k++){const a=k/seg*Math.PI*2,b=(k+1)/seg*Math.PI*2,v=rr(a),q=rr(b),t=ru(a),s=ru(b),nn=unit([Math.cos((a+b)/2+rad),(r-upper)/h,Math.sin((a+b)/2+rad)]);
+   quad(out,[...v.slice(0,1),y-h/2,v[1]],[...q.slice(0,1),y-h/2,q[1]],[s[0],y+h/2,s[1]],[t[0],y+h/2,t[1]],col,type,rough,metal,em,nn);
+   tri(out,[x,y+h/2,z],[t[0],y+h/2,t[1]],[s[0],y+h/2,s[1]],col,type,rough,metal,em);
+   tri(out,[x,y-h/2,z],[q[0],y-h/2,q[1]],[v[0],y-h/2,v[1]],col,type,rough,metal,em);
+  }
+ }
+ function orb(x,y,z,rx,ry,rz,color=PAL.leaf,type=MAT.leaf,options={}){const out=options.em?emissive:solid,rough=options.rough??.87,met=options.metal||0,em=options.em||0,rot=options.rot||0,lat=9,lon=13;const s=out.p.length/STRIDE;
+  for(let i=0;i<=lat;i++)for(let j=0;j<=lon;j++){const a=i/lat*Math.PI,b=j/lon*Math.PI*2;let xx=Math.sin(a)*Math.cos(b),zz=Math.sin(a)*Math.sin(b),yy=Math.cos(a);const nx=xx*Math.cos(rot)-zz*Math.sin(rot),nz=xx*Math.sin(rot)+zz*Math.cos(rot);buildVertex(out,[x+nx*rx,y+yy*ry,z+nz*rz],unit([nx/rx,yy/ry,nz/rz]),color,type,rough,met,em)}
+  for(let i=0;i<lat;i++)for(let j=0;j<lon;j++){let a=s+i*(lon+1)+j,b=a+lon+1;out.i.push(a,b,a+1,b,b+1,a+1)}
+ }
+ function rod(a,b,r,color=PAL.bronze,type=MAT.metal,opts={}){let dir=sub(b,a),len=Math.hypot(...dir),up=unit(dir),right=unit(cross(Math.abs(up[1])>.95?[1,0,0]:[0,1,0],up)),z=cross(right,up),seg=opts.seg||10,out=opts.em?emissive:solid;for(let k=0;k<seg;k++){let t=k*2*Math.PI/seg,u=(k+1)*2*Math.PI/seg;const loc=(p,a)=>add(p,add(scale(right,Math.cos(a)*r),scale(z,Math.sin(a)*r)));quad(out,loc(a,t),loc(a,u),loc(b,u),loc(b,t),color,type,opts.rough??.38,opts.metal??.7,opts.em||0,unit(add(scale(right,Math.cos((t+u)/2)),scale(z,Math.sin((t+u)/2)))));}}
+ function ring(x,y,z,r,thick,col=PAL.bronze,opts={}){const seg=32,parts=7,out=opts.em?emissive:solid;for(let i=0;i<seg;i++){const a=i*Math.PI*2/seg,b=(i+1)*Math.PI*2/seg;for(let j=0;j<parts;j++){const c=j*Math.PI*2/parts,d=(j+1)*Math.PI*2/parts;const p=(v,u)=>[(r+Math.cos(u)*thick)*Math.cos(v)+x,y+Math.sin(u)*thick,(r+Math.cos(u)*thick)*Math.sin(v)+z];quad(out,p(a,c),p(b,c),p(b,d),p(a,d),col,opts.em?MAT.glow:MAT.metal,.26,.6,opts.em||0);}}}
+ function rug(x,z,w,d,color=PAL.rug){box(x,.075,z,w,.04,d,color,MAT.rug,{round:.024,rough:1});}
+ function sofaSoft(x,y,z,w,h,d,color=PAL.cream,rot=0){box(x,y,z,w,h,d,color,MAT.fabric,{round:.10,rough:1,rot});}
+ function furnitureLegs(x,z,w,d,h,y=.34,color=PAL.walnut){for(let a of [-1,1])for(let b of [-1,1])box(x+a*w*.4,y,z+b*d*.40,.055,h,.055,color,MAT.wood,{round:.018});}
+ function pot(x,z,k=1){cyl(x,.24*k,z,.19*k,.36*k,PAL.clay,MAT.stone,{top:.25*k,seg:14});cyl(x,.436*k,z,.215*k,.036*k,PAL.ivory,MAT.stone);for(let i=0;i<9;i++){const a=i*2.399,r=.08*k+(i%3)*.07*k;let yy=.56*k+(i%5)*.115*k;rod([x,.41*k,z],[x+Math.cos(a)*r,yy,z+Math.sin(a)*r],.014*k,PAL.forest,MAT.leaf,{metal:0});orb(x+Math.cos(a)*r,yy,z+Math.sin(a)*r,.12*k,.22*k,.065*k,i%2?PAL.leaf:PAL.plant,MAT.leaf,{rot:a});}}
+ const bulbs=[];function lum(room,x,y,z,power=1){const id=rooms.findIndex(r=>r.id===room);bulbs.push({room,id,x,y,z,power});orb(x,y,z,.065,.065,.065,PAL.gold,MAT.glow,{em:2.7});}
+ function lamp(room,x,z,y=1.25){cyl(x,.09,z,.21,.07,PAL.bronze,MAT.metal,{metal:.75});rod([x,.12,z],[x,y-.14,z],.022,PAL.bronze);cyl(x,y-.11,z,.25,.22,PAL.ivory,MAT.fabric,{top:.13});lum(room,x,y-.03,z,.9);}
+ // Floating limestone architecture / beveled metal understructure and warm inset reveal.
+ box(0,-.41,0,14.83,.15,10.82,0x252b2d,MAT.metal,{round:.06,metal:.7});
+ box(0,-.29,0,14.65,.20,10.66,0x6c6155,MAT.stone,{round:.08});
+ box(0,-.173,0,14.54,.07,10.58,PAL.bronze,MAT.metal,{rough:.27,metal:.79});
+ box(0,-.09,0,14.45,.12,10.48,PAL.stone,MAT.stone,{round:.04});
+ // Studio cyclorama catches the cast shadows of the floating cutaway.
+ box(0,-.80,0,46,.17,37,0x293039,MAT.stone,{rough:1});
+ for(let n=0;n<12;n++){let x=-13.3+n*2.4;box(x,-.70,9.0,.74,.06,.74,n%2?0x535b5c:0x46494b,MAT.stone,{round:.06,rot:Math.sin(n*9)*.28});}
+ // Seven architectural rooms. Flooring planks follow global world coordinates.
+ for(const r of rooms){box(r.x,-.015,r.z,r.w,.12,r.d,['bath','kitchen'].includes(r.id)?(r.id==='bath'?PAL.tile:PAL.marble):PAL.oak,MAT[['bath','kitchen'].includes(r.id)?(r.id==='bath'?'tile':'marble'):'wood'],{rough:r.id==='bath'?.42:.76});}
+ // Boundary walls are solid but selectively cut away for camera visibility.
+ const wall=(x,z,w,d,h=1.8,color=PAL.wall)=>box(x,h/2,z,w,h,d,color,MAT.stone,{rough:.92});
+ wall(0,-5.17,14.50,.17,2.45,PAL.ivory);wall(-7.18,0,.18,10.30,2.08,PAL.ivory);wall(7.18,0,.18,10.3,2.08,PAL.ivory);wall(0,5.17,14.40,.13,.23,PAL.ivory);
+ const vw=(x,z1,z2,h=1.36)=>wall(x,(z1+z2)/2,.105,Math.abs(z2-z1),h,PAL.ivory);
+ const hw=(z,x1,x2,h=1.36)=>wall((x1+x2)/2,z,Math.abs(x2-x1),.105,h,PAL.ivory);
+ vw(-2.05,-5,-2.3);vw(-2.05,-.80,1.3);vw(-2.05,2.8,5.0,.85);vw(.83,-5,-2.45);vw(.83,-1.2,1.51);vw(.83,2.9,5.0,.91);vw(3.67,1.2,2.15);vw(3.67,3.45,5.0,1.04);
+ hw(.19,-7,-5.2);hw(.19,-3.84,-2.05);hw(.19,-1.99,-.86);hw(.19,.19,.80);hw(1.18,.86,1.8);hw(1.18,2.78,5.05);hw(1.18,5.69,7.05);
+ // Wainscoting, window frames, vertical trims and thresholds.
+ for(const x of [-4.6,3.25]){const ww=x<0?2.75:2.8;box(x,1.11,-5.045,ww,1.24,.034,PAL.glass,MAT.glass,{glass:true});for(const dx of [-ww*.5,0,ww*.5])box(x+dx,1.18,-4.986,.035,1.45,.065,PAL.bronze,MAT.metal,{metal:.5});for(const yy of [.45,1.79])box(x,yy,-4.986,ww+.1,.055,.09,PAL.ivory,MAT.plain);box(x,.47,-4.79,ww+.14,.055,.28,PAL.marble,MAT.marble,{rough:.25});}
+ for(let i=0;i<8;i++){box(-7.074,.08,-4.6+i*1.24,.03,.10,1.1,PAL.cream,MAT.stone);box(7.074,.08,-4.6+i*1.24,.03,.10,1.1,PAL.cream,MAT.stone)}
+ // Sculptural furniture — living suite, six cushion composition, walnut table and credenza.
+ rug(-4.64,2.64,3.75,2.9,0x95978d);
+ sofaSoft(-5.61,.37,2.93,.92,.48,2.23,0xb3b0a4);sofaSoft(-4.75,.35,3.64,2.95,.50,.89,0xb3b0a4);
+ sofaSoft(-5.88,.69,2.90,.22,.57,2.3,0xb3b0a4);sofaSoft(-4.75,.72,4.08,2.97,.66,.22,0xb3b0a4);
+ for(const a of [-5.57,-4.77,-3.97])sofaSoft(a,.63,3.56,.71,.22,.68,PAL.cream);
+ for(let i=0;i<3;i++)sofaSoft(-5.52,.70,2.18+i*.65,.48,.32,.14,0xb5b3aa,Math.sin(i)*.07);
+ for(let i=0;i<3;i++){const colors=[PAL.rust,PAL.linen,PAL.moss];sofaSoft(-5.55+i*.69,.84,3.76,.44,.30,.16,colors[i],Math.sin(i*2)*.17);}
+ box(-4.10,.34,2.34,1.54,.145,.87,PAL.walnut,MAT.wood,{round:.085,rough:.32});furnitureLegs(-4.10,2.34,1.4,.71,.32,.15);
+ box(-2.47,.34,2.55,.33,.54,1.83,PAL.walnut,MAT.wood,{round:.035});box(-2.53,.88,2.55,.075,1.15,1.80,PAL.black,MAT.metal,{rough:.23,metal:.5});box(-2.577,.89,2.55,.018,1.04,1.66,PAL.screen,MAT.screen,{em:.14});
+ for(let i=0;i<4;i++)box(-2.45,.36,1.87+i*.28,.036,.045,.20,PAL.bronze,MAT.metal,{metal:.8});
+ for(let i=0;i<3;i++){box(-4.5,.47+i*.035,2.45,.44,.043,.29,[PAL.ivory,PAL.rust,PAL.blue][i],MAT.fabric,{round:.01,rot:.16});}cyl(-3.74,.53,2.25,.08,.20,PAL.ivory,MAT.marble,{top:.06});
+ pot(-6.42,.80,.85);lamp('living',-3.03,4.22,1.21);lum('living',-4.43,1.75,2.4,.96);
+ // Dining: wood pedestal table, sculpted seating, woven placemats, tableware and bespoke chandelier.
+ rug(-4.49,-2.44,3.87,3.48,0x9d9080);
+ cyl(-4.49,.68,-2.45,1.07,.14,PAL.walnut,MAT.wood,{seg:36});cyl(-4.49,.34,-2.45,.19,.55,PAL.walnut,MAT.wood,{top:.13});cyl(-4.49,.08,-2.45,.52,.10,PAL.walnut,MAT.wood,{seg:28});
+ for(let i=0;i<4;i++){const a=i*Math.PI*.5,xx=-4.49+Math.cos(a)*1.56,zz=-2.45+Math.sin(a)*1.56;cyl(xx,.42,zz,.33,.13,PAL.clay,MAT.fabric,{seg:20});box(xx+Math.cos(a)*.21,.73,zz+Math.sin(a)*.21,.59,.60,.12,PAL.oak,MAT.wood,{rot:-a,round:.065});for(const q of [-1,1])rod([xx+q*.15,.37,zz],[xx+q*.15,.15,zz],.025,PAL.walnut,MAT.wood);}
+ for(let i=0;i<4;i++){const a=i*Math.PI*.5,xx=-4.49+Math.sin(a)*.68,zz=-2.45+Math.cos(a)*.68;ring(xx,.764,zz,.155,.013,PAL.ivory);cyl(xx,.753,zz,.122,.017,PAL.linen,MAT.marble,{seg:24});box(xx+.18,.76,zz,.017,.013,.22,PAL.bronze,MAT.metal,{metal:.8});}
+ ring(-4.49,1.71,-2.45,.45,.025,PAL.bronze);rod([-4.49,2.44,-2.45],[-4.49,1.7,-2.45],.012,PAL.bronze);lum('dining',-4.49,1.68,-2.45,1.36);pot(-6.42,-4.04,.79);
+ // Kitchen: two slabs, glossy limestone counters, panels, chrome fixtures, hob and stools.
+ box(-.63,.45,-4.47,2.43,.75,.59,PAL.cream,MAT.wood,{round:.035});box(-.63,.849,-4.47,2.57,.085,.73,PAL.marble,MAT.marble,{round:.022,rough:.21});
+ for(let i=0;i<4;i++){const x=-1.53+i*.59;box(x,.45,-4.075,.018,.69,.03,PAL.clay,MAT.wood);box(x+.27,.49,-4.068,.25,.020,.035,PAL.bronze,MAT.metal,{metal:.8});}
+ box(.40,.40,-2.84,.58,.72,2.57,PAL.cream,MAT.wood,{round:.022});box(.41,.78,-2.84,.68,.08,2.64,PAL.marble,MAT.marble,{rough:.20});
+ box(-.62,.43,-2.02,1.77,.73,.89,PAL.walnut,MAT.wood,{round:.038});box(-.63,.835,-2.02,1.96,.09,1.04,PAL.marble,MAT.marble,{round:.032,rough:.17});
+ for(let i=0;i<3;i++){const x=-1.26+i*.61;cyl(x,.34,-1.11,.29,.10,PAL.clay,MAT.fabric);rod([x,.15,-1.11],[x,.31,-1.11],.038,PAL.bronze);}
+ for(let xx of [-.98,-.40])for(let zz of [-2.25,-1.84])ring(xx,.91,zz,.108,.012,PAL.black);
+ box(-1.18,.894,-4.49,.50,.02,.32,0x657b81,MAT.metal,{metal:.85});rod([-1.2,.88,-4.52],[-1.2,1.18,-4.52],.017,PAL.bronze);rod([-1.2,1.18,-4.52],[-.97,1.18,-4.52],.018,PAL.bronze);
+ for(let i=0;i<3;i++){box(-1.17+i*.48,1.63,-4.5,.40,.47,.44,PAL.cream,MAT.wood,{round:.025});box(-1.17+i*.48,1.33,-4.24,.24,.017,.027,PAL.bronze,MAT.metal,{metal:.6});}
+ box(-.55,1.23,-4.14,2.23,.027,.065,PAL.gold,MAT.glow,{em:1.35});lum('kitchen',-.62,1.75,-2.18,1.11);lum('kitchen',-.62,1.62,-4.16,.9);
+ // Bedroom: upholstered headboard, sculpted mattress, layered duvet and pillows, sideboards.
+ rug(3.85,-1.66,4.55,4.40,0xc4b6a4);
+ box(3.85,.48,-1.75,3.48,.52,3.47,PAL.walnut,MAT.wood,{round:.055});sofaSoft(3.86,.64,-1.76,3.30,.31,3.20,PAL.ivory);
+ sofaSoft(3.86,.88,-3.31,3.51,1.08,.24,0x978d82);
+ sofaSoft(3.86,.816,-1.21,3.25,.22,2.18,PAL.linen);sofaSoft(3.86,.84,-.20,3.20,.13,.57,PAL.clay);
+ for(const x of [3.06,4.56]){sofaSoft(x,.86,-2.98,1.11,.24,.63,PAL.ivory);sofaSoft(x,.92,-2.62,.58,.27,.18,0xb8b0a0);}
+ for(const x of [1.71,6.05]){box(x,.35,-3.26,.73,.61,.68,PAL.walnut,MAT.wood,{round:.04});box(x,.67,-3.26,.79,.055,.73,PAL.marble,MAT.marble,{rough:.28});lamp('bedroom',x,-3.27,1.10);}
+ box(6.50,1.12,-1.27,.44,2.05,2.86,PAL.oak,MAT.wood,{round:.02});for(let i=0;i<4;i++)box(6.248,1.02,-2.26+i*.65,.025,1.73,.025,PAL.walnut,MAT.wood);
+ pot(1.36,.56,.73);lum('bedroom',3.85,1.98,-2.0,.88);
+ // Bathroom: wide bathtub, inset water, mirror, contemporary wall-mounted vanity and translucent shower.
+ box(2.58,.42,2.87,1.05,.69,1.85,PAL.ivory,MAT.marble,{round:.17,rough:.17});box(2.57,.78,2.87,.81,.040,1.58,PAL.water,MAT.glass,{glass:true});
+ box(1.39,.48,3.65,.64,.70,1.62,PAL.oak,MAT.wood,{round:.025});box(1.38,.85,3.65,.72,.065,1.74,PAL.marble,MAT.marble,{rough:.18});
+ cyl(1.37,.917,3.66,.24,.06,PAL.ivory,MAT.marble,{seg:25});rod([1.37,.92,3.68],[1.37,1.15,3.68],.014,PAL.bronze);rod([1.37,1.15,3.68],[1.55,1.15,3.68],.014,PAL.bronze);
+ box(1.02,1.50,3.66,.055,.85,1.30,0x819c9e,MAT.metal,{round:.035,rough:.12,metal:.81});
+ box(3.43,1.10,2.77,.03,1.62,1.49,PAL.glass,MAT.glass,{glass:true});rod([3.38,.62,2.14],[3.38,1.79,2.14],.016,PAL.bronze);rod([3.38,1.78,2.14],[3.04,1.78,2.14],.016,PAL.bronze);cyl(3.02,1.77,2.14,.14,.031,PAL.bronze,MAT.metal,{metal:.8});
+ for(let i=0;i<3;i++)box(1.86,1.0+i*.09,4.44,.44,.085,.46,i%2?PAL.clay:PAL.linen,MAT.fabric,{round:.035});lum('bath',1.56,1.88,3.76,.97);
+ // Office: architect's desk, dual monitors, keycaps, desk chair, plants and shelves.
+ rug(5.19,2.9,2.44,2.60,0x919e9d);
+ box(5.15,.78,2.37,2.20,.12,.82,PAL.walnut,MAT.wood,{round:.046,rough:.35});furnitureLegs(5.15,2.37,2.17,.70,.77,.35,PAL.black);
+ for(let i=0;i<2;i++){const x=4.78+i*.84;box(x,1.26,2.09,.83,.67,.067,PAL.black,MAT.metal,{round:.026,rough:.22,metal:.5});box(x,1.26,2.045,.72,.55,.012,i?0x283d4d:0x3d5963,MAT.glow,{em:.22});rod([x,.83,2.09],[x,1.0,2.09],.025,PAL.bronze);}
+ box(5.14,.86,2.76,.80,.024,.22,0x78858a,MAT.metal,{metal:.6});for(let i=0;i<16;i++)box(4.77+i*.049,.877,2.76,.029,.009,.15,i%3?PAL.black:0x5c6a72,MAT.plain);
+ cyl(5.25,.29,3.66,.38,.13,PAL.blue,MAT.fabric);rod([5.25,.14,3.66],[5.25,.73,3.66],.035,PAL.black);sofaSoft(5.25,.78,4.0,.74,.67,.16,PAL.blue);
+ box(6.48,.89,4.12,.44,1.63,.69,PAL.oak,MAT.wood);for(let j=0;j<4;j++)box(6.46,.35+j*.35,4.1,.44,.035,.67,PAL.walnut,MAT.wood);
+ for(let i=0;i<19;i++){const x=6.36+(i%4)*.085,y=.41+Math.floor(i/4)*.32;box(x,y,4.19,.06,.18+.04*Math.sin(i*3)**2,.26,[PAL.ivory,PAL.blue,PAL.rust,PAL.moss][i%4],MAT.fabric);}
+ pot(3.98,4.29,.61);lamp('office',5.92,2.4,1.20);lum('office',5.22,1.86,3.25,.78);
+ // Entryway: floating sideboard, coat hangers, framed wall art and sculptural greenery.
+ rug(-.63,2.7,1.72,3.24,0xa58c7b);
+ box(-1.28,.39,3.51,.63,.57,1.38,PAL.walnut,MAT.wood,{round:.037});box(-1.28,.70,3.51,.68,.055,1.45,PAL.marble,MAT.marble,{rough:.27});
+ box(-.12,.44,1.68,.80,.75,.43,PAL.oak,MAT.wood,{round:.055});pot(.32,4.24,.78);lum('hall',-.55,1.94,2.56,.91);
+ for(let n=0;n<6;n++){box(-.61,1.22+n*.078,-4.84,.24,.035,.11,n%2?PAL.oak:PAL.ivory,MAT.wood);}
+ // Kinetic ceiling-fan blades and smart roller blinds (driven by live cover/fan states).
+ cyl(-.55,1.99,2.43,.13,.09,PAL.bronze,MAT.metal,{metal:.8});
+ for(let j=0;j<4;j++){const a=j*Math.PI/2;box(-.55+Math.cos(a)*.37,1.96,2.43+Math.sin(a)*.37,.67,.048,.21,PAL.cream,MAT.fan,{rot:-a,round:.045});}
+ for(let j=0;j<10;j++){box(2.27,1.57-j*.116,-4.83,1.57,.055,.055,PAL.ivory,MAT.blind,{round:.013});}
+ // Wall art built as actual painted panels (not perspective-corrected screenshots).
+ for(const a of [[-5.78,1.35,-5.048,.89,.64,PAL.rust], [4.59,1.35,-5.048,1.10,.69,PAL.blue]]){
+  const [x,y,z,w,h,c]=a;box(x,y,z,w+.075,h+.075,.055,PAL.walnut,MAT.wood,{round:.02});box(x,y,z+.041,w,h,.017,PAL.ivory,MAT.plain);orb(x-.13,y,z+.055,.23,.19,.014,c,MAT.plain);orb(x+.19,y-.07,z+.057,.19,.15,.014,PAL.clay,MAT.plain);
+ }
+ // Emissive architectural strip along the plinth and cabinet lighting.
+ box(0,-.245,5.268,14.21,.022,.025,PAL.gold,MAT.glow,{em:.49});box(0,-.245,-5.268,14.21,.022,.025,PAL.gold,MAT.glow,{em:.49});
+ // Transparent glass panes / low entrance balustrade.
+ box(-3.72,.27,5.025,3.29,.53,.042,PAL.glass,MAT.glass,{glass:true});box(5.28,.24,5.025,3.05,.48,.042,PAL.glass,MAT.glass,{glass:true});
+ // Room status beacons float in scene and respond to live HA entities.
+ const materialRooms=rooms.map(r=>({room:r.id,light:0}));
+ // VERTEX + PHYSICALLY INSPIRED FRAGMENT LIGHTING: contact shadows, sun shadow map,
+ // spatial warm bulbs, procedural materials, highlight roughness and ACES tone mapping.
+ const vert=`#version 300 es
+ precision highp float;
+ layout(location=0) in vec3 aPosition;
+ layout(location=1) in vec3 aNormal;
+ layout(location=2) in vec3 aColor;
+ layout(location=3) in vec4 aMaterial;
+ uniform mat4 uVP;uniform mat4 uLightVP;uniform float uBlind;uniform float uFanPhase;
+ out vec3 vWorld;out vec3 vNormal;out vec3 vColor;out vec4 vMat;out vec4 vShadow;
+ void main(){vec3 wp=aPosition;vec3 norm=aNormal;
+ if(aMaterial.x>10.5&&aMaterial.x<11.5)wp.y=mix(wp.y,1.92+(wp.y-1.05)*.055,uBlind);
+ if(aMaterial.x>12.5&&aMaterial.x<13.5){float c=cos(uFanPhase),s=sin(uFanPhase);vec2 q=wp.xz-vec2(-.55,2.43);wp.xz=vec2(q.x*c-q.y*s,q.x*s+q.y*c)+vec2(-.55,2.43);norm.xz=vec2(norm.x*c-norm.z*s,norm.x*s+norm.z*c);}
+ vWorld=wp;vNormal=norm;vColor=aColor;vMat=aMaterial;vShadow=uLightVP*vec4(wp,1.);gl_Position=uVP*vec4(wp,1.);}
+ `;
+ const frag=`#version 300 es
+ precision highp float;precision highp sampler2DShadow;
+ in vec3 vWorld;in vec3 vNormal;in vec3 vColor;in vec4 vMat;in vec4 vShadow;
+ uniform sampler2DShadow uShadow;
+ uniform vec3 uEye;uniform vec3 uSunDir;uniform float uDay;uniform float uWarm;uniform float uExposure;uniform vec2 uResolution;
+ uniform vec4 uLights[12]; // xyz position / actual Home Assistant normalized intensity
+ uniform int uLightCount;uniform float uSceneTime;uniform float uTV;
+ out vec4 Frag;
+ float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}
+ float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+ float shade(){vec3 q=vShadow.xyz/vShadow.w*.5+.5;if(q.x<0.||q.x>1.||q.y<0.||q.y>1.||q.z>1.)return 1.;float sh=0.;float bias=max(.0012,.0030*(1.-max(dot(normalize(vNormal),normalize(uSunDir)),0.)));for(int i=-2;i<=2;i++)for(int j=-2;j<=2;j++){sh+=texture(uShadow,vec3(q.xy+vec2(float(i),float(j))/2048.,q.z-bias));}return sh/25.;}
+ vec3 matColor(vec3 col,float type,vec3 p){
+  if(type>0.5&&type<1.5){vec2 plank=p.xz*vec2(.52,3.3);float grain=sin(p.z*36.+sin(p.x*1.9)*.8)+.36*sin(p.z*102.);float knot=noise(p.xz*4.0)*.18;float seam=step(.965,fract(plank.y+floor(plank.x)*.29));float crossing=step(.992,fract(plank.x));float variation=(hash(floor(plank))-.5)*.13;col*=1.+grain*.037+knot*.21+variation;col*=1.-.19*max(seam,crossing);}
+  if(type>1.5&&type<2.5){float vein=sin(p.x*6.+p.z*3.+noise(p.xz*4.)*7.+sin(p.x*15.)*.35);float lines=smoothstep(.84,.97,vein);col=mix(col,vec3(.48,.47,.45),lines*.30);col*=.96+.08*noise(p.xz*13.);}
+  if(type>2.5&&type<3.5){float threads=sin(p.x*460.)*sin(p.z*410.);col*=.94+.06*threads+.07*noise(p.xz*55.);}
+  if(type>3.5&&type<4.5){vec2 g=fract(p.xz*2.3);float grout=1.-step(.023,min(min(g.x,g.y),min(1.-g.x,1.-g.y)));col*=1.-.13*grout+.04*noise(p.xz*8.);}
+  if(type>4.5&&type<5.5){col*=.9+.10*noise(p.xz*65.)+.05*hash(floor(p.xz*140.));}
+  if(type>6.5&&type<7.5){col*=.82+.20*noise(p.xz*16.+p.yy*5.);}
+  if(type>8.5&&type<9.5){col*=.96+.045*noise(p.xz*8.);}
+  return col;
+ }
+ vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
+ void main(){
+  vec3 n=normalize(vNormal),view=normalize(uEye-vWorld),sun=normalize(uSunDir),h=normalize(view+sun);
+  float rough=vMat.y,metal=vMat.z,emis=vMat.w,type=vMat.x;
+  vec3 albedo=matColor(vColor,type,vWorld);
+  float lam=max(dot(n,sun),0.);float shadow=shade();
+  // Low-frequency hemispherical bounce fills walls facing away from the sun.
+  float skylight=(n.y*.5+.5)*.23+.24;
+  vec3 illumination=vec3(.35,.40,.47)*(.43+uDay*.20)+vec3(.87,.89,.93)*skylight*(.35+uDay*.35);
+  illumination+=mix(vec3(1.,.67,.39),vec3(1.0,.91,.80),uDay)*lam*shadow*(.13+uDay*2.25);
+  vec3 warm=vec3(1.0,.68,.36);
+  for(int i=0;i<12;i++){if(i>=uLightCount)break;vec3 d=uLights[i].xyz-vWorld;float ds=dot(d,d);float brightness=uLights[i].w;float reach=1./(1.+ds*.56);float ldot=max(dot(n,normalize(d)),0.);illumination+=warm*brightness*reach*(.26+.93*ldot)*.85;}
+  // Highly controlled Fresnel specular captures brass, chrome, lacquer and porcelain.
+  float specPower=mix(130.,9.,rough*rough);float spec=pow(max(dot(n,h),0.),specPower)*(1.-rough*.55)*(1.+metal*3.0);spec*=shadow*(.2+uDay*1.2);
+  float f=pow(1.-max(dot(n,view),0.),5.);vec3 specColor=mix(vec3(.68,.73,.77),albedo,metal);
+  vec3 radiance=albedo*illumination*(1.-metal*.72)+specColor*(spec+f*.075)*(1.-rough*.5);
+  if(type>5.5&&type<6.5){float act=.12;for(int j=0;j<12;j++){if(j>=uLightCount)break;float nearLight=1.-smoothstep(.18,.45,distance(vWorld,uLights[j].xyz));act=max(act,uLights[j].w*nearLight);}radiance+=albedo*emis*act*2.9;}
+  if(type>11.5&&type<12.5)radiance+=albedo*(uTV*.85+.025);
+  if(type>9.5){radiance=mix(radiance,vec3(.37,.55,.61),.3);radiance+=pow(max(dot(reflect(-view,n),sun),0.),16.)*.28;}
+  // Grade the environment, gentle atmospheric falloff behind walls.
+  float depth=length(uEye-vWorld);radiance=mix(radiance,vec3(.16,.19,.23),clamp((depth-38.)/45.,0.,.35));
+  radiance*=uExposure;
+  Frag=vec4(pow(aces(radiance),vec3(1./2.2)),(type>9.5&&type<10.5)?0.26:1.0);
+ }
+ `;
+ const shadowVert=`#version 300 es
+ layout(location=0) in vec3 aPosition;uniform mat4 uLightVP;
+ void main(){gl_Position=uLightVP*vec4(aPosition,1.);}`;
+ const shadowFrag=`#version 300 es
+ precision highp float;void main(){} `;
+ const postVert=`#version 300 es
+ precision highp float;const vec2 p[6]=vec2[](vec2(-1,-1),vec2(1,-1),vec2(-1,1),vec2(-1,1),vec2(1,-1),vec2(1,1));out vec2 uv;void main(){gl_Position=vec4(p[gl_VertexID],0,1);uv=p[gl_VertexID]*.5+.5;}`;
+ const postFrag=`#version 300 es
+ precision highp float;in vec2 uv;out vec4 frag;uniform sampler2D uScene;uniform vec2 uResolution;uniform float uBloom;uniform float uGrain;uniform float uFrame;
+ float lum(vec3 c){return dot(c,vec3(.2126,.7152,.0722));}
+ void main(){vec3 color=texture(uScene,uv).rgb;vec3 bloom=vec3(0);vec2 px=1./uResolution;for(int i=0;i<12;i++){float a=float(i)*6.2831853/12.;vec2 off=vec2(cos(a),sin(a));vec3 s=texture(uScene,uv+off*px*5.5).rgb;float k=smoothstep(.55,.97,lum(s));bloom+=s*k/12.;}color+=bloom*uBloom*.47;float vignette=1.-smoothstep(.21,.81,length((uv-.5)*vec2(1.25,1.05)));color*=.88+.12*vignette;float grain=(fract(sin(dot(uv*uResolution+uFrame,vec2(12.9898,78.233)))*43758.54)-.5)*uGrain;color+=grain;frag=vec4(color,1.);}`;
+ function shader(t,src){let sh=gl.createShader(t);gl.shaderSource(sh,src);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw new Error('Shader compilation: '+gl.getShaderInfoLog(sh));return sh;}
+ function program(v,f){let p=gl.createProgram();gl.attachShader(p,shader(gl.VERTEX_SHADER,v));gl.attachShader(p,shader(gl.FRAGMENT_SHADER,f));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error('Shader link: '+gl.getProgramInfoLog(p));return p;}
+ const paint=program(vert,frag),depthProgram=program(shadowVert,shadowFrag),post=program(postVert,postFrag);
+ function bufferG(g){const vao=gl.createVertexArray();gl.bindVertexArray(vao);const vb=gl.createBuffer(),ib=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(g.p),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(g.i),gl.STATIC_DRAW);
+  for(let k=0;k<4;k++){const width=k===3?4:3;gl.enableVertexAttribArray(k);gl.vertexAttribPointer(k,width,gl.FLOAT,false,STRIDE*4,(k===0?0:k===1?3:k===2?6:9)*4);}gl.bindVertexArray(null);return {vao,num:g.i.length,vb,ib};}
+ const meshes={solid:bufferG(solid),em:bufferG(emissive),glass:bufferG(transparent)};
+ const shadowMap=gl.createTexture(),shadowFbo=gl.createFramebuffer();let shadowSize=2048;
+ function makeShadow(){gl.bindTexture(gl.TEXTURE_2D,shadowMap);gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT24,shadowSize,shadowSize,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_COMPARE_MODE,gl.COMPARE_REF_TO_TEXTURE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_COMPARE_FUNC,gl.LEQUAL);gl.bindFramebuffer(gl.FRAMEBUFFER,shadowFbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,shadowMap,0);gl.drawBuffers([gl.NONE]);gl.readBuffer(gl.NONE);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw new Error('Shadow framebuffer incomplete.');gl.bindFramebuffer(gl.FRAMEBUFFER,null);}
+ makeShadow();
+ let frameBuffer=null,frameTexture=null,frameDepth=null,W=0,H=0,ratio=1,quality=true,cinema=true;
+ function makeTarget(){if(frameTexture)gl.deleteTexture(frameTexture);if(frameDepth)gl.deleteRenderbuffer(frameDepth);if(frameBuffer)gl.deleteFramebuffer(frameBuffer);frameBuffer=gl.createFramebuffer();frameTexture=gl.createTexture();frameDepth=gl.createRenderbuffer();gl.bindTexture(gl.TEXTURE_2D,frameTexture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.bindRenderbuffer(gl.RENDERBUFFER,frameDepth);gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT24,W,H);gl.bindFramebuffer(gl.FRAMEBUFFER,frameBuffer);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,frameTexture,0);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,frameDepth);gl.drawBuffers([gl.COLOR_ATTACHMENT0]);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw new Error('Color framebuffer incomplete.');gl.bindFramebuffer(gl.FRAMEBUFFER,null);}
+ function resize(){const r=host.getBoundingClientRect();const dpr=Math.min(devicePixelRatio||1,quality?1.65:1);const nw=Math.max(2,Math.floor(r.width*dpr)),nh=Math.max(2,Math.floor(r.height*dpr));if(nw===W&&nh===H)return;W=nw;H=nh;ratio=r.width/r.height;canvas.width=W;canvas.height=H;canvas.style.width='100%';canvas.style.height='100%';makeTarget();}
+ const overlay=document.createElement('div');overlay.className='haven-room-overlay';shell.append(overlay);
+ const labels=new Map();for(let r of rooms){const b=document.createElement('button');b.className='haven-room-chip';b.textContent=r.name;b.title='Explore '+r.full;b.onclick=()=>selectRoom(r.id,false);overlay.append(b);labels.set(r.id,b);}
+ // Camera rig: orbit, drag-to-pan around target, cinematic transition, touch and wheel zoom.
+ let yaw=.71,elev=.61,dist=31.8,tYaw=yaw,tElev=elev,tDist=dist;
+ let target=[0,.36,0],desired=[0,.36,0],auto=false,top=false,moving=false,press=null,autoRaf=0;
+ function eyePosition(){const c=Math.cos(elev);return [target[0]+Math.sin(yaw)*c*dist,target[1]+Math.sin(elev)*dist,target[2]+Math.cos(yaw)*c*dist];}
+ let dayTime=17,dayCycle=false,lastFrame=performance.now(),lastLVP=null,lastVP=null,frame=0,blindOpen=0,fanAngle=0; const prefersReduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const pointLights=new Float32Array(48);
+ function sync(){let k=0;for(let b of bulbs){const list=devices.filter(d=>d.room===b.room&&d.domain==='light');const active=list.filter(d=>d.on),intensity=active.length?active.reduce((t,d)=>t+(d.brightness||80)/100,0)/active.length:0;pointLights[k*4]=b.x;pointLights[k*4+1]=b.y;pointLights[k*4+2]=b.z;pointLights[k*4+3]=intensity*b.power;k++;}}
+ function select(id,animated=true){let r=rooms.find(x=>x.id===id);if(r){desired=[r.x*.46,.36,r.z*.46];tDist=25.6;tYaw=.71;tElev=.70;}else{desired=[0,.36,0];tDist=31.8;tYaw=.71;tElev=.61;}if(!animated){target=[...desired];dist=tDist;yaw=tYaw;elev=tElev;}labels.forEach((el,key)=>el.classList.toggle('chosen',key===id));}
+ const down=e=>{press={x:e.clientX,y:e.clientY,prevX:e.clientX,prevY:e.clientY,t:performance.now(),drag:false};canvas.setPointerCapture(e.pointerId);};
+ const move=e=>{if(!press)return;let dx=e.clientX-press.prevX,dy=e.clientY-press.prevY;press.prevX=e.clientX;press.prevY=e.clientY;if(Math.hypot(e.clientX-press.x,e.clientY-press.y)>5)press.drag=true;if(press.drag){tYaw+=dx*.007;tElev=Math.min(1.45,Math.max(.25,tElev+dy*.006));auto=false;$('#rotateView').classList.remove('active');}};
+ const up=e=>{if(!press)return;let p=press;press=null;if(p.drag||performance.now()-p.t>520)return;let rect=canvas.getBoundingClientRect();let xy=[(e.clientX-rect.left)/rect.width,(e.clientY-rect.top)/rect.height];
+ // Ray cast the real 3D floor footprint, not merely the nearest room caption.
+ const eye=eyePosition(),forward=unit(sub(target,eye)),right=unit(cross(forward,[0,1,0])),up=cross(right,forward),fov=Math.tan(35*Math.PI/360);
+ const nx=xy[0]*2-1,ny=1-xy[1]*2,ray=unit(add(forward,add(scale(right,nx*fov*rect.width/rect.height),scale(up,ny*fov))));
+ let chosen=null;if(ray[1]<-.0001){const t=(.045-eye[1])/ray[1];if(t>0){const ground=add(eye,scale(ray,t));chosen=rooms.find(r=>Math.abs(ground[0]-r.x)<=r.w/2&&Math.abs(ground[2]-r.z)<=r.d/2)?.id||null;}}
+ if(!chosen){let best=70;for(const r of rooms){const center=project([r.x,.35,r.z]);if(!center)continue;let d=Math.hypot((center[0]-xy[0])*rect.width,(center[1]-xy[1])*rect.height);if(d<best){best=d;chosen=r.id;}}}
+ if(chosen)selectRoom(chosen,false);};
+ canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',()=>press=null);canvas.addEventListener('wheel',e=>{e.preventDefault();tDist=Math.max(17,Math.min(44,tDist+e.deltaY*.012))},{passive:false});
+ let prevTouches=null;canvas.addEventListener('touchmove',e=>{if(e.touches.length!==2){prevTouches=null;return;}const a=e.touches[0],b=e.touches[1],d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);if(prevTouches)tDist=Math.max(17,Math.min(44,tDist+(prevTouches-d)*.035));prevTouches=d;},{passive:true});canvas.addEventListener('touchend',()=>prevTouches=null);
+ function project(pos){if(!lastVP)return null;const m=lastVP,[x,y,z]=pos;const p=[m[0]*x+m[4]*y+m[8]*z+m[12],m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14],m[3]*x+m[7]*y+m[11]*z+m[15]];if(p[3]<=0)return null;return [p[0]/p[3]*.5+.5,-p[1]/p[3]*.5+.5];}
+ function updateLabels(){let rect=host.getBoundingClientRect();if(!rect.width||!rect.height)return;for(const r of rooms){const p=project([r.x,1.84,r.z]),el=labels.get(r.id);if(!p)continue;el.style.left=`${Math.round(p[0]*rect.width)}px`;el.style.top=`${Math.round(p[1]*rect.height)}px`;el.style.opacity=p[0]<-.04||p[0]>1.04||p[1]<-.1||p[1]>1.1?0:1;}}
+ $('#resetView').onclick=()=>{top=false;selectRoom('all',true);$('#topView').classList.remove('active')};$('#resetCameraFooter').onclick=()=>{top=false;selectRoom('all',true);$('#topView').classList.remove('active')};
+ $('#topView').onclick=()=>{top=!top;tElev=top?1.55:.61;tDist=top?27:31.8;desired=[0,.36,0];$('#topView').classList.toggle('active',top);};
+ $('#rotateView').onclick=()=>{auto=!auto;$('#rotateView').classList.toggle('active',auto);};
+ $('#qualityToggle').onclick=()=>{quality=!quality;$('#qualityToggle').classList.toggle('active',quality);shadowSize=quality?2048:1024;makeShadow();resize();};
+ $('#cinemaToggle').onclick=()=>{cinema=!cinema;$('#cinemaToggle').classList.toggle('active',cinema);};
+ $('#timeSlider').oninput=e=>{dayTime=+e.target.value;dayCycle=false;$('#animateDay').classList.remove('active');$('#animateDay').textContent='▶ DAY CYCLE';};
+ $('#animateDay').onclick=()=>{dayCycle=!dayCycle;$('#animateDay').classList.toggle('active',dayCycle);$('#animateDay').textContent=dayCycle?'Ⅱ PAUSE CYCLE':'▶ DAY CYCLE';};
+ function draw(){autoRaf=requestAnimationFrame(draw);const now=performance.now(),dt=Math.min(.05,Math.max(0,(now-lastFrame)/1000));lastFrame=now;frame++;
+  resize();if(auto&&!prefersReduced)tYaw+=dt*.15;if(dayCycle){dayTime=(dayTime+dt*.32)%24;$('#timeSlider').value=dayTime;}
+  const label=dayTime>=5&&dayTime<10?'Morning':dayTime>=10&&dayTime<16?'Daylight':dayTime>=16&&dayTime<20?'Golden hour':'Night';let hh=Math.floor(dayTime),mm=Math.floor((dayTime-hh)*60);$('#timeValue').textContent=label+' · '+String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+  yaw+=(tYaw-yaw)*Math.min(1,dt*7);elev+=(tElev-elev)*Math.min(1,dt*7);dist+=(tDist-dist)*Math.min(1,dt*7);for(let i=0;i<3;i++)target[i]+=(desired[i]-target[i])*Math.min(1,dt*4.8);
+  const eye=eyePosition(),proj=perspective(35*Math.PI/180,W/H,.1,150),view=lookAt(eye,target),VP=mult(proj,view);lastVP=VP;
+  let a=(dayTime-6)/24*Math.PI*2,day=Math.max(0,Math.sin(a)),sunDir=unit([-Math.cos(a)*.64,Math.max(.08,day),.52]);const skyColor=day<.2?[.030,.047,.076]:day<.6?[.07,.085,.11]:[.11,.125,.15],lw=.50+day*1.0;
+  const sunEye=scale(sunDir,28),lightView=lookAt(sunEye,[0,0,0]),lightVP=mult(ortho(-18,18,-16,16,.5,72),lightView);lastLVP=lightVP;
+  gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
+  // 2048 px directional cast shadows; transparent panels never cast opaque shadows.
+  gl.bindFramebuffer(gl.FRAMEBUFFER,shadowFbo);gl.viewport(0,0,shadowSize,shadowSize);gl.clearDepth(1);gl.clear(gl.DEPTH_BUFFER_BIT);gl.colorMask(false,false,false,false);gl.useProgram(depthProgram);gl.uniformMatrix4fv(gl.getUniformLocation(depthProgram,'uLightVP'),false,lightVP);
+  gl.bindVertexArray(meshes.solid.vao);gl.drawElements(gl.TRIANGLES,meshes.solid.num,gl.UNSIGNED_INT,0);
+  gl.bindVertexArray(meshes.em.vao);gl.drawElements(gl.TRIANGLES,meshes.em.num,gl.UNSIGNED_INT,0);
+  gl.colorMask(true,true,true,true);
+  // Filmic shaded geometry, warm spatial light sources, shadows and procedural PBR.
+  gl.bindFramebuffer(gl.FRAMEBUFFER,frameBuffer);gl.viewport(0,0,W,H);gl.clearColor(...skyColor,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(paint);
+  const uniform=(name)=>gl.getUniformLocation(paint,name);
+  gl.uniformMatrix4fv(uniform('uVP'),false,VP);gl.uniformMatrix4fv(uniform('uLightVP'),false,lightVP);gl.uniform3fv(uniform('uEye'),eye);gl.uniform3fv(uniform('uSunDir'),sunDir);gl.uniform1f(uniform('uDay'),day);gl.uniform1f(uniform('uWarm'),Math.max(0,1-Math.abs(dayTime-18)/3));gl.uniform1f(uniform('uExposure'),.6+day*.12);gl.uniform2f(uniform('uResolution'),W,H);gl.uniform1i(uniform('uLightCount'),Math.min(12,bulbs.length));gl.uniform4fv(uniform('uLights[0]'),pointLights);gl.uniform1f(uniform('uSceneTime'),now*.001);
+  const opened=devices.some(d=>d.domain==='cover'&&d.room==='bedroom'&&d.on)?1:0;blindOpen+=(opened-blindOpen)*Math.min(1,dt*3.0);
+  const fans=devices.filter(d=>d.domain==='fan'&&d.room==='hall');const spinning=fans.length?fans.some(f=>f.on):true;if(spinning)fanAngle+=dt*(fans.length?2.1:.43);
+  gl.uniform1f(uniform('uBlind'),blindOpen);gl.uniform1f(uniform('uFanPhase'),fanAngle);
+  const television=devices.some(d=>d.domain==='media_player'&&d.room==='living'&&d.on);
+  gl.uniform1f(uniform('uTV'),television?1:0);
+  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,shadowMap);gl.uniform1i(uniform('uShadow'),0);
+  gl.bindVertexArray(meshes.solid.vao);gl.drawElements(gl.TRIANGLES,meshes.solid.num,gl.UNSIGNED_INT,0);
+  gl.bindVertexArray(meshes.em.vao);gl.drawElements(gl.TRIANGLES,meshes.em.num,gl.UNSIGNED_INT,0);
+  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);gl.bindVertexArray(meshes.glass.vao);gl.drawElements(gl.TRIANGLES,meshes.glass.num,gl.UNSIGNED_INT,0);gl.depthMask(true);gl.disable(gl.BLEND);
+  // Native post processing: bloom convolution, subtle film grain and vignetting.
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,W,H);gl.disable(gl.DEPTH_TEST);gl.useProgram(post);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,frameTexture);gl.uniform1i(gl.getUniformLocation(post,'uScene'),1);gl.uniform2f(gl.getUniformLocation(post,'uResolution'),W,H);gl.uniform1f(gl.getUniformLocation(post,'uBloom'),cinema?.72:0);gl.uniform1f(gl.getUniformLocation(post,'uGrain'),cinema?.005:0);gl.uniform1f(gl.getUniformLocation(post,'uFrame'),frame);gl.bindVertexArray(null);gl.drawArrays(gl.TRIANGLES,0,6);
+  if(frame%4===0)updateLabels();
+ }
+ sync();select(selectedRoom,false);const observer=new ResizeObserver(resize);observer.observe(host);resize();draw();
+ return {select,sync,dispose(){cancelAnimationFrame(autoRaf);observer.disconnect();canvas.remove();overlay.remove();gl.deleteTexture(shadowMap);gl.deleteFramebuffer(shadowFbo);}};
+}
+
+</script>
+</body>
+</html>

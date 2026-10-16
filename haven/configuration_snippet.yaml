@@ -1,0 +1,9 @@
+# Add to /config/configuration.yaml (merge with any existing panel_custom list).
+# Copy the files in haven/ to /config/www/haven/ first.
+panel_custom:
+  - name: haven-3d-panel
+    sidebar_title: Haven Realtime
+    sidebar_icon: mdi:home-analytics
+    url_path: haven-3d
+    module_url: /local/haven/haven-3d-panel.js
+    require_admin: false

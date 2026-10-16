@@ -23,6 +23,17 @@
       "preview": "worlds/golden-harbor/preview.jpg"
     },
     {
+      "slug": "haven-home",
+      "title": "Haven Home",
+      "description": "The seven-room apartment behind the Haven Home Assistant dashboard: a furnished architectural cutaway with live-controllable lights, TV, blinds and fan.",
+      "tags": [
+        "interior",
+        "architecture",
+        "home-assistant"
+      ],
+      "preview": "worlds/haven-home/preview.jpg"
+    },
+    {
       "slug": "lowpoly-island",
       "title": "Low-Poly Island",
       "description": "A faceted island with pine forests, boulders and a lighthouse on the point.",

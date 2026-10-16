@@ -1,0 +1,216 @@
+{
+  "slug": "haven-home",
+  "title": "Haven Home",
+  "description": "The seven-room apartment behind the Haven Home Assistant dashboard: a furnished architectural cutaway with live-controllable lights, TV, blinds and fan.",
+  "tags": [
+    "interior",
+    "architecture",
+    "home-assistant"
+  ],
+  "seed": 7,
+  "private": false,
+  "glb": "worlds/haven-home/world.glb",
+  "preview": "worlds/haven-home/preview.jpg",
+  "viewer": {
+    "camera": {
+      "position": [
+        14.6,
+        14.2,
+        16.4
+      ],
+      "target": [
+        0.1,
+        0.1,
+        0.35
+      ],
+      "fov": 28.41
+    },
+    "sun": {
+      "direction": [
+        -0.7209,
+        0.0874,
+        -0.6875
+      ],
+      "color": "#ff9231",
+      "strength": 0.23769343349574132
+    },
+    "sky": {
+      "color": "#658ac4",
+      "ground": "#4a4a44",
+      "strength": 0.96,
+      "glow": null,
+      "physical": true
+    },
+    "fog": {
+      "color": "#bcb5c0",
+      "near": 1467.5000000000002,
+      "far": 29350.000000000004
+    },
+    "bounds": {
+      "min": [
+        -7.31,
+        -0.52,
+        -5.3
+      ],
+      "max": [
+        7.31,
+        2.7,
+        5.3
+      ]
+    },
+    "ocean": null,
+    "atmosphere": {
+      "time": 18.833,
+      "latitude": 42.0,
+      "day": 200,
+      "north": -20.0,
+      "haze": 0.35,
+      "visibility": 29350,
+      "exposure": 0.3,
+      "lamps": "on",
+      "elevation": 5.02,
+      "azimuth": 313.64,
+      "ev": 0.88,
+      "lamp_level": 1.0
+    },
+    "lamps": [
+      [
+        -4.5,
+        1.8,
+        2.4,
+        "#ffcf96",
+        4200,
+        null
+      ],
+      [
+        -2.55,
+        1.42,
+        4.7,
+        "#ffcf96",
+        3400,
+        null
+      ],
+      [
+        -4.5,
+        1.7,
+        -2.45,
+        "#ffcf96",
+        6000,
+        null
+      ],
+      [
+        -6.84,
+        1.25,
+        -3.25,
+        "#ffcf96",
+        2600,
+        null
+      ],
+      [
+        -0.3,
+        1.38,
+        -4.67,
+        "#ffcf96",
+        2600,
+        null
+      ],
+      [
+        -1.04,
+        1.68,
+        -2.95,
+        "#ffcf96",
+        2800,
+        null
+      ],
+      [
+        -0.2,
+        1.68,
+        -2.95,
+        "#ffcf96",
+        2800,
+        null
+      ],
+      [
+        0.5,
+        1.47,
+        2.95,
+        "#ffcf96",
+        3000,
+        null
+      ],
+      [
+        3.02,
+        1.02,
+        -4.87,
+        "#ffcf96",
+        2600,
+        null
+      ],
+      [
+        5.68,
+        1.02,
+        -4.87,
+        "#ffcf96",
+        2600,
+        null
+      ],
+      [
+        1.15,
+        1.42,
+        -4.55,
+        "#ffcf96",
+        3400,
+        null
+      ],
+      [
+        1.49,
+        1.85,
+        2.3,
+        "#ffcf96",
+        2600,
+        null
+      ],
+      [
+        6.0,
+        1.12,
+        1.68,
+        "#ffcf96",
+        2200,
+        null
+      ],
+      [
+        3.98,
+        1.42,
+        1.55,
+        "#ffcf96",
+        3000,
+        null
+      ]
+    ],
+    "plumes": [],
+    "interior": null,
+    "twin": null,
+    "bloom": 0.35,
+    "grade": null
+  },
+  "stats": {
+    "objects": 266,
+    "unique_meshes": 148,
+    "triangles_drawn": 156250,
+    "triangles_stored": 124850,
+    "materials": 69,
+    "textures": 26,
+    "bounds_min": [
+      -7.31,
+      -5.3,
+      -0.52
+    ],
+    "bounds_max": [
+      7.31,
+      5.3,
+      2.7
+    ],
+    "glb_bytes": 5773952
+  },
+  "built_with": "5.2.2 LTS"
+}
