@@ -1,13 +1,15 @@
 """North Field Build: Purnell's document-controlled construction process as a campus you can
-replay. Five stations (home office, vendor, fab shop, field site, QC) on one site, and one real
-spool (control 1 of Pressure Test Pack 1, job 2024-062A for Arc Resources) followed from
-isometric to turnover: material shipped, put on hold at receiving for a missing MTR, released,
-fabricated, tested, hauled to site, lowered in and inspected. Documents fly between the stations
-as they are issued, the spool's record shows which it has at any moment, and the crews walk,
-weld and inspect through it all.
+replay. Five stations (home office, vendor, fab shop, field site, QC) on one site, and the 21
+spools of Pressure Test Pack 1 (job 2024-062A for Arc Resources) followed from isometric to
+delivery: material shipped, put on hold at receiving for missing MTRs, released, fabricated one
+after another, NDE'd, hydrotested as one pack, primed, and hauled to 10-16 in three trips.
+Documents fly between the stations as they are issued, every spool's record shows which it has
+at any moment, and the crews walk, weld and inspect through it all.
 
-The layout is a stylised campus (the real vendor is far away); the spool and its test pack are
-real, the schedule around it is reconstructed (see scenario.py).
+The layout is a stylised campus (the real vendor is far away); the spools and their test pack
+are real, the schedule around them is reconstructed (see scenario.py). The field site is a
+laydown yard: the pack has no drawing of where the spools tie in, so installation is not
+modelled until the reference drawings are added.
 """
 
 import math
@@ -30,9 +32,10 @@ import scenario as S  # noqa: E402
 
 META = {
     "title": "North Field Build",
-    "description": "Purnell's construction process as a replayable campus: one spool from "
-                   "isometric to turnover, through a document hold, fabrication, hydrotest and "
-                   "installation, with the crews and paperwork that move it.",
+    "description": "Purnell's construction process as a replayable campus: the 21 spools of "
+                   "Pressure Test Pack 1 from isometric to delivery, through a document hold, "
+                   "fabrication, hydrotest and three trips to site, with the crews and paperwork "
+                   "that move them.",
     "tags": ["construction sim", "data twin", "piping", "industrial"],
     "seed": 62,
     "private": True,          # built around a client job
@@ -41,6 +44,7 @@ META = {
 }
 
 PAD_MARGIN = 12.0
+SPOOL_COLORS = {1: "#9fe39a", 2: "#7fd1ff", 6: "#ffd27a", 8: "#ffb36b", 10: "#ff8a6b", 12: "#f06bd0"}
 
 
 # ------------------------------------------------------------------ ground
@@ -67,33 +71,12 @@ def pad_blend(x, y):
     return best * best * (3 - 2 * best)
 
 
-def ground_height(x, y):
-    """The grass terrain: like height(), but dropped under the field's dirt patch so its coarser
-    grid can't poke through the patch on the trench walls."""
-    z = height(x, y)
-    x0, y0, x1, y1 = S.STATIONS["field"]["pad"]
-    if x0 - 1 <= x <= x1 + 1 and y0 - 1 <= y <= y1 + 1:
-        z -= 0.6
-    return z
-
-
 def height(x, y):
     z = 0.45 * fbm(x, y, scale=60, seed=7) + 0.12 * fbm(x, y, scale=9, seed=3)
-    z *= 1.0 - pad_blend(x, y)
-    # The open cut: a trench with battered walls along the field site.
-    tx0, tx1 = S.TRENCH_X
-    ty = S.TRENCH[1]
-    if tx0 - 2 <= x <= tx1 + 2 and abs(y - ty) < S.TRENCH_HALF:
-        w = min(1.0, (S.TRENCH_HALF - abs(y - ty)) / 1.6)
-        ends = min(1.0, (x - tx0 + 2) / 3, (tx1 + 2 - x) / 3)
-        z -= S.TRENCH_DEPTH * w * ends
-    return z
+    return z * (1.0 - pad_blend(x, y))
 
 
 # ------------------------------------------------------------------ people
-
-PEOPLE = []
-
 
 def crew(prefix, n, shifts, rng, vest=None, helmet="#f2f2f2"):
     """n workers sharing a set of shifts, each starting at a different point of the path so they
@@ -116,7 +99,6 @@ def crew(prefix, n, shifts, rng, vest=None, helmet="#f2f2f2"):
                    pants=pants[i % len(pants)], skin=skins[(i + len(prefix)) % len(skins)], helmet=helmet,
                    location=my[0]["path"][0] if my else (0, 0, 0))
         twin_actor(p, my, speed=rng.uniform(1.0, 1.3))
-        PEOPLE.append(p)
 
 
 def shift(start, end, path, tasks=None, loop=True):
@@ -139,35 +121,42 @@ def people(rng):
                              {0: (5, "carry"), 2: (6, "carry")}),
                        shift(9.9, 11.5, [(vx - 5, 78), (vx + 5, 78), (vx + 5, 82), (vx - 8, 82)],
                              {1: (6, "inspect"), 3: (5, "talk")})], rng, vest="#e6d81a")
-    # 3 Fab shop: receiving inspector at the dock during the hold, welders around the spool,
-    # the NDE tech, and shop hands crossing the yard all the time.
+    # 3 Fab shop: receiving inspectors at the dock during the hold, welders and the NDE tech
+    # moving down the rows of spools as each comes up, shop hands crossing the yard all the time.
     fx, fy = st["fab"]["centre"]
-    sx, sy, _ = S.STAND
-    crew("Receiver", 2, [shift(8.25, 12.6, [(sx + 10, 71), (sx + 6, 69), (sx + 8, 66)],
+    slots = [S.yard_slot(i) for i in range(len(S.CTRLS))]
+    crew("Receiver", 2, [shift(8.25, 12.6, [(120, 71), (116, 69), (118, 66)],
                                {0: (12, "inspect"), 1: (6, "talk"), 2: (5, "inspect")})], rng, vest="#1fb85a")
-    crew("Welder", 3, [shift(12.5, 19.0, [(sx - 1.0, sy - 1.3), (sx + 2.6, sy - 1.2), (sx + 3.2, sy + 1.0),
-                                          (sx - 1.5, sy + 1.6)],
-                             {0: (14, "weld"), 1: (10, "weld"), 2: (9, "weld"), 3: (5, "carry")}),
-                       shift(22.0, 28.0, [(sx - 1.0, sy - 1.3), (sx + 2.8, sy - 1.0), (sx - 6, sy - 6)],
-                             {0: (8, "carry"), 1: (10, "inspect"), 2: (6, "talk")}),
-                       shift(29.0, 31.0, [(sx - 1.2, sy - 1.2), (sx + 2.8, sy - 1.1)], {0: (10, "weld"), 1: (10, "weld")})],
-         rng)
-    crew("NDE", 1, [shift(19.0, 21.5, [(sx + 1.0, sy - 1.6), (sx + 2.8, sy + 1.6)], {0: (16, "inspect"), 1: (12, "inspect")}),
-                    shift(28.0, 28.6, [(sx - 1.5, sy - 2.2)], {0: (60, "inspect")})], rng, vest="#f2f2f2")
+    weld_shifts = []
+    for i, (x, y, _) in enumerate(slots):
+        fs, fe = S.fab_window(i)
+        weld_shifts.append(shift(fs, fe, [(x - 1.6, y - 1.4), (x + 1.8, y - 1.4), (x + 1.8, y + 1.4), (x - 1.6, y + 1.4)],
+                                 {0: (12, "weld"), 1: (9, "weld"), 2: (10, "weld"), 3: (5, "carry")}))
+    crew("Welder", 3, weld_shifts + [
+        shift(S.HYDROTEST[0] - 1.5, S.PAINTED, [(74, 86), (144, 86), (144, 58), (74, 58)],
+              {0: (8, "carry"), 1: (10, "inspect"), 2: (6, "talk"), 3: (6, "carry")})], rng)
+    nde_shifts = [shift(*S.nde_window(i), [(x + 1.0, y - 1.8), (x + 2.4, y + 1.6)], {0: (16, "inspect"), 1: (12, "inspect")})
+                  for i, (x, y, _) in enumerate(slots)]
+    crew("NDE", 1, nde_shifts + [shift(S.HYDROTEST[0], S.HYDROTEST[1] + 0.3, [(108, 64)], {0: (60, "inspect")})],
+         rng, vest="#f2f2f2")
     crew("Shop", 4, [shift(0, S.END, [(fx - 12, 62), (fx - 12, 82), (fx + 12, 84), (fx + 22, 80), (fx + 14, 62)],
                            {1: (6, "carry"), 2: (8, "idle"), 3: (5, "talk")})], rng)
-    # 4 Field site: surveyors ahead of the pipe, the lowering-in crew, the inspector, tie-in.
-    tx, ty, _ = S.TRENCH
-    crew("Survey", 3, [shift(20.0, 33.5, [(-40, ty + 9), (-10, ty + 9), (30, ty + 9), (60, ty + 8), (66, ty - 12), (20, ty - 13), (-30, ty - 13)],
+    # 4 Field site: a site survey before the pack comes, receiving crews for each trip, then a
+    # couple of hands checking the laydown while the tie-ins wait.
+    lx, ly = 10, -90
+    crew("Survey", 3, [shift(20.0, 30.0, [(-50, -72), (-10, -72), (30, -72), (70, -74), (66, -112), (20, -114), (-30, -112)],
                              {0: (10, "survey"), 2: (8, "survey"), 4: (10, "survey"), 6: (6, "talk")})], rng)
-    crew("Crew", 8, [shift(33.6, 36.5, [(tx - 8, ty + 10), (tx + 4, ty + 10), (tx + 10, ty + 6), (tx - 4, ty + 6)],
-                           {0: (8, "carry"), 1: (6, "carry"), 2: (10, "idle"), 3: (7, "talk")}),
-                     shift(36.5, 40.5, [(tx - 3, ty - 0.2, -1.55), (tx + 3.5, ty - 0.3, -1.55), (tx + 6, ty + 4.5),
-                                        (tx - 6, ty + 4.5)],
-                           {0: (14, "weld"), 1: (12, "weld"), 2: (6, "carry"), 3: (6, "talk")}),
-                     shift(40.5, S.END, [(tx - 30, ty + 8), (tx + 40, ty + 8), (tx + 40, ty + 12), (tx - 30, ty + 12)],
-                           {1: (6, "idle"), 3: (6, "talk")})], rng)
-    crew("Inspector", 1, [shift(38.0, 39.6, [(tx + 1.5, ty + 3.2), (tx - 2.5, ty + 3.2)], {0: (20, "inspect"), 1: (14, "inspect")})],
+    recv = []
+    for k, tr in enumerate(S.TRIPS):
+        t0 = tr["t0"] + S.TRIP_DRIVE - 0.2
+        pts = [S.laydown_slot(i) for i in tr["spools"]]
+        path = [(lx - 8, -78), (lx + 8, -78)] + [(p[0], p[1] + 3) for p in pts[::2]]
+        recv.append(shift(t0, t0 + S.TRIP_UNLOAD + 0.6, path, {0: (6, "carry"), 1: (8, "inspect"), 3: (6, "carry"), 5: (6, "inspect")}))
+    crew("Crew", 6, recv + [shift(S.delivered_at(20) + 0.5, S.END, [(-60, -76), (80, -76), (80, -110), (-60, -110)],
+                                  {1: (6, "inspect"), 3: (6, "talk")})], rng)
+    crew("Inspector", 1, [shift(S.delivered_at(k * 7) - 0.1, S.delivered_at(k * 7) + 0.9,
+                                [(S.laydown_slot(i)[0], S.laydown_slot(i)[1] - 2.5) for i in tr["spools"]],
+                                {j: (10, "inspect") for j in range(0, 7, 2)}) for k, tr in enumerate(S.TRIPS)],
          rng, vest="#f2f2f2")
     # 5 QC: between the trailers, a lot of talking.
     qx, qy = st["qc"]["centre"]
@@ -175,7 +164,7 @@ def people(rng):
                          {0: (8, "talk"), 2: (10, "inspect"), 3: (5, "idle")})], rng, vest="#5a6f8a", helmet=None)
 
 
-# ------------------------------------------------------------------ the spool
+# ------------------------------------------------------------------ the spools
 
 def spool_mats():
     return {
@@ -188,49 +177,108 @@ def spool_mats():
         "lever": material("valve_lever", "#141414", roughness=0.5),
         "plug": material("plug_steel", "#8d8a84", roughness=0.4, metallic=0.75),
         "blind": material("blind_green", "#3f7a3c", roughness=0.5),
+        "blind_paint": material("blind_green", "#3f7a3c", roughness=0.5),
+        "cap": material("thread_cap", "#c8322a", roughness=0.6),
         "gasket": material("gasket_spiral", "#aeb2b4", roughness=0.35, metallic=0.8),
     }
 
 
-def build_spool(M, sd):
-    sp = piping.Spool("Spool-1", sd["nps"], spool_mats(), sch=sd["sch"])
+def rotz(p, yaw):
+    c, s = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+    return (p[0] * c - p[1] * s, p[0] * s + p[1] * c, p[2])
+
+
+def build_spool(i, sd, PM, stand, crib, truck_keys):
+    """Build spool i from its isometric route, centre it on its root (origin at the bottom
+    centre so it sits on stands, a deck or cribbing), and key its journey: fab yard slot from
+    its fabrication start, then its trip on the flatbed, then its laydown slot at 10-16."""
+    sid = f"spool-{sd['ctrl']}"
+    sp = piping.Spool(f"Spool-{sd['ctrl']}", sd["nps"], PM, sch=sd["sch"], branch_nps=sd.get("branch_nps"),
+                      threaded=sd.get("threaded", False))
     sp.walk(sd["route"], direction=sd["start"])
-    root = sp.build(collection="Spool")
-    twin_tag(root, "spool-1")
+    root = sp.build(collection="Spools")
+    twin_tag(root, sid)
+    lo, hi = sp.bounds()
     r = piping.OD[sd["nps"]] / 2000
-    z_stand = 0.55 + r
-    truck = S.TRUCK_2
-    keys = [(12.5, (S.STAND[0], S.STAND[1], z_stand), 0), (32.0, (S.STAND[0], S.STAND[1], z_stand), 0)]
-    keys += [(t, (p[0], p[1], S.BED_Z + r), yaw) for t, p, yaw in truck[3:7]]
-    keys += [(34.0, (S.LAYDOWN[0], S.LAYDOWN[1], 0.3 + r), 0), (36.0, (S.LAYDOWN[0], S.LAYDOWN[1], 0.3 + r), 0),
-             (36.5, (S.TRENCH[0], S.TRENCH[1], S.TRENCH[2] + r), 0)]
+    # Lay the spool out flat, as it would be on stands or cribbing: whichever extent is the
+    # smallest becomes vertical (a riser lies down, an L lies on its side).
+    ex, ey, ez = hi.x - lo.x, hi.y - lo.y, hi.z - lo.z
+    rot = (0, 0, 0)
+    if ex < ez and ex <= ey:            # rotate about Y: (x, y, z) -> (z, y, -x)
+        rot = (0, math.radians(90), 0)
+        lo, hi = Vector((lo.z, lo.y, -hi.x)), Vector((hi.z, hi.y, -lo.x))
+    elif ey < ez and ey < ex:           # rotate about X: (x, y, z) -> (x, -z, y)
+        rot = (math.radians(90), 0, 0)
+        lo, hi = Vector((lo.x, -hi.z, lo.y)), Vector((hi.x, -lo.z, hi.y))
+    for rec in sp.parts:
+        if rec.get("obj"):
+            rec["obj"].rotation_euler = rot
+    centre = Vector(((lo.x + hi.x) / 2, (lo.y + hi.y) / 2, lo.z - r))
+    for rec in sp.parts:
+        if rec.get("obj"):
+            rec["obj"].location = -centre
+    size = (hi.x - lo.x, hi.y - lo.y)
+    # Journey
+    yard = S.yard_slot(i)
+    fs, fe = S.fab_window(i)
+    k = S.trip_of(i)
+    tr = S.TRIPS[k]
+    kth = list(tr["spools"]).index(i)
+    off = S.bed_offset(kth)
+    t0 = tr["t0"]
+    keys = [(fs, (yard[0], yard[1], 0.55), 0), (t0 - 0.01, (yard[0], yard[1], 0.55), 0)]
+    for t, p, yaw in truck_keys:
+        if t0 <= t <= t0 + S.TRIP_DRIVE:
+            o = rotz(off, yaw)
+            keys.append((t, (p[0] + o[0], p[1] + o[1], o[2]), yaw))
+    lay = S.laydown_slot(i)
+    keys += [(t0 + S.TRIP_DRIVE + 0.1 + kth * 0.08, (lay[0], lay[1], 0.4), 0)]
     twin_motion(root, keys)
+    # Stands in the yard, cribbing at the laydown (long enough for the spool).
+    for j, dx in enumerate((-0.7, 0.7)):
+        instance(stand, f"Stand_{sd['ctrl']}_{j}", (yard[0] + dx * max(1, size[0] / 2), yard[1], 0), collection="Fab shop")
+        instance(crib, f"Crib_{sd['ctrl']}_{j}", (lay[0] + dx * max(1, size[0] / 2), lay[1], 0), collection="Field")
     return sp, root
 
 
-def spool_record(sd):
+def spool_record(i, sd):
     size = f'{sd["nps"]}"'
+    sid = f"spool-{sd['ctrl']}"
     bw = [w for w in sd["welds"] if w["type"] == "BW"]
+    kind = "Dummy leg" if sd.get("dummy") else "Threaded assembly" if sd.get("threaded") else "Spool"
+    fs, fe = S.fab_window(i)
+    tr = S.trip_of(i)
     fields = [("Job", f"{pack.REPORT['job']} · {pack.REPORT['customer']}"), ("Line", sd["line"]),
-              ("Control no.", sd["ctrl"]), ("Purchase order", S.PO),
-              ("Size / schedule", f"{size} Sch {sd['sch']}"), ("Material", "A333-6 / A420-WPL6 / A350-LF2, NACE"),
-              ("Butt welds", f"{len(bw)} (100% RT)"), ("Test", "Water, 15,307 kPa min, 15 min hold"),
-              ("Hydrotest", "Accepted 2024-04-29 (Pack 1)"), ("Destination", f"{pack.REPORT['site']}, Kakwa")]
+              ("Control no.", sd["ctrl"]), ("Type", kind), ("Purchase order", S.PO),
+              ("Size / schedule", f"{size} Sch {sd['sch']}"), ("Insulation", sd["insulation"]),
+              ("Butt welds", f"{len(bw)} (100% RT)" if bw else "none"),
+              ("Fabricated", f"days {fs:.1f} to {fe:.1f} (reconstructed)"),
+              ("Hydrotest", "N/A" if sd.get("dummy") else "Accepted 2024-04-29 (Pack 1)"),
+              ("To site", f"trip {tr + 1}, day {S.TRIPS[tr]['t0']:.0f}"),
+              ("Installed", "not modelled: no tie-in drawing in the pack")]
     tables = [{"title": "Bill of materials", "columns": ["Item", "Heat no.", "Size", "Description", "Qty"],
-               "rows": [[str(i), h, s, d, str(q)] for i, h, s, d, q in sd["bom"]]},
-              {"title": "Weld information", "columns": ["Weld", "Size", "Type", "Welder", "X-ray", "MPI", "HT", "VT"],
-               "rows": [[w["id"], w["size"], w["type"], w["welder"], w["xray"], w["mpi"], w["ht"], w["vt"]]
-                        for w in sd["welds"]]}]
-    twin_record("spool-1", sd["iso"], f"Control {sd['ctrl']} · {size} spool · {S.PO}", group="Material",
-                fields=fields, tables=tables, color="#9fe39a", docs=S.DOCS,
+               "rows": [[str(a), h, s, d, str(q)] for a, h, s, d, q in sd["bom"]]}]
+    if sd["welds"]:
+        tables.append({"title": "Weld information", "columns": ["Weld", "Size", "Type", "Welder", "X-ray", "MPI", "HT", "VT"],
+                       "rows": [[w["id"], w["size"], w["type"], w["welder"], w["xray"], w["mpi"], w["ht"], w["vt"]]
+                                for w in sd["welds"]]})
+    twin_record(sid, sd["iso"], f"Control {sd['ctrl']} · {size} {kind.lower()} · {S.PO}", group="Spools",
+                fields=fields, tables=tables, color=SPOOL_COLORS.get(sd["nps"], "#6cb6ff"), docs=S.docs_for(i),
                 images=[{"title": "Isometric drawing", "src": f"docs/iso-ctrl{sd['ctrl']:02d}.png"}],
-                notes=["Press ▶ on the replay bar: the spool is shipped, held for its MTR, fabricated, "
-                       "tested, hauled to site and installed; its documents arrive as they are issued.",
-                       "Isometric, BOM, weld table and hydrotest are from Pressure Test Pack 1; the purchasing, "
-                       "shipping, hold and field dates around them are reconstructed."])
+                notes=["Isometric, BOM, weld table and hydrotest are from Pressure Test Pack 1; the purchasing, "
+                       "shipping, hold and fabrication dates are reconstructed."])
 
 
 # ------------------------------------------------------------------ records
+
+STATION_ROLE = {
+    "office": "Engineering issues isometrics, ITPs and procedures; purchasing issues POs",
+    "vendor": "Supplies pipe, fittings and flanges with certificates and MTRs",
+    "fab": "Receives material, fabricates, NDE, hydrotest, paint",
+    "field": "Receives spools at the laydown; installation waits on the tie-in drawings",
+    "qc": "Closes NCRs, collects test reports, assembles the turnover dossier",
+}
+
 
 def records(objs):
     R = pack.REPORT
@@ -238,58 +286,55 @@ def records(objs):
                 overview=True, color="#6cb6ff",
                 fields=[("Process", "Home office → vendors → fab shop → field site → QC / turnover"),
                         ("Replay", f"{S.EPOCH} + {S.END:.0f} days; ▶ on the replay bar, drag to scrub"),
-                        ("Spool", "Control 1 of Pressure Test Pack 1 (click it, or find it under Material)"),
-                        ("Hold", "Day 8: material received without its MTR; released day 12")],
-                notes=["Click a building for its station and workload; click the spool, the truck or the "
-                       "shipment for its record. Objects glow with their state: orange in progress, red on "
-                       "hold, green released, blue turned over.",
-                       "Station workloads are illustrative; the spool's documents are the real ones."])
+                        ("Spools", "The 21 spools of Pressure Test Pack 1 (under Spools, or click one)"),
+                        ("Hold", "Day 8: material received without its MTRs; released day 12"),
+                        ("Open", "Installation, field inspection and turnover: the pack has no tie-in drawings")],
+                notes=["Click a building for its station and workload; click a spool, truck or the shipment "
+                       "for its record. Objects glow with their state: orange in progress, red on hold, "
+                       "green released, yellow at risk (waiting), blue turned over.",
+                       "Station workloads are illustrative; the spools' documents are the real ones."])
     for key, st in S.STATIONS.items():
         rows = [[name, f"{done} / {total}", f"{round(100 * done / total)}%"] for name, done, total in S.WORKLOAD[key]]
         rid = f"st-{key}"
         twin_record(rid, f"{st['n']} · {st['title']}", group="Stations", color="#ffd56b",
                     fields=[("Station", st["n"]), ("Role", STATION_ROLE[key])],
-                    tables=[{"title": "Document workload (illustrative)", "columns": ["Document", "Done", ""], "rows": rows}])
+                    tables=[{"title": "Document workload (illustrative)", "columns": ["Document", "Done", ""], "rows": rows}],
+                    notes=(["Placeholder: a laydown yard at 10-16-062-04 W6M. The spools' tie-in points are not "
+                            "in the test pack; add the P&IDs, plot plan or tie-in drawings to docs/ to model them."]
+                           if key == "field" else []))
         for o in objs.get(key, []):
             twin_tag(o, rid)
-    twin_record("ncr-1", "Document hold: MTR missing", f"{S.PO} · heat AG2198", group="Holds", color="#ff6b5e",
-                fields=[("Raised", "Receiving inspection, fab shop, day 8"), ("Reason", "Material test report not in the vendor data book"),
-                        ("Action", "Vendor documents requested day 10; MTR received day 12"), ("Released", "Day 12 (4 days held)")],
-                docs=[("Vendor data book", 6.5), ("MTR (heat AG2198)", 12.4)])
+    twin_record("ncr-1", "Document hold: MTRs missing", f"{S.PO} · heats AG2198, AG2073", group="Holds", color="#ff6b5e",
+                fields=[("Raised", "Receiving inspection, fab shop, day 8"), ("Reason", "Material test reports not in the vendor data book"),
+                        ("Action", "Vendor documents requested day 10; MTRs received day 12"), ("Released", "Day 12 (4 days held)")],
+                docs=[("Vendor data book", 6.5), ("MTRs", 12.4)])
     twin_record("truck-1", "Flatbed · vendor delivery", f"{S.PO} material to the fab shop", group="Material", color="#ffb36b",
-                fields=[("Load", "10\" A333-6 pipe, fittings and flanges for control 1"), ("Leaves vendor", "Day 7"),
+                fields=[("Load", "Pipe, fittings, flanges, olets and valves for 21 spools"), ("Leaves vendor", "Day 7"),
                         ("At fab dock", "Day 8.3 (receiving inspection)")])
-    twin_record("truck-2", "Flatbed · spool to site", "Primed spool to 10-16-062-04 W6M", group="Material", color="#ffb36b",
-                fields=[("Leaves shop", "Day 32"), ("At site", "Day 33.6"), ("Lowered in", "Day 36.5")])
+    twin_record("truck-2", "Flatbed · spools to site", "Primed spools to 10-16-062-04 W6M, three trips", group="Material",
+                color="#ffb36b", fields=[(f"Trip {k + 1}", f"day {tr['t0']:.0f}: spools {', '.join(str(S.CTRLS[i]) for i in tr['spools'])}")
+                                         for k, tr in enumerate(S.TRIPS)])
     twin_record("shipment", "Shipment: pipe and fittings", f"{S.PO} · as received", group="Material", color="#ffb36b",
-                parent="spool-1", listed=False,
-                fields=[("Contents", "Pipe (heat AG2198), elbow, flanges, olets, valves"), ("Status", "Held at the dock until the MTR arrives")])
-
-
-STATION_ROLE = {
-    "office": "Engineering issues isometrics, ITPs and procedures; purchasing issues POs",
-    "vendor": "Supplies pipe, fittings and flanges with certificates and MTRs",
-    "fab": "Receives material, fabricates, NDE, hydrotest, paint",
-    "field": "Receives spools, lowers in, ties in, field inspection",
-    "qc": "Closes NCRs, collects test reports, assembles the turnover dossier",
-}
+                fields=[("Contents", "Pipe (heats AG2198, AG2073), elbows, flanges, olets, valves"),
+                        ("Status", "Held at the dock until the MTRs arrive")])
 
 
 def completeness():
-    """Document completeness of the spool as a step series (the throughput bar's number)."""
+    """Pack-wide document completeness: the mean over the 21 spools of documents in hand."""
+    stamps = sorted({t for i in range(len(S.CTRLS)) for _, t in S.docs_for(i) if t is not None})
+    n = len(S.CTRLS) * len(S.docs_for(0))
     times, values = [0.0], [0.0]
-    n = len(S.DOCS)
-    done = 0
-    for _, t in sorted(S.DOCS, key=lambda d: d[1]):
-        times += [t, t + 0.01]
-        values += [values[-1], 0]
-        done += 1
-        values[-1] = round(100 * done / n, 1)
+    for t in stamps:
+        got = sum(1 for i in range(len(S.CTRLS)) for _, dt in S.docs_for(i) if dt is not None and dt <= t + 1e-6)
+        before = sum(1 for i in range(len(S.CTRLS)) for _, dt in S.docs_for(i) if dt is not None and dt < t - 1e-6)
+        if t > 0:
+            times.append(t - 0.005)
+            values.append(round(100 * before / n, 1))
+        times.append(t + 0.005)
+        values.append(round(100 * got / n, 1))
     times.append(S.END)
     values.append(values[-1])
-    # Keep the series strictly increasing in time for the chart.
-    times[1] = 0.0
-    twin_series("docs", "Spool document completeness", "%", times, values,
+    twin_series("docs", "Pack 1 document completeness", "%", times, values,
                 events=S.EVENTS, clock={"epoch": S.EPOCH}, speed=0.35, range=(0, 100))
 
 
@@ -304,20 +349,17 @@ def build(ctx):
     pickup = campus.pickup_prefab(M)
 
     # Ground, pads and roads
-    terrain("Ground", size=560, resolution=280, height=ground_height, material=M["grass"], center=(0, 10))
+    terrain("Ground", size=560, resolution=280, height=height, material=M["grass"], center=(0, 10))
     for key, s in st.items():
         x0, y0, x1, y1 = s["pad"]
-        if key == "field":
-            campus.patch("Pad_field", x0, y0, x1, y1, height, M["dirt"], step=1.0)
-            continue
         plane(f"Pad_{key}", ((x1 - x0), (y1 - y0)), ((x0 + x1) / 2, (y0 + y1) / 2, 0.03),
-              material=M["gravel"], collection="Ground")
+              material=M["dirt"] if key == "field" else M["gravel"], collection="Ground")
     plane("Road_spine", (420, S.ROAD_W), (0, S.ROAD_Y, 0.05), material=M["asphalt"], collection="Ground")
     for key, s in st.items():
         cx, cy = s["door"][0], s["door"][1]
         y0, y1 = sorted((S.ROAD_Y, cy))
         plane(f"Road_{key}", (S.ROAD_W, y1 - y0), (cx, (y0 + y1) / 2, 0.05), material=M["asphalt"], collection="Ground")
-    plane("Backdrop", 3000, (0, 10, -4.0), material=M["grass"], backdrop=True, collection="Ground")   # below the trench floor
+    plane("Backdrop", 3000, (0, 10, -4.0), material=M["grass"], backdrop=True, collection="Ground")
 
     # 1 Home office
     ox, oy = st["office"]["centre"]
@@ -346,47 +388,29 @@ def build(ctx):
     campus.fence(M, [(vx - 54, 59), (vx - 12, 59)])
     instance(pickup, "Forklift_v", (vx + 10, 78, 0), (0, 0, -30), collection="Vendor")
 
-    # 3 Fab shop
+    # 3 Fab shop: the shop, racks of raw pipe in the north-west corner, the spool yard south.
     fx, fy = st["fab"]["centre"]
     objs["fab"] = [campus.fab_shop(M, (fx, fy))]
-    stand = campus.stand_prefab(M)
-    sx, sy, _ = S.STAND
-    for i, dx in enumerate((0.5, 1.5)):
-        instance(stand, f"Stand_{i}", (sx + dx, sy, 0), collection="Fab shop")
-    for i, (dx, dy) in enumerate(((-12, 4), (-12, 12), (12, 14), (14, 6))):   # other work on the apron
-        for j, k in enumerate((2, 9)):
-            instance(stand, f"StandB_{i}_{j}", (fx + dx + k, fy - 40 + dy, 0), collection="Fab shop")
-        instance(joint, f"Joint_fab_{i}", (fx + dx - 1, fy - 40 + dy, 0.69), collection="Fab shop")
-    for (rx, ry) in ((fx - 42, 60), (fx - 42, 67), (fx + 24, 60)):
+    for (rx, ry) in ((fx - 42, 112), (fx - 42, 119), (fx + 28, 119)):
         campus.pipe_rack(M, (rx, ry, 0), 0)
         campus.stack_pipes(M, joint, (rx, ry, 0), 0, levels=2)
-    campus.fence(M, [(fx - 42, 57), (fx - 42, 120), (fx - 14, 120)])
-    campus.fence(M, [(fx + 42, 120), (fx + 42, 57), (fx + 16, 57)])
+    campus.fence(M, [(fx - 42, 57), (fx - 42, 126), (fx - 14, 126)])
+    campus.fence(M, [(fx + 42, 126), (fx + 42, 57), (fx + 16, 57)])
     campus.fence(M, [(fx - 42, 57), (fx - 10, 57)])
+    plane("FabYard", (84, 30), (fx, 71, 0.05), material=M["concrete"], collection="Fab shop")
 
-    # 4 Field site
-    tx0, tx1 = S.TRENCH_X
-    ty = S.TRENCH[1]
-    campus.spoil_ridge(M, tx0, tx1, ty - 7.0, height=1.8, width=5.0)
-    skid = campus.skid_prefab(M)
-    for i in range(10):
-        x = tx0 + i * 12.6
-        instance(joint, f"Strung_{i}", (x, ty + 14, 0.4), collection="Field")
-        for k in (2.0, 10.0):
-            instance(skid, f"Skid_{i}_{k:.0f}", (x + k, ty + 14, 0), collection="Field")
-    for k in (0.5, 1.6):
-        instance(skid, f"Skid_lay_{k}", (S.LAYDOWN[0] + k, S.LAYDOWN[1], 0), collection="Field")
-    campus.excavator(M, (42, ty - 11, 0), 90)
-    campus.excavator(M, (-20, ty + 11, 0), -90, boom_down=False)
+    # 4 Field site: the laydown yard at 10-16 (no tie-in drawings: no plant to install into).
+    campus.fence(M, [(-72, -60), (-72, -118), (92, -118), (92, -60)], height=1.8, post_step=4)
     instance(pickup, "Pickup_field_1", (-45, -67, 0), (0, 0, 10), collection="Field")
     instance(pickup, "Pickup_field_2", (-37, -67, 0), (0, 0, -5), collection="Field")
     instance(pickup, "Pickup_field_3", (60, -68, 0), (0, 0, 95), collection="Field")
     cone = campus.cone_prefab(M)
-    for i in range(12):
-        instance(cone, f"Cone_{i}", (tx0 - 4 + i * 11, ty + 4.5, 0), collection="Field")
-        instance(cone, f"ConeS_{i}", (tx0 - 4 + i * 11, ty - 4.5, 0), collection="Field")
-    campus.fence(M, [(-72, -60), (-72, -118), (92, -118), (92, -60)], height=1.2, post_step=4)
-    objs["field"] = [campus.trailer(M, "FieldOffice", (-52, -110), 0, label="FIELD OFFICE")]
+    for i in range(8):
+        instance(cone, f"Cone_{i}", (-4 + i * 1.5 if i < 4 else 20 - (i - 4) * 1.5, -80, 0), collection="Field")
+    for i in range(6):
+        instance(crate, f"Crate_f{i}", (70 + (i % 3) * 2.0, -100 - (i // 3) * 1.6, 0), (0, 0, rng.uniform(-8, 8)), collection="Field")
+    objs["field"] = [campus.trailer(M, "FieldOffice", (-52, -110), 0, label="FIELD OFFICE 10-16")]
+    campus.sign("laydown", "LAYDOWN · TIE-INS PENDING DRAWINGS", 14, (10, -117.9, 1.3), (90, 0, 180), color="#8a2b22")
 
     # 5 QC / turnover
     qx, qy = st["qc"]["centre"]
@@ -412,32 +436,41 @@ def build(ctx):
     for i, (x, y, z) in enumerate(pts):
         instance(tree, f"Tree_{i}", (x, y, z - 0.1), (0, 0, rng.uniform(0, 360)), rng.uniform(1.1, 2.2), collection="Trees")
 
-    # The material: shipment on truck 1, the spool itself, truck 2.
+    # The material: shipment on truck 1, the 21 spools, truck 2 on its three trips.
     flatbed = campus.flatbed_prefab(M)
     t1 = instance(flatbed, "Truck_1", collection="Vehicles")
     twin_tag(t1, "truck-1")
     twin_motion(t1, S.TRUCK_1, hide=False)
     t2 = instance(flatbed, "Truck_2", collection="Vehicles")
     twin_tag(t2, "truck-2")
-    twin_motion(t2, S.TRUCK_2, hide=False)
+    truck2 = S.truck_2_keys()
+    twin_motion(t2, truck2, hide=False)
     mb = MeshBuilder("Shipment")
-    for dy in (-0.45, 0.0, 0.45):
-        mb.rod((-3.5, dy, 0.14), (2.5, dy, 0.14), 0.1365, M["cs_pipe"], 20)
+    for dy in (-0.75, -0.45, -0.15, 0.15, 0.45, 0.75):
+        mb.rod((-4.0, dy, 0.14), (2.0, dy, 0.14), 0.1365 if abs(dy) > 0.3 else 0.162, M["cs_pipe"], 20)
     mb.box((4.0, 0, 0.45), (1.6, 1.1, 0.9), M["timber"])
+    mb.box((3.2, 0, 1.2), (1.2, 1.0, 0.6), M["timber"])
     shipment = mb.build(collection="Vehicles")
     twin_tag(shipment, "shipment")
     ship_keys = [(t, (p[0], p[1], S.BED_Z), yaw) for t, p, yaw in S.TRUCK_1[:5]]
-    ship_keys += [(8.6, (sx + 11, 70, 0), -90)]
+    ship_keys += [(8.6, (121, 70, 0), -90)]
     twin_motion(shipment, ship_keys, until=12.5)
 
-    sd = next(s for s in pack.SPOOLS if s["ctrl"] == S.SPOOL_CTRL)
-    build_spool(M, sd)
-    spool_record(sd)
+    PM = spool_mats()
+    stand = campus.stand_prefab(M)
+    crib = campus.skid_prefab(M)
+    by_ctrl = {s["ctrl"]: s for s in pack.SPOOLS}
+    for i, ctrl in enumerate(S.CTRLS):
+        sd = by_ctrl[ctrl]
+        build_spool(i, sd, PM, stand, crib, truck2)
+        spool_record(i, sd)
+        twin_state(f"spool-{ctrl}", S.state_of(i))
     records(objs)
-    twin_state("spool-1", S.STATE)
     twin_state("ncr-1", [(0, "pending"), (8.4, "hold"), (12.4, "ok")])
     twin_state("truck-1", [(0, "pending"), (7.0, "active"), (8.3, "hold"), (9.0, "pending")])
-    twin_state("truck-2", [(0, "pending"), (31.6, "active"), (34.5, "pending")])
+    twin_state("truck-2", [(0, "pending")] + [x for tr in S.TRIPS for x in ((tr["t0"] - 0.5, "active"),
+                                                                            (tr["t0"] + S.TRIP_DRIVE + S.TRIP_UNLOAD + 1.2, "pending"))])
+    twin_state("shipment", [(0, "pending"), (7.0, "active"), (8.4, "hold"), (12.4, "ok")])
     for label, a, b, t0, t1, color in S.FLOWS:
         da, db = st[a]["door"], st[b]["door"]
         twin_flow(label, (da[0], da[1], 7.0), (db[0], db[1], 7.0), t0, t1, color=color)
