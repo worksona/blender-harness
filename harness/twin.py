@@ -22,7 +22,8 @@ def _twin():
 
 
 def twin_record(id, title, subtitle=None, group=None, fields=None, tables=None, notes=None,
-                overview=False, color=None, images=None, links=None, parent=None, listed=True):
+                overview=False, color=None, images=None, links=None, parent=None, listed=True,
+                docs=None):
     """A record the viewer can show as a card. fields: dict or list of (label, value) pairs.
     tables: [{"title", "columns": [...], "rows": [[...]]}]. notes: list of strings.
     overview=True makes it the world's summary card, shown when nothing is selected.
@@ -32,14 +33,18 @@ def twin_record(id, title, subtitle=None, group=None, fields=None, tables=None, 
     parent: the record this one is part of (a pipe piece's spool); the card links back to it, and
     tagging its object under the parent's object makes a first click select the parent, a second
     click the part. listed=False keeps it out of the browse list (the filter box still finds it).
-    A table may carry "row_ids": [record id or None per row] to make its rows clickable."""
+    A table may carry "row_ids": [record id or None per row] to make its rows clickable.
+    docs: [(name, t)] documents this record needs; t is the sim time (see harness.sim) the
+    document was received, None if it never arrives. The card shows which are in hand at the
+    replay playhead, and a record whose docs are all in is complete."""
     t = _twin()
     if isinstance(fields, dict):
         fields = list(fields.items())
     rec = {"id": id, "title": title, "subtitle": subtitle, "group": group,
            "fields": [[str(k), "" if v is None else str(v)] for k, v in (fields or [])],
            "tables": tables or [], "notes": notes or [], "color": color,
-           "images": images or [], "links": links or [], "parent": parent, "listed": listed}
+           "images": images or [], "links": links or [], "parent": parent, "listed": listed,
+           "docs": [[str(n), None if t is None else round(float(t), 4)] for n, t in (docs or [])]}
     if id not in t["records"]:
         t["order"].append(id)
     t["records"][id] = rec
@@ -55,15 +60,18 @@ def twin_tag(obj, id):
 
 
 def twin_series(id, title, unit, times, values, labels=None, events=None, tint_group=None,
-                range=None):
+                range=None, clock=None, speed=None):
     """A time series the viewer can replay (chart + playhead). times in hours (e.g. 10.5 = 10:30).
     events: [{"t": hours, "label": "..."}]. tint_group: record group whose objects glow with the
-    value while replaying (e.g. spools under test pressure). range: (min, max) for the tint."""
+    value while replaying (e.g. spools under test pressure). range: (min, max) for the tint.
+    clock: {"epoch": "2024-04-01"} makes `times` days from that date (the sim timeline; the
+    viewer shows dates). speed: replay speed in time units per second (default 0.06 hours/s).
+    An event may carry "kind": "hold" and "until": t to show a hold banner while it lasts."""
     _twin()["series"].append({"id": id, "title": title, "unit": unit,
                               "t": [round(float(x), 4) for x in times],
                               "v": [round(float(v), 3) for v in values],
                               "labels": labels, "events": events or [], "tint_group": tint_group,
-                              "range": list(range) if range else None})
+                              "range": list(range) if range else None, "clock": clock, "speed": speed})
 
 
 def twin_gauge(label, location, series, record=None, digits=0):

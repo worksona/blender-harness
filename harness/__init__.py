@@ -21,6 +21,7 @@ from .textures import (blur, colorize, contrast, decal, fbm_noise, grime, height
                        make_tileable, photo_patch, text_atlas, text_image, text_mask, texture,
                        value_noise)
 from .twin import twin_record, twin_series, twin_tag, twin_gauge
+from .sim import person, preview_time, twin_actor, twin_flow, twin_motion, twin_state
 
 
 def reset():
@@ -43,4 +44,5 @@ __all__ = [
     "textures", "blur", "colorize", "contrast", "decal", "fbm_noise", "grime", "height_normal",
     "make_tileable", "photo_patch", "text_atlas", "text_image", "text_mask", "texture", "value_noise",
     "twin_record", "twin_series", "twin_tag", "twin_gauge",
+    "person", "preview_time", "twin_actor", "twin_flow", "twin_motion", "twin_state",
 ]

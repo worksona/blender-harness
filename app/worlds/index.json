@@ -45,6 +45,19 @@
       "preview": "worlds/neon-city/preview.jpg"
     },
     {
+      "slug": "north-field-build",
+      "title": "North Field Build",
+      "description": "Purnell's construction process as a replayable campus: one spool from isometric to turnover, through a document hold, fabrication, hydrotest and installation, with the crews and paperwork that move it.",
+      "tags": [
+        "construction sim",
+        "data twin",
+        "piping",
+        "industrial"
+      ],
+      "preview": "worlds/north-field-build/preview.jpg",
+      "private": true
+    },
+    {
       "slug": "oil-refinery",
       "title": "Coastal Oil Refinery",
       "description": "A kilometer of process units, pipe racks, tank farm and a burning flare, with a tanker riding the swell at the marine jetty.",

@@ -1,0 +1,4729 @@
+{
+  "slug": "north-field-build",
+  "title": "North Field Build",
+  "description": "Purnell's construction process as a replayable campus: one spool from isometric to turnover, through a document hold, fabrication, hydrotest and installation, with the crews and paperwork that move it.",
+  "tags": [
+    "construction sim",
+    "data twin",
+    "piping",
+    "industrial"
+  ],
+  "seed": 62,
+  "private": true,
+  "glb": "worlds/north-field-build/world.glb",
+  "preview": "worlds/north-field-build/preview.jpg",
+  "viewer": {
+    "camera": {
+      "position": [
+        -205,
+        140,
+        295
+      ],
+      "target": [
+        -8,
+        0,
+        4
+      ],
+      "fov": 27.11
+    },
+    "sun": {
+      "direction": [
+        0.4032,
+        0.6245,
+        0.6689
+      ],
+      "color": "#ffeccb",
+      "strength": 3.981641616133902
+    },
+    "sky": {
+      "color": "#75a0e2",
+      "ground": "#4a4a44",
+      "strength": 0.96,
+      "glow": null,
+      "physical": true
+    },
+    "fog": {
+      "color": "#cddef6",
+      "near": 1887.5,
+      "far": 37750.0
+    },
+    "bounds": {
+      "min": [
+        -283.5036,
+        -3.0,
+        -290.0
+      ],
+      "max": [
+        283.5793,
+        14.7092,
+        270.0
+      ]
+    },
+    "ocean": null,
+    "atmosphere": {
+      "time": 10.4,
+      "latitude": 55.2,
+      "day": 100,
+      "north": 0.0,
+      "haze": 0.25,
+      "visibility": 37750,
+      "exposure": 0.0,
+      "lamps": "auto",
+      "elevation": 38.64,
+      "azimuth": 148.92,
+      "ev": 0.0,
+      "lamp_level": 0.0
+    },
+    "lamps": [
+      [
+        -200,
+        10.1,
+        -16.4,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -150,
+        10.1,
+        -16.4,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -100,
+        10.1,
+        -16.4,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -50,
+        10.1,
+        -16.4,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        0,
+        10.1,
+        -16.4,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        50,
+        10.1,
+        -16.4,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        100,
+        10.1,
+        -16.4,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        150,
+        10.1,
+        -16.4,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        200,
+        10.1,
+        -16.4,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -201,
+        10.1,
+        103,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -119,
+        10.1,
+        103,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -201,
+        10.1,
+        41,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -119,
+        10.1,
+        41,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -107,
+        10.1,
+        -61,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -3,
+        10.1,
+        -61,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -107,
+        10.1,
+        -131,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -3,
+        10.1,
+        -131,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        69,
+        10.1,
+        -59,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        151,
+        10.1,
+        -59,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        69,
+        10.1,
+        -131,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        151,
+        10.1,
+        -131,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -69,
+        10.1,
+        115,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        89,
+        10.1,
+        115,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        -69,
+        10.1,
+        63,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        89,
+        10.1,
+        63,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        113,
+        10.1,
+        109,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        187,
+        10.1,
+        109,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        113,
+        10.1,
+        51,
+        "#ffe6c0",
+        2500,
+        0.05
+      ],
+      [
+        187,
+        10.1,
+        51,
+        "#ffe6c0",
+        2500,
+        0.05
+      ]
+    ],
+    "plumes": [],
+    "interior": null,
+    "twin": {
+      "records": {
+        "spool-1": {
+          "id": "spool-1",
+          "title": "273.0-NG-CLS-720522-38H-A",
+          "subtitle": "Control 1 \u00b7 10\" spool \u00b7 PO-7842-33",
+          "group": "Material",
+          "fields": [
+            [
+              "Job",
+              "2024-062A \u00b7 Arc Resources"
+            ],
+            [
+              "Line",
+              "273.0-NG-CLS-720522-38H"
+            ],
+            [
+              "Control no.",
+              "1"
+            ],
+            [
+              "Purchase order",
+              "PO-7842-33"
+            ],
+            [
+              "Size / schedule",
+              "10\" Sch 80"
+            ],
+            [
+              "Material",
+              "A333-6 / A420-WPL6 / A350-LF2, NACE"
+            ],
+            [
+              "Butt welds",
+              "3 (100% RT)"
+            ],
+            [
+              "Test",
+              "Water, 15,307 kPa min, 15 min hold"
+            ],
+            [
+              "Hydrotest",
+              "Accepted 2024-04-29 (Pack 1)"
+            ],
+            [
+              "Destination",
+              "10-16-062-04 W6M, Kakwa"
+            ]
+          ],
+          "tables": [
+            {
+              "title": "Bill of materials",
+              "columns": [
+                "Item",
+                "Heat no.",
+                "Size",
+                "Description",
+                "Qty"
+              ],
+              "rows": [
+                [
+                  "1",
+                  "AG2198",
+                  "10",
+                  "PIPE, BE, SCH. 80, SMLS, A333-6, NACE",
+                  "1729 mm"
+                ],
+                [
+                  "2",
+                  "51597",
+                  "10X1",
+                  "TOL, CL6000, A350-LF2 CL1, NACE",
+                  "2"
+                ],
+                [
+                  "3",
+                  "533B",
+                  "10",
+                  "ELBOW, 90 LR, SCH. 80, BW, A420-WPL6, NACE",
+                  "1"
+                ],
+                [
+                  "4",
+                  "I66",
+                  "1",
+                  "NIPPLE, SMLS, A333-6, NACE, 100mm LG, TBE (100.000 MM LG)",
+                  "2"
+                ],
+                [
+                  "5",
+                  "YB0206",
+                  "1",
+                  "PLUG, HEX HEAD, THRD, A350-LF2 CL1, NACE",
+                  "2"
+                ],
+                [
+                  "6",
+                  "134005",
+                  "10",
+                  "FLANGE, WN, CL600, RF, SCH. 80, A350-LF2 CL1, NACE",
+                  "2"
+                ],
+                [
+                  "7",
+                  "",
+                  "10",
+                  "GASKET, ASME 600 RF, 3.2mm, FLEXITALLIC 'FLEXICARB' CGI, 304L OR 316L SS WINDINGS AND INNER RING, FLEXIBLE GRAPHITE FILLER, ASME B16.20",
+                  "2"
+                ],
+                [
+                  "8",
+                  "",
+                  "1-1/4",
+                  "(16) STUD BOLTS, ASTM A193-B7M c/w (2 PER STUD) ASTM A194-2HM HEAVY SEMI FINISHED HEX NUTS (220.000 MM LG)",
+                  "2"
+                ],
+                [
+                  "9",
+                  "231008",
+                  "1",
+                  "VALVE, BALL, 3000 PSI, FNPT, RP, A350-LF2-CL1, 316 SS TRIM, RTFE SEATS, 3 PIECE 4 BOLT DESIGN, FLOATING, LEAVER OP., NACE, 30BVTT4H",
+                  "2"
+                ]
+              ]
+            },
+            {
+              "title": "Weld information",
+              "columns": [
+                "Weld",
+                "Size",
+                "Type",
+                "Welder",
+                "X-ray",
+                "MPI",
+                "HT",
+                "VT"
+              ],
+              "rows": [
+                [
+                  "A",
+                  "10\"",
+                  "BW",
+                  "JI",
+                  "XF-53",
+                  "",
+                  "",
+                  "DM"
+                ],
+                [
+                  "C",
+                  "1\"",
+                  "LET",
+                  "JI",
+                  "",
+                  "MT-9",
+                  "",
+                  "DM"
+                ],
+                [
+                  "D",
+                  "10\"",
+                  "BW",
+                  "JI",
+                  "XF-52",
+                  "",
+                  "",
+                  "DM"
+                ],
+                [
+                  "E",
+                  "10\"",
+                  "BW",
+                  "JI",
+                  "XF-51",
+                  "",
+                  "XF-51",
+                  "DM"
+                ]
+              ]
+            }
+          ],
+          "notes": [
+            "Press \u25b6 on the replay bar: the spool is shipped, held for its MTR, fabricated, tested, hauled to site and installed; its documents arrive as they are issued.",
+            "Isometric, BOM, weld table and hydrotest are from Pressure Test Pack 1; the purchasing, shipping, hold and field dates around them are reconstructed."
+          ],
+          "color": "#9fe39a",
+          "images": [
+            {
+              "title": "Isometric drawing",
+              "src": "docs/iso-ctrl01.png"
+            }
+          ],
+          "links": [],
+          "parent": null,
+          "listed": true,
+          "docs": [
+            [
+              "Drawings / revisions (ISO rev 0)",
+              0.0
+            ],
+            [
+              "Purchase order PO-7842-33",
+              1.0
+            ],
+            [
+              "Vendor data book (shipping docs, certificates)",
+              6.5
+            ],
+            [
+              "Material test report (MTR)",
+              12.4
+            ],
+            [
+              "Weld / NDE records (RT, MT, hardness)",
+              21.0
+            ],
+            [
+              "Pressure test package (QF-9, Pack 1)",
+              28.5
+            ],
+            [
+              "Field inspection report",
+              39.0
+            ],
+            [
+              "Turnover dossier",
+              41.5
+            ]
+          ]
+        },
+        "job": {
+          "id": "job",
+          "title": "2024-062A \u00b7 10-16 Sales Gas Rerouting (10-16)",
+          "subtitle": "Purnell Energy Services for Arc Resources \u00b7 10-16-062-04 W6M",
+          "group": null,
+          "fields": [
+            [
+              "Process",
+              "Home office \u2192 vendors \u2192 fab shop \u2192 field site \u2192 QC / turnover"
+            ],
+            [
+              "Replay",
+              "2024-04-01 + 44 days; \u25b6 on the replay bar, drag to scrub"
+            ],
+            [
+              "Spool",
+              "Control 1 of Pressure Test Pack 1 (click it, or find it under Material)"
+            ],
+            [
+              "Hold",
+              "Day 8: material received without its MTR; released day 12"
+            ]
+          ],
+          "tables": [],
+          "notes": [
+            "Click a building for its station and workload; click the spool, the truck or the shipment for its record. Objects glow with their state: orange in progress, red on hold, green released, blue turned over.",
+            "Station workloads are illustrative; the spool's documents are the real ones."
+          ],
+          "color": "#6cb6ff",
+          "images": [],
+          "links": [],
+          "parent": null,
+          "listed": true,
+          "docs": []
+        },
+        "st-office": {
+          "id": "st-office",
+          "title": "1 \u00b7 Home office / Engineering",
+          "subtitle": null,
+          "group": "Stations",
+          "fields": [
+            [
+              "Station",
+              "1"
+            ],
+            [
+              "Role",
+              "Engineering issues isometrics, ITPs and procedures; purchasing issues POs"
+            ]
+          ],
+          "tables": [
+            {
+              "title": "Document workload (illustrative)",
+              "columns": [
+                "Document",
+                "Done",
+                ""
+              ],
+              "rows": [
+                [
+                  "Drawings / revisions",
+                  "18 / 20",
+                  "90%"
+                ],
+                [
+                  "ITPs",
+                  "12 / 12",
+                  "100%"
+                ],
+                [
+                  "Procedures",
+                  "10 / 10",
+                  "100%"
+                ],
+                [
+                  "Approvals",
+                  "8 / 10",
+                  "80%"
+                ]
+              ]
+            }
+          ],
+          "notes": [],
+          "color": "#ffd56b",
+          "images": [],
+          "links": [],
+          "parent": null,
+          "listed": true,
+          "docs": []
+        },
+        "st-vendor": {
+          "id": "st-vendor",
+          "title": "2 \u00b7 Global vendors",
+          "subtitle": null,
+          "group": "Stations",
+          "fields": [
+            [
+              "Station",
+              "2"
+            ],
+            [
+              "Role",
+              "Supplies pipe, fittings and flanges with certificates and MTRs"
+            ]
+          ],
+          "tables": [
+            {
+              "title": "Document workload (illustrative)",
+              "columns": [
+                "Document",
+                "Done",
+                ""
+              ],
+              "rows": [
+                [
+                  "Purchase orders",
+                  "6 / 6",
+                  "100%"
+                ],
+                [
+                  "Shipping docs",
+                  "5 / 6",
+                  "83%"
+                ],
+                [
+                  "Certificates",
+                  "4 / 6",
+                  "67%"
+                ],
+                [
+                  "Material test reports",
+                  "3 / 6",
+                  "50%"
+                ]
+              ]
+            }
+          ],
+          "notes": [],
+          "color": "#ffd56b",
+          "images": [],
+          "links": [],
+          "parent": null,
+          "listed": true,
+          "docs": []
+        },
+        "st-fab": {
+          "id": "st-fab",
+          "title": "3 \u00b7 Fab shop",
+          "subtitle": null,
+          "group": "Stations",
+          "fields": [
+            [
+              "Station",
+              "3"
+            ],
+            [
+              "Role",
+              "Receives material, fabricates, NDE, hydrotest, paint"
+            ]
+          ],
+          "tables": [
+            {
+              "title": "Document workload (illustrative)",
+              "columns": [
+                "Document",
+                "Done",
+                ""
+              ],
+              "rows": [
+                [
+                  "WPS / PQR",
+                  "6 / 6",
+                  "100%"
+                ],
+                [
+                  "Welder quals",
+                  "8 / 8",
+                  "100%"
+                ],
+                [
+                  "Weld maps",
+                  "5 / 6",
+                  "83%"
+                ],
+                [
+                  "NDE reports",
+                  "4 / 6",
+                  "67%"
+                ]
+              ]
+            }
+          ],
+          "notes": [],
+          "color": "#ffd56b",
+          "images": [],
+          "links": [],
+          "parent": null,
+          "listed": true,
+          "docs": []
+        },
+        "st-field": {
+          "id": "st-field",
+          "title": "4 \u00b7 Field site",
+          "subtitle": null,
+          "group": "Stations",
+          "fields": [
+            [
+              "Station",
+              "4"
+            ],
+            [
+              "Role",
+              "Receives spools, lowers in, ties in, field inspection"
+            ]
+          ],
+          "tables": [
+            {
+              "title": "Document workload (illustrative)",
+              "columns": [
+                "Document",
+                "Done",
+                ""
+              ],
+              "rows": [
+                [
+                  "Receiving records",
+                  "8 / 10",
+                  "80%"
+                ],
+                [
+                  "Installation records",
+                  "6 / 8",
+                  "75%"
+                ],
+                [
+                  "Field inspection notes",
+                  "4 / 6",
+                  "67%"
+                ],
+                [
+                  "Test preparation",
+                  "2 / 4",
+                  "50%"
+                ]
+              ]
+            }
+          ],
+          "notes": [],
+          "color": "#ffd56b",
+          "images": [],
+          "links": [],
+          "parent": null,
+          "listed": true,
+          "docs": []
+        },
+        "st-qc": {
+          "id": "st-qc",
+          "title": "5 \u00b7 QC / Reporting / Turnover",
+          "subtitle": null,
+          "group": "Stations",
+          "fields": [
+            [
+              "Station",
+              "5"
+            ],
+            [
+              "Role",
+              "Closes NCRs, collects test reports, assembles the turnover dossier"
+            ]
+          ],
+          "tables": [
+            {
+              "title": "Document workload (illustrative)",
+              "columns": [
+                "Document",
+                "Done",
+                ""
+              ],
+              "rows": [
+                [
+                  "NCR closure",
+                  "3 / 6",
+                  "50%"
+                ],
+                [
+                  "Test reports",
+                  "2 / 4",
+                  "50%"
+                ],
+                [
+                  "Punch items",
+                  "1 / 4",
+                  "25%"
+                ],
+                [
+                  "Turnover package",
+                  "0 / 4",
+                  "0%"
+                ]
+              ]
+            }
+          ],
+          "notes": [],
+          "color": "#ffd56b",
+          "images": [],
+          "links": [],
+          "parent": null,
+          "listed": true,
+          "docs": []
+        },
+        "ncr-1": {
+          "id": "ncr-1",
+          "title": "Document hold: MTR missing",
+          "subtitle": "PO-7842-33 \u00b7 heat AG2198",
+          "group": "Holds",
+          "fields": [
+            [
+              "Raised",
+              "Receiving inspection, fab shop, day 8"
+            ],
+            [
+              "Reason",
+              "Material test report not in the vendor data book"
+            ],
+            [
+              "Action",
+              "Vendor documents requested day 10; MTR received day 12"
+            ],
+            [
+              "Released",
+              "Day 12 (4 days held)"
+            ]
+          ],
+          "tables": [],
+          "notes": [],
+          "color": "#ff6b5e",
+          "images": [],
+          "links": [],
+          "parent": null,
+          "listed": true,
+          "docs": [
+            [
+              "Vendor data book",
+              6.5
+            ],
+            [
+              "MTR (heat AG2198)",
+              12.4
+            ]
+          ]
+        },
+        "truck-1": {
+          "id": "truck-1",
+          "title": "Flatbed \u00b7 vendor delivery",
+          "subtitle": "PO-7842-33 material to the fab shop",
+          "group": "Material",
+          "fields": [
+            [
+              "Load",
+              "10\" A333-6 pipe, fittings and flanges for control 1"
+            ],
+            [
+              "Leaves vendor",
+              "Day 7"
+            ],
+            [
+              "At fab dock",
+              "Day 8.3 (receiving inspection)"
+            ]
+          ],
+          "tables": [],
+          "notes": [],
+          "color": "#ffb36b",
+          "images": [],
+          "links": [],
+          "parent": null,
+          "listed": true,
+          "docs": []
+        },
+        "truck-2": {
+          "id": "truck-2",
+          "title": "Flatbed \u00b7 spool to site",
+          "subtitle": "Primed spool to 10-16-062-04 W6M",
+          "group": "Material",
+          "fields": [
+            [
+              "Leaves shop",
+              "Day 32"
+            ],
+            [
+              "At site",
+              "Day 33.6"
+            ],
+            [
+              "Lowered in",
+              "Day 36.5"
+            ]
+          ],
+          "tables": [],
+          "notes": [],
+          "color": "#ffb36b",
+          "images": [],
+          "links": [],
+          "parent": null,
+          "listed": true,
+          "docs": []
+        },
+        "shipment": {
+          "id": "shipment",
+          "title": "Shipment: pipe and fittings",
+          "subtitle": "PO-7842-33 \u00b7 as received",
+          "group": "Material",
+          "fields": [
+            [
+              "Contents",
+              "Pipe (heat AG2198), elbow, flanges, olets, valves"
+            ],
+            [
+              "Status",
+              "Held at the dock until the MTR arrives"
+            ]
+          ],
+          "tables": [],
+          "notes": [],
+          "color": "#ffb36b",
+          "images": [],
+          "links": [],
+          "parent": "spool-1",
+          "listed": false,
+          "docs": []
+        }
+      },
+      "order": [
+        "spool-1",
+        "job",
+        "st-office",
+        "st-vendor",
+        "st-fab",
+        "st-field",
+        "st-qc",
+        "ncr-1",
+        "truck-1",
+        "truck-2",
+        "shipment"
+      ],
+      "series": [
+        {
+          "id": "docs",
+          "title": "Spool document completeness",
+          "unit": "%",
+          "t": [
+            0.0,
+            0.0,
+            0.01,
+            1.0,
+            1.01,
+            6.5,
+            6.51,
+            12.4,
+            12.41,
+            21.0,
+            21.01,
+            28.5,
+            28.51,
+            39.0,
+            39.01,
+            41.5,
+            41.51,
+            44.0
+          ],
+          "v": [
+            0.0,
+            0.0,
+            12.5,
+            12.5,
+            25.0,
+            25.0,
+            37.5,
+            37.5,
+            50.0,
+            50.0,
+            62.5,
+            62.5,
+            75.0,
+            75.0,
+            87.5,
+            87.5,
+            100.0,
+            100.0
+          ],
+          "labels": null,
+          "events": [
+            {
+              "t": 0.0,
+              "label": "Isometrics issued (rev 0)"
+            },
+            {
+              "t": 1.0,
+              "label": "PO-7842-33 issued to vendor"
+            },
+            {
+              "t": 7.0,
+              "label": "Material shipped from vendor"
+            },
+            {
+              "t": 8.4,
+              "label": "DOCUMENT HOLD: MTR missing",
+              "kind": "hold",
+              "until": 12.4,
+              "detail": "PO-7842-33 \u00b7 10\" CS pipe spool \u00b7 MTR not received from vendor \u00b7 fabrication on hold"
+            },
+            {
+              "t": 10.0,
+              "label": "Vendor documents requested"
+            },
+            {
+              "t": 12.4,
+              "label": "MTR received, hold released"
+            },
+            {
+              "t": 12.5,
+              "label": "Fabrication starts"
+            },
+            {
+              "t": 19.0,
+              "label": "NDE: 100% RT, MT on LET welds"
+            },
+            {
+              "t": 28.35,
+              "label": "Hydrotest Pack 1 accepted (15,315 kPa, 15 min)"
+            },
+            {
+              "t": 31.0,
+              "label": "Primed, released for shipment"
+            },
+            {
+              "t": 33.6,
+              "label": "Spool delivered to site"
+            },
+            {
+              "t": 36.5,
+              "label": "Lowered in and tied in"
+            },
+            {
+              "t": 39.0,
+              "label": "Field inspection signed off"
+            },
+            {
+              "t": 41.5,
+              "label": "Turnover dossier issued"
+            }
+          ],
+          "tint_group": null,
+          "range": [
+            0,
+            100
+          ],
+          "clock": {
+            "epoch": "2024-04-01"
+          },
+          "speed": 0.35
+        }
+      ],
+      "gauges": [],
+      "overview": "job",
+      "motions": [
+        {
+          "node": "Truck_1",
+          "hide": false,
+          "until": null,
+          "keys": [
+            [
+              6.8,
+              [
+                -55,
+                0,
+                -74
+              ],
+              -90.0
+            ],
+            [
+              7.0,
+              [
+                -55,
+                0,
+                -74
+              ],
+              -90.0
+            ],
+            [
+              7.3,
+              [
+                -55,
+                0,
+                -12.0
+              ],
+              0.0
+            ],
+            [
+              8.0,
+              [
+                110,
+                0,
+                -12.0
+              ],
+              90.0
+            ],
+            [
+              8.3,
+              [
+                110,
+                0,
+                -72
+              ],
+              90.0
+            ],
+            [
+              9.0,
+              [
+                110,
+                0,
+                -72
+              ],
+              90.0
+            ],
+            [
+              9.3,
+              [
+                110,
+                0,
+                -12.0
+              ],
+              180.0
+            ],
+            [
+              10.0,
+              [
+                -55,
+                0,
+                -12.0
+              ],
+              90.0
+            ],
+            [
+              10.3,
+              [
+                -55,
+                0,
+                -74
+              ],
+              90.0
+            ]
+          ]
+        },
+        {
+          "node": "Truck_2",
+          "hide": false,
+          "until": null,
+          "keys": [
+            [
+              31.0,
+              [
+                128,
+                0,
+                -64
+              ],
+              90.0
+            ],
+            [
+              31.3,
+              [
+                128,
+                0,
+                -64
+              ],
+              90.0
+            ],
+            [
+              31.6,
+              [
+                110,
+                0,
+                -72
+              ],
+              -90.0
+            ],
+            [
+              32.2,
+              [
+                110,
+                0,
+                -72
+              ],
+              -90.0
+            ],
+            [
+              32.5,
+              [
+                110,
+                0,
+                -12.0
+              ],
+              180.0
+            ],
+            [
+              33.2,
+              [
+                10,
+                0,
+                -12.0
+              ],
+              -90.0
+            ],
+            [
+              33.6,
+              [
+                10,
+                0,
+                74
+              ],
+              -90.0
+            ],
+            [
+              34.5,
+              [
+                10,
+                0,
+                74
+              ],
+              -90.0
+            ],
+            [
+              34.8,
+              [
+                10,
+                0,
+                -12.0
+              ],
+              0.0
+            ],
+            [
+              35.4,
+              [
+                150,
+                0,
+                -12.0
+              ],
+              -90.0
+            ],
+            [
+              35.8,
+              [
+                150,
+                0,
+                60
+              ],
+              -90.0
+            ]
+          ]
+        },
+        {
+          "node": "Shipment",
+          "hide": true,
+          "until": 12.5,
+          "keys": [
+            [
+              6.8,
+              [
+                -55,
+                1.25,
+                -74
+              ],
+              -90.0
+            ],
+            [
+              7.0,
+              [
+                -55,
+                1.25,
+                -74
+              ],
+              -90.0
+            ],
+            [
+              7.3,
+              [
+                -55,
+                1.25,
+                -12.0
+              ],
+              0.0
+            ],
+            [
+              8.0,
+              [
+                110,
+                1.25,
+                -12.0
+              ],
+              90.0
+            ],
+            [
+              8.3,
+              [
+                110,
+                1.25,
+                -72
+              ],
+              90.0
+            ],
+            [
+              8.6,
+              [
+                121,
+                0,
+                -70
+              ],
+              -90.0
+            ]
+          ]
+        },
+        {
+          "node": "Spool-1",
+          "hide": true,
+          "until": null,
+          "keys": [
+            [
+              12.5,
+              [
+                110,
+                0.6865,
+                -64
+              ],
+              0.0
+            ],
+            [
+              32.0,
+              [
+                110,
+                0.6865,
+                -64
+              ],
+              0.0
+            ],
+            [
+              32.2,
+              [
+                110,
+                1.3865,
+                -72
+              ],
+              -90.0
+            ],
+            [
+              32.5,
+              [
+                110,
+                1.3865,
+                -12.0
+              ],
+              180.0
+            ],
+            [
+              33.2,
+              [
+                10,
+                1.3865,
+                -12.0
+              ],
+              -90.0
+            ],
+            [
+              33.6,
+              [
+                10,
+                1.3865,
+                74
+              ],
+              -90.0
+            ],
+            [
+              34.0,
+              [
+                10,
+                0.4365,
+                85
+              ],
+              0.0
+            ],
+            [
+              36.0,
+              [
+                10,
+                0.4365,
+                85
+              ],
+              0.0
+            ],
+            [
+              36.5,
+              [
+                10,
+                -1.4135,
+                92
+              ],
+              0.0
+            ]
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "node": "Office1",
+          "speed": 1.022585022139911,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -160.0,
+                  0.0,
+                  63.0
+                ],
+                [
+                  -154.0,
+                  0.0,
+                  56.0
+                ],
+                [
+                  -138.0,
+                  0.0,
+                  50.0
+                ],
+                [
+                  -148.0,
+                  0.0,
+                  44.0
+                ],
+                [
+                  -174.0,
+                  0.0,
+                  48.0
+                ],
+                [
+                  -168.0,
+                  0.0,
+                  60.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  6.0,
+                  "talk"
+                ],
+                "2": [
+                  5.0,
+                  "idle"
+                ],
+                "4": [
+                  8.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Office2",
+          "speed": 1.1780157383931438,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -138.0,
+                  0.0,
+                  50.0
+                ],
+                [
+                  -148.0,
+                  0.0,
+                  44.0
+                ],
+                [
+                  -174.0,
+                  0.0,
+                  48.0
+                ],
+                [
+                  -168.0,
+                  0.0,
+                  60.0
+                ],
+                [
+                  -160.0,
+                  0.0,
+                  63.0
+                ],
+                [
+                  -154.0,
+                  0.0,
+                  56.0
+                ]
+              ],
+              "tasks": {
+                "5": [
+                  6.0,
+                  "talk"
+                ],
+                "0": [
+                  5.0,
+                  "idle"
+                ],
+                "2": [
+                  8.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Office3",
+          "speed": 1.226881005931486,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -174.0,
+                  0.0,
+                  48.0
+                ],
+                [
+                  -168.0,
+                  0.0,
+                  60.0
+                ],
+                [
+                  -160.0,
+                  0.0,
+                  63.0
+                ],
+                [
+                  -154.0,
+                  0.0,
+                  56.0
+                ],
+                [
+                  -138.0,
+                  0.0,
+                  50.0
+                ],
+                [
+                  -148.0,
+                  0.0,
+                  44.0
+                ]
+              ],
+              "tasks": {
+                "3": [
+                  6.0,
+                  "talk"
+                ],
+                "4": [
+                  5.0,
+                  "idle"
+                ],
+                "0": [
+                  8.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Office4",
+          "speed": 1.0509407698988993,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -160.0,
+                  0.0,
+                  63.0
+                ],
+                [
+                  -154.0,
+                  0.0,
+                  56.0
+                ],
+                [
+                  -138.0,
+                  0.0,
+                  50.0
+                ],
+                [
+                  -148.0,
+                  0.0,
+                  44.0
+                ],
+                [
+                  -174.0,
+                  0.0,
+                  48.0
+                ],
+                [
+                  -168.0,
+                  0.0,
+                  60.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  6.0,
+                  "talk"
+                ],
+                "2": [
+                  5.0,
+                  "idle"
+                ],
+                "4": [
+                  8.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Office5",
+          "speed": 1.1121254084075172,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -138.0,
+                  0.0,
+                  50.0
+                ],
+                [
+                  -148.0,
+                  0.0,
+                  44.0
+                ],
+                [
+                  -174.0,
+                  0.0,
+                  48.0
+                ],
+                [
+                  -168.0,
+                  0.0,
+                  60.0
+                ],
+                [
+                  -160.0,
+                  0.0,
+                  63.0
+                ],
+                [
+                  -154.0,
+                  0.0,
+                  56.0
+                ]
+              ],
+              "tasks": {
+                "5": [
+                  6.0,
+                  "talk"
+                ],
+                "0": [
+                  5.0,
+                  "idle"
+                ],
+                "2": [
+                  8.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Office6",
+          "speed": 1.1374490671432653,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -174.0,
+                  0.0,
+                  48.0
+                ],
+                [
+                  -168.0,
+                  0.0,
+                  60.0
+                ],
+                [
+                  -160.0,
+                  0.0,
+                  63.0
+                ],
+                [
+                  -154.0,
+                  0.0,
+                  56.0
+                ],
+                [
+                  -138.0,
+                  0.0,
+                  50.0
+                ],
+                [
+                  -148.0,
+                  0.0,
+                  44.0
+                ]
+              ],
+              "tasks": {
+                "3": [
+                  6.0,
+                  "talk"
+                ],
+                "4": [
+                  5.0,
+                  "idle"
+                ],
+                "0": [
+                  8.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Yard1",
+          "speed": 1.077867636867559,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -99.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -75.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -75.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  -45.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  -31.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -11.0,
+                  0.0,
+                  -74.0
+                ],
+                [
+                  -45.0,
+                  0.0,
+                  -84.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  7.0,
+                  "carry"
+                ],
+                "3": [
+                  6.0,
+                  "carry"
+                ],
+                "4": [
+                  5.0,
+                  "inspect"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Yard2",
+          "speed": 1.0970769582963673,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -75.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  -45.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  -31.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -11.0,
+                  0.0,
+                  -74.0
+                ],
+                [
+                  -45.0,
+                  0.0,
+                  -84.0
+                ],
+                [
+                  -99.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -75.0,
+                  0.0,
+                  -66.0
+                ]
+              ],
+              "tasks": {
+                "6": [
+                  7.0,
+                  "carry"
+                ],
+                "1": [
+                  6.0,
+                  "carry"
+                ],
+                "2": [
+                  5.0,
+                  "inspect"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Yard3",
+          "speed": 1.1092130626121912,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -31.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -11.0,
+                  0.0,
+                  -74.0
+                ],
+                [
+                  -45.0,
+                  0.0,
+                  -84.0
+                ],
+                [
+                  -99.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -75.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -75.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  -45.0,
+                  0.0,
+                  -80.0
+                ]
+              ],
+              "tasks": {
+                "4": [
+                  7.0,
+                  "carry"
+                ],
+                "6": [
+                  6.0,
+                  "carry"
+                ],
+                "0": [
+                  5.0,
+                  "inspect"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Yard4",
+          "speed": 1.112643115489349,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -45.0,
+                  0.0,
+                  -84.0
+                ],
+                [
+                  -99.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -75.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -75.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  -45.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  -31.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -11.0,
+                  0.0,
+                  -74.0
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  7.0,
+                  "carry"
+                ],
+                "4": [
+                  6.0,
+                  "carry"
+                ],
+                "5": [
+                  5.0,
+                  "inspect"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Yard5",
+          "speed": 1.284503127543093,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -75.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -75.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  -45.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  -31.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  -11.0,
+                  0.0,
+                  -74.0
+                ],
+                [
+                  -45.0,
+                  0.0,
+                  -84.0
+                ],
+                [
+                  -99.0,
+                  0.0,
+                  -66.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  7.0,
+                  "carry"
+                ],
+                "2": [
+                  6.0,
+                  "carry"
+                ],
+                "3": [
+                  5.0,
+                  "inspect"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Loader1",
+          "speed": 1.0547182496954726,
+          "shifts": [
+            {
+              "start": 6.0,
+              "end": 7.1,
+              "loop": true,
+              "path": [
+                [
+                  -60.0,
+                  0.0,
+                  -78.0
+                ],
+                [
+                  -50.0,
+                  0.0,
+                  -78.0
+                ],
+                [
+                  -50.0,
+                  0.0,
+                  -82.0
+                ],
+                [
+                  -63.0,
+                  0.0,
+                  -82.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  5.0,
+                  "carry"
+                ],
+                "2": [
+                  6.0,
+                  "carry"
+                ]
+              }
+            },
+            {
+              "start": 9.9,
+              "end": 11.5,
+              "loop": true,
+              "path": [
+                [
+                  -60.0,
+                  0.0,
+                  -78.0
+                ],
+                [
+                  -50.0,
+                  0.0,
+                  -78.0
+                ],
+                [
+                  -50.0,
+                  0.0,
+                  -82.0
+                ],
+                [
+                  -63.0,
+                  0.0,
+                  -82.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  6.0,
+                  "inspect"
+                ],
+                "3": [
+                  5.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Loader2",
+          "speed": 1.1653947816409966,
+          "shifts": [
+            {
+              "start": 6.0,
+              "end": 7.1,
+              "loop": true,
+              "path": [
+                [
+                  -50.0,
+                  0.0,
+                  -82.0
+                ],
+                [
+                  -63.0,
+                  0.0,
+                  -82.0
+                ],
+                [
+                  -60.0,
+                  0.0,
+                  -78.0
+                ],
+                [
+                  -50.0,
+                  0.0,
+                  -78.0
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  5.0,
+                  "carry"
+                ],
+                "0": [
+                  6.0,
+                  "carry"
+                ]
+              }
+            },
+            {
+              "start": 9.9,
+              "end": 11.5,
+              "loop": true,
+              "path": [
+                [
+                  -50.0,
+                  0.0,
+                  -82.0
+                ],
+                [
+                  -63.0,
+                  0.0,
+                  -82.0
+                ],
+                [
+                  -60.0,
+                  0.0,
+                  -78.0
+                ],
+                [
+                  -50.0,
+                  0.0,
+                  -78.0
+                ]
+              ],
+              "tasks": {
+                "3": [
+                  6.0,
+                  "inspect"
+                ],
+                "1": [
+                  5.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Loader3",
+          "speed": 1.0515735672860285,
+          "shifts": [
+            {
+              "start": 6.0,
+              "end": 7.1,
+              "loop": true,
+              "path": [
+                [
+                  -60.0,
+                  0.0,
+                  -78.0
+                ],
+                [
+                  -50.0,
+                  0.0,
+                  -78.0
+                ],
+                [
+                  -50.0,
+                  0.0,
+                  -82.0
+                ],
+                [
+                  -63.0,
+                  0.0,
+                  -82.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  5.0,
+                  "carry"
+                ],
+                "2": [
+                  6.0,
+                  "carry"
+                ]
+              }
+            },
+            {
+              "start": 9.9,
+              "end": 11.5,
+              "loop": true,
+              "path": [
+                [
+                  -60.0,
+                  0.0,
+                  -78.0
+                ],
+                [
+                  -50.0,
+                  0.0,
+                  -78.0
+                ],
+                [
+                  -50.0,
+                  0.0,
+                  -82.0
+                ],
+                [
+                  -63.0,
+                  0.0,
+                  -82.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  6.0,
+                  "inspect"
+                ],
+                "3": [
+                  5.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Receiver1",
+          "speed": 1.0693547362186253,
+          "shifts": [
+            {
+              "start": 8.25,
+              "end": 12.6,
+              "loop": true,
+              "path": [
+                [
+                  120.0,
+                  0.0,
+                  -71.0
+                ],
+                [
+                  116.0,
+                  0.0,
+                  -69.0
+                ],
+                [
+                  118.0,
+                  0.0,
+                  -66.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  12.0,
+                  "inspect"
+                ],
+                "1": [
+                  6.0,
+                  "talk"
+                ],
+                "2": [
+                  5.0,
+                  "inspect"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Receiver2",
+          "speed": 1.0993637244670906,
+          "shifts": [
+            {
+              "start": 8.25,
+              "end": 12.6,
+              "loop": true,
+              "path": [
+                [
+                  118.0,
+                  0.0,
+                  -66.0
+                ],
+                [
+                  120.0,
+                  0.0,
+                  -71.0
+                ],
+                [
+                  116.0,
+                  0.0,
+                  -69.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  12.0,
+                  "inspect"
+                ],
+                "2": [
+                  6.0,
+                  "talk"
+                ],
+                "0": [
+                  5.0,
+                  "inspect"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Welder1",
+          "speed": 1.1064571510781183,
+          "shifts": [
+            {
+              "start": 12.5,
+              "end": 19.0,
+              "loop": true,
+              "path": [
+                [
+                  109.0,
+                  0.0,
+                  -62.7
+                ],
+                [
+                  112.6,
+                  0.0,
+                  -62.8
+                ],
+                [
+                  113.2,
+                  0.0,
+                  -65.0
+                ],
+                [
+                  108.5,
+                  0.0,
+                  -65.6
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  14.0,
+                  "weld"
+                ],
+                "1": [
+                  10.0,
+                  "weld"
+                ],
+                "2": [
+                  9.0,
+                  "weld"
+                ],
+                "3": [
+                  5.0,
+                  "carry"
+                ]
+              }
+            },
+            {
+              "start": 22.0,
+              "end": 28.0,
+              "loop": true,
+              "path": [
+                [
+                  109.0,
+                  0.0,
+                  -62.7
+                ],
+                [
+                  112.8,
+                  0.0,
+                  -63.0
+                ],
+                [
+                  104.0,
+                  0.0,
+                  -58.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  8.0,
+                  "carry"
+                ],
+                "1": [
+                  10.0,
+                  "inspect"
+                ],
+                "2": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 29.0,
+              "end": 31.0,
+              "loop": true,
+              "path": [
+                [
+                  108.8,
+                  0.0,
+                  -62.8
+                ],
+                [
+                  112.8,
+                  0.0,
+                  -62.9
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  10.0,
+                  "weld"
+                ],
+                "1": [
+                  10.0,
+                  "weld"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Welder2",
+          "speed": 1.1614802789813061,
+          "shifts": [
+            {
+              "start": 12.5,
+              "end": 19.0,
+              "loop": true,
+              "path": [
+                [
+                  113.2,
+                  0.0,
+                  -65.0
+                ],
+                [
+                  108.5,
+                  0.0,
+                  -65.6
+                ],
+                [
+                  109.0,
+                  0.0,
+                  -62.7
+                ],
+                [
+                  112.6,
+                  0.0,
+                  -62.8
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  14.0,
+                  "weld"
+                ],
+                "3": [
+                  10.0,
+                  "weld"
+                ],
+                "0": [
+                  9.0,
+                  "weld"
+                ],
+                "1": [
+                  5.0,
+                  "carry"
+                ]
+              }
+            },
+            {
+              "start": 22.0,
+              "end": 28.0,
+              "loop": true,
+              "path": [
+                [
+                  104.0,
+                  0.0,
+                  -58.0
+                ],
+                [
+                  109.0,
+                  0.0,
+                  -62.7
+                ],
+                [
+                  112.8,
+                  0.0,
+                  -63.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  8.0,
+                  "carry"
+                ],
+                "2": [
+                  10.0,
+                  "inspect"
+                ],
+                "0": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 29.0,
+              "end": 31.0,
+              "loop": true,
+              "path": [
+                [
+                  108.8,
+                  0.0,
+                  -62.8
+                ],
+                [
+                  112.8,
+                  0.0,
+                  -62.9
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  10.0,
+                  "weld"
+                ],
+                "1": [
+                  10.0,
+                  "weld"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Welder3",
+          "speed": 1.0582564813389879,
+          "shifts": [
+            {
+              "start": 12.5,
+              "end": 19.0,
+              "loop": true,
+              "path": [
+                [
+                  109.0,
+                  0.0,
+                  -62.7
+                ],
+                [
+                  112.6,
+                  0.0,
+                  -62.8
+                ],
+                [
+                  113.2,
+                  0.0,
+                  -65.0
+                ],
+                [
+                  108.5,
+                  0.0,
+                  -65.6
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  14.0,
+                  "weld"
+                ],
+                "1": [
+                  10.0,
+                  "weld"
+                ],
+                "2": [
+                  9.0,
+                  "weld"
+                ],
+                "3": [
+                  5.0,
+                  "carry"
+                ]
+              }
+            },
+            {
+              "start": 22.0,
+              "end": 28.0,
+              "loop": true,
+              "path": [
+                [
+                  112.8,
+                  0.0,
+                  -63.0
+                ],
+                [
+                  104.0,
+                  0.0,
+                  -58.0
+                ],
+                [
+                  109.0,
+                  0.0,
+                  -62.7
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  8.0,
+                  "carry"
+                ],
+                "0": [
+                  10.0,
+                  "inspect"
+                ],
+                "1": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 29.0,
+              "end": 31.0,
+              "loop": true,
+              "path": [
+                [
+                  108.8,
+                  0.0,
+                  -62.8
+                ],
+                [
+                  112.8,
+                  0.0,
+                  -62.9
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  10.0,
+                  "weld"
+                ],
+                "1": [
+                  10.0,
+                  "weld"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "NDE1",
+          "speed": 1.2835236306802438,
+          "shifts": [
+            {
+              "start": 19.0,
+              "end": 21.5,
+              "loop": true,
+              "path": [
+                [
+                  111.0,
+                  0.0,
+                  -62.4
+                ],
+                [
+                  112.8,
+                  0.0,
+                  -65.6
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  16.0,
+                  "inspect"
+                ],
+                "1": [
+                  12.0,
+                  "inspect"
+                ]
+              }
+            },
+            {
+              "start": 28.0,
+              "end": 28.6,
+              "loop": true,
+              "path": [
+                [
+                  108.5,
+                  0.0,
+                  -61.8
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  60.0,
+                  "inspect"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Shop1",
+          "speed": 1.2691357648553587,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  98.0,
+                  0.0,
+                  -62.0
+                ],
+                [
+                  98.0,
+                  0.0,
+                  -82.0
+                ],
+                [
+                  122.0,
+                  0.0,
+                  -84.0
+                ],
+                [
+                  132.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  124.0,
+                  0.0,
+                  -62.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  6.0,
+                  "carry"
+                ],
+                "2": [
+                  8.0,
+                  "idle"
+                ],
+                "3": [
+                  5.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Shop2",
+          "speed": 1.0885112383084947,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  122.0,
+                  0.0,
+                  -84.0
+                ],
+                [
+                  132.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  124.0,
+                  0.0,
+                  -62.0
+                ],
+                [
+                  98.0,
+                  0.0,
+                  -62.0
+                ],
+                [
+                  98.0,
+                  0.0,
+                  -82.0
+                ]
+              ],
+              "tasks": {
+                "4": [
+                  6.0,
+                  "carry"
+                ],
+                "0": [
+                  8.0,
+                  "idle"
+                ],
+                "1": [
+                  5.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Shop3",
+          "speed": 1.0672631378330084,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  124.0,
+                  0.0,
+                  -62.0
+                ],
+                [
+                  98.0,
+                  0.0,
+                  -62.0
+                ],
+                [
+                  98.0,
+                  0.0,
+                  -82.0
+                ],
+                [
+                  122.0,
+                  0.0,
+                  -84.0
+                ],
+                [
+                  132.0,
+                  0.0,
+                  -80.0
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  6.0,
+                  "carry"
+                ],
+                "3": [
+                  8.0,
+                  "idle"
+                ],
+                "4": [
+                  5.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Shop4",
+          "speed": 1.2532719876084681,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  98.0,
+                  0.0,
+                  -82.0
+                ],
+                [
+                  122.0,
+                  0.0,
+                  -84.0
+                ],
+                [
+                  132.0,
+                  0.0,
+                  -80.0
+                ],
+                [
+                  124.0,
+                  0.0,
+                  -62.0
+                ],
+                [
+                  98.0,
+                  0.0,
+                  -62.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  6.0,
+                  "carry"
+                ],
+                "1": [
+                  8.0,
+                  "idle"
+                ],
+                "2": [
+                  5.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Survey1",
+          "speed": 1.0669639637063826,
+          "shifts": [
+            {
+              "start": 20.0,
+              "end": 33.5,
+              "loop": true,
+              "path": [
+                [
+                  -40.0,
+                  0.0,
+                  83.0
+                ],
+                [
+                  -10.0,
+                  0.0,
+                  83.0
+                ],
+                [
+                  30.0,
+                  0.0,
+                  83.0
+                ],
+                [
+                  60.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  66.0,
+                  0.0,
+                  104.0
+                ],
+                [
+                  20.0,
+                  0.0,
+                  105.0
+                ],
+                [
+                  -30.0,
+                  0.0,
+                  105.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  10.0,
+                  "survey"
+                ],
+                "2": [
+                  8.0,
+                  "survey"
+                ],
+                "4": [
+                  10.0,
+                  "survey"
+                ],
+                "6": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Survey2",
+          "speed": 1.0519234051947066,
+          "shifts": [
+            {
+              "start": 20.0,
+              "end": 33.5,
+              "loop": true,
+              "path": [
+                [
+                  30.0,
+                  0.0,
+                  83.0
+                ],
+                [
+                  60.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  66.0,
+                  0.0,
+                  104.0
+                ],
+                [
+                  20.0,
+                  0.0,
+                  105.0
+                ],
+                [
+                  -30.0,
+                  0.0,
+                  105.0
+                ],
+                [
+                  -40.0,
+                  0.0,
+                  83.0
+                ],
+                [
+                  -10.0,
+                  0.0,
+                  83.0
+                ]
+              ],
+              "tasks": {
+                "5": [
+                  10.0,
+                  "survey"
+                ],
+                "0": [
+                  8.0,
+                  "survey"
+                ],
+                "2": [
+                  10.0,
+                  "survey"
+                ],
+                "4": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Survey3",
+          "speed": 1.1713005338023235,
+          "shifts": [
+            {
+              "start": 20.0,
+              "end": 33.5,
+              "loop": true,
+              "path": [
+                [
+                  66.0,
+                  0.0,
+                  104.0
+                ],
+                [
+                  20.0,
+                  0.0,
+                  105.0
+                ],
+                [
+                  -30.0,
+                  0.0,
+                  105.0
+                ],
+                [
+                  -40.0,
+                  0.0,
+                  83.0
+                ],
+                [
+                  -10.0,
+                  0.0,
+                  83.0
+                ],
+                [
+                  30.0,
+                  0.0,
+                  83.0
+                ],
+                [
+                  60.0,
+                  0.0,
+                  84.0
+                ]
+              ],
+              "tasks": {
+                "3": [
+                  10.0,
+                  "survey"
+                ],
+                "5": [
+                  8.0,
+                  "survey"
+                ],
+                "0": [
+                  10.0,
+                  "survey"
+                ],
+                "2": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Crew1",
+          "speed": 1.117497311739906,
+          "shifts": [
+            {
+              "start": 33.6,
+              "end": 36.5,
+              "loop": true,
+              "path": [
+                [
+                  2.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  14.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  20.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  6.0,
+                  0.0,
+                  86.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  8.0,
+                  "carry"
+                ],
+                "1": [
+                  6.0,
+                  "carry"
+                ],
+                "2": [
+                  10.0,
+                  "idle"
+                ],
+                "3": [
+                  7.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 36.5,
+              "end": 40.5,
+              "loop": true,
+              "path": [
+                [
+                  7.0,
+                  -1.55,
+                  92.2
+                ],
+                [
+                  13.5,
+                  -1.55,
+                  92.3
+                ],
+                [
+                  16.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  4.0,
+                  0.0,
+                  87.5
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  14.0,
+                  "weld"
+                ],
+                "1": [
+                  12.0,
+                  "weld"
+                ],
+                "2": [
+                  6.0,
+                  "carry"
+                ],
+                "3": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 40.5,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -20.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  80.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  6.0,
+                  "idle"
+                ],
+                "3": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Crew2",
+          "speed": 1.245849269972553,
+          "shifts": [
+            {
+              "start": 33.6,
+              "end": 36.5,
+              "loop": true,
+              "path": [
+                [
+                  20.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  6.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  2.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  14.0,
+                  0.0,
+                  82.0
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  8.0,
+                  "carry"
+                ],
+                "3": [
+                  6.0,
+                  "carry"
+                ],
+                "0": [
+                  10.0,
+                  "idle"
+                ],
+                "1": [
+                  7.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 36.5,
+              "end": 40.5,
+              "loop": true,
+              "path": [
+                [
+                  16.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  4.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  7.0,
+                  -1.55,
+                  92.2
+                ],
+                [
+                  13.5,
+                  -1.55,
+                  92.3
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  14.0,
+                  "weld"
+                ],
+                "3": [
+                  12.0,
+                  "weld"
+                ],
+                "0": [
+                  6.0,
+                  "carry"
+                ],
+                "1": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 40.5,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  50.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  84.0
+                ]
+              ],
+              "tasks": {
+                "3": [
+                  6.0,
+                  "idle"
+                ],
+                "1": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Crew3",
+          "speed": 1.0553884257075778,
+          "shifts": [
+            {
+              "start": 33.6,
+              "end": 36.5,
+              "loop": true,
+              "path": [
+                [
+                  2.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  14.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  20.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  6.0,
+                  0.0,
+                  86.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  8.0,
+                  "carry"
+                ],
+                "1": [
+                  6.0,
+                  "carry"
+                ],
+                "2": [
+                  10.0,
+                  "idle"
+                ],
+                "3": [
+                  7.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 36.5,
+              "end": 40.5,
+              "loop": true,
+              "path": [
+                [
+                  7.0,
+                  -1.55,
+                  92.2
+                ],
+                [
+                  13.5,
+                  -1.55,
+                  92.3
+                ],
+                [
+                  16.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  4.0,
+                  0.0,
+                  87.5
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  14.0,
+                  "weld"
+                ],
+                "1": [
+                  12.0,
+                  "weld"
+                ],
+                "2": [
+                  6.0,
+                  "carry"
+                ],
+                "3": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 40.5,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -20.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  80.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  6.0,
+                  "idle"
+                ],
+                "3": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Crew4",
+          "speed": 1.1505702046021788,
+          "shifts": [
+            {
+              "start": 33.6,
+              "end": 36.5,
+              "loop": true,
+              "path": [
+                [
+                  20.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  6.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  2.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  14.0,
+                  0.0,
+                  82.0
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  8.0,
+                  "carry"
+                ],
+                "3": [
+                  6.0,
+                  "carry"
+                ],
+                "0": [
+                  10.0,
+                  "idle"
+                ],
+                "1": [
+                  7.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 36.5,
+              "end": 40.5,
+              "loop": true,
+              "path": [
+                [
+                  16.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  4.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  7.0,
+                  -1.55,
+                  92.2
+                ],
+                [
+                  13.5,
+                  -1.55,
+                  92.3
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  14.0,
+                  "weld"
+                ],
+                "3": [
+                  12.0,
+                  "weld"
+                ],
+                "0": [
+                  6.0,
+                  "carry"
+                ],
+                "1": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 40.5,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  50.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  84.0
+                ]
+              ],
+              "tasks": {
+                "3": [
+                  6.0,
+                  "idle"
+                ],
+                "1": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Crew5",
+          "speed": 1.0481406864569498,
+          "shifts": [
+            {
+              "start": 33.6,
+              "end": 36.5,
+              "loop": true,
+              "path": [
+                [
+                  2.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  14.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  20.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  6.0,
+                  0.0,
+                  86.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  8.0,
+                  "carry"
+                ],
+                "1": [
+                  6.0,
+                  "carry"
+                ],
+                "2": [
+                  10.0,
+                  "idle"
+                ],
+                "3": [
+                  7.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 36.5,
+              "end": 40.5,
+              "loop": true,
+              "path": [
+                [
+                  7.0,
+                  -1.55,
+                  92.2
+                ],
+                [
+                  13.5,
+                  -1.55,
+                  92.3
+                ],
+                [
+                  16.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  4.0,
+                  0.0,
+                  87.5
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  14.0,
+                  "weld"
+                ],
+                "1": [
+                  12.0,
+                  "weld"
+                ],
+                "2": [
+                  6.0,
+                  "carry"
+                ],
+                "3": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 40.5,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -20.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  80.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  6.0,
+                  "idle"
+                ],
+                "3": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Crew6",
+          "speed": 1.1798396109510625,
+          "shifts": [
+            {
+              "start": 33.6,
+              "end": 36.5,
+              "loop": true,
+              "path": [
+                [
+                  20.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  6.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  2.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  14.0,
+                  0.0,
+                  82.0
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  8.0,
+                  "carry"
+                ],
+                "3": [
+                  6.0,
+                  "carry"
+                ],
+                "0": [
+                  10.0,
+                  "idle"
+                ],
+                "1": [
+                  7.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 36.5,
+              "end": 40.5,
+              "loop": true,
+              "path": [
+                [
+                  16.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  4.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  7.0,
+                  -1.55,
+                  92.2
+                ],
+                [
+                  13.5,
+                  -1.55,
+                  92.3
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  14.0,
+                  "weld"
+                ],
+                "3": [
+                  12.0,
+                  "weld"
+                ],
+                "0": [
+                  6.0,
+                  "carry"
+                ],
+                "1": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 40.5,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  50.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  84.0
+                ]
+              ],
+              "tasks": {
+                "3": [
+                  6.0,
+                  "idle"
+                ],
+                "1": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Crew7",
+          "speed": 1.2770405644824843,
+          "shifts": [
+            {
+              "start": 33.6,
+              "end": 36.5,
+              "loop": true,
+              "path": [
+                [
+                  2.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  14.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  20.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  6.0,
+                  0.0,
+                  86.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  8.0,
+                  "carry"
+                ],
+                "1": [
+                  6.0,
+                  "carry"
+                ],
+                "2": [
+                  10.0,
+                  "idle"
+                ],
+                "3": [
+                  7.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 36.5,
+              "end": 40.5,
+              "loop": true,
+              "path": [
+                [
+                  7.0,
+                  -1.55,
+                  92.2
+                ],
+                [
+                  13.5,
+                  -1.55,
+                  92.3
+                ],
+                [
+                  16.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  4.0,
+                  0.0,
+                  87.5
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  14.0,
+                  "weld"
+                ],
+                "1": [
+                  12.0,
+                  "weld"
+                ],
+                "2": [
+                  6.0,
+                  "carry"
+                ],
+                "3": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 40.5,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  -20.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  80.0
+                ]
+              ],
+              "tasks": {
+                "1": [
+                  6.0,
+                  "idle"
+                ],
+                "3": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Crew8",
+          "speed": 1.1905115311416703,
+          "shifts": [
+            {
+              "start": 33.6,
+              "end": 36.5,
+              "loop": true,
+              "path": [
+                [
+                  20.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  6.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  2.0,
+                  0.0,
+                  82.0
+                ],
+                [
+                  14.0,
+                  0.0,
+                  82.0
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  8.0,
+                  "carry"
+                ],
+                "3": [
+                  6.0,
+                  "carry"
+                ],
+                "0": [
+                  10.0,
+                  "idle"
+                ],
+                "1": [
+                  7.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 36.5,
+              "end": 40.5,
+              "loop": true,
+              "path": [
+                [
+                  16.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  4.0,
+                  0.0,
+                  87.5
+                ],
+                [
+                  7.0,
+                  -1.55,
+                  92.2
+                ],
+                [
+                  13.5,
+                  -1.55,
+                  92.3
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  14.0,
+                  "weld"
+                ],
+                "3": [
+                  12.0,
+                  "weld"
+                ],
+                "0": [
+                  6.0,
+                  "carry"
+                ],
+                "1": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            },
+            {
+              "start": 40.5,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  50.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  80.0
+                ],
+                [
+                  -20.0,
+                  0.0,
+                  84.0
+                ],
+                [
+                  50.0,
+                  0.0,
+                  84.0
+                ]
+              ],
+              "tasks": {
+                "3": [
+                  6.0,
+                  "idle"
+                ],
+                "1": [
+                  6.0,
+                  "talk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "Inspector1",
+          "speed": 1.1181647290630274,
+          "shifts": [
+            {
+              "start": 38.0,
+              "end": 39.6,
+              "loop": true,
+              "path": [
+                [
+                  11.5,
+                  0.0,
+                  88.8
+                ],
+                [
+                  7.5,
+                  0.0,
+                  88.8
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  20.0,
+                  "inspect"
+                ],
+                "1": [
+                  14.0,
+                  "inspect"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "QC1",
+          "speed": 1.0990535448823697,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  140.0,
+                  0.0,
+                  72.0
+                ],
+                [
+                  158.0,
+                  0.0,
+                  72.0
+                ],
+                [
+                  158.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  138.0,
+                  0.0,
+                  86.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  8.0,
+                  "talk"
+                ],
+                "2": [
+                  10.0,
+                  "inspect"
+                ],
+                "3": [
+                  5.0,
+                  "idle"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "QC2",
+          "speed": 1.0774058210698725,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  158.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  138.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  140.0,
+                  0.0,
+                  72.0
+                ],
+                [
+                  158.0,
+                  0.0,
+                  72.0
+                ]
+              ],
+              "tasks": {
+                "2": [
+                  8.0,
+                  "talk"
+                ],
+                "0": [
+                  10.0,
+                  "inspect"
+                ],
+                "1": [
+                  5.0,
+                  "idle"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "node": "QC3",
+          "speed": 1.0536102206017341,
+          "shifts": [
+            {
+              "start": 0.0,
+              "end": 44.0,
+              "loop": true,
+              "path": [
+                [
+                  140.0,
+                  0.0,
+                  72.0
+                ],
+                [
+                  158.0,
+                  0.0,
+                  72.0
+                ],
+                [
+                  158.0,
+                  0.0,
+                  86.0
+                ],
+                [
+                  138.0,
+                  0.0,
+                  86.0
+                ]
+              ],
+              "tasks": {
+                "0": [
+                  8.0,
+                  "talk"
+                ],
+                "2": [
+                  10.0,
+                  "inspect"
+                ],
+                "3": [
+                  5.0,
+                  "idle"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "flows": [
+        {
+          "label": "Isometrics",
+          "a": [
+            -160,
+            7.0,
+            62
+          ],
+          "b": [
+            110,
+            7.0,
+            -84.5
+          ],
+          "t0": 0.0,
+          "t1": 1.0,
+          "color": "#6cb6ff",
+          "kind": "doc"
+        },
+        {
+          "label": "PO-7842-33",
+          "a": [
+            -160,
+            7.0,
+            62
+          ],
+          "b": [
+            -55,
+            7.0,
+            -85
+          ],
+          "t0": 1.0,
+          "t1": 2.0,
+          "color": "#6cb6ff",
+          "kind": "doc"
+        },
+        {
+          "label": "Shipping docs",
+          "a": [
+            -55,
+            7.0,
+            -85
+          ],
+          "b": [
+            110,
+            7.0,
+            -84.5
+          ],
+          "t0": 6.5,
+          "t1": 7.5,
+          "color": "#ffd56b",
+          "kind": "doc"
+        },
+        {
+          "label": "Request: MTR",
+          "a": [
+            110,
+            7.0,
+            -84.5
+          ],
+          "b": [
+            -55,
+            7.0,
+            -85
+          ],
+          "t0": 10.0,
+          "t1": 11.0,
+          "color": "#ff8a6b",
+          "kind": "doc"
+        },
+        {
+          "label": "MTR (heat AG2198)",
+          "a": [
+            -55,
+            7.0,
+            -85
+          ],
+          "b": [
+            110,
+            7.0,
+            -84.5
+          ],
+          "t0": 11.5,
+          "t1": 12.4,
+          "color": "#5fd38a",
+          "kind": "doc"
+        },
+        {
+          "label": "RT / MT reports",
+          "a": [
+            110,
+            7.0,
+            -84.5
+          ],
+          "b": [
+            150,
+            7.0,
+            68
+          ],
+          "t0": 21.0,
+          "t1": 22.0,
+          "color": "#6cb6ff",
+          "kind": "doc"
+        },
+        {
+          "label": "QF-9 test report",
+          "a": [
+            110,
+            7.0,
+            -84.5
+          ],
+          "b": [
+            150,
+            7.0,
+            68
+          ],
+          "t0": 28.5,
+          "t1": 29.5,
+          "color": "#6cb6ff",
+          "kind": "doc"
+        },
+        {
+          "label": "Installation record",
+          "a": [
+            10,
+            7.0,
+            70
+          ],
+          "b": [
+            150,
+            7.0,
+            68
+          ],
+          "t0": 39.0,
+          "t1": 40.0,
+          "color": "#6cb6ff",
+          "kind": "doc"
+        },
+        {
+          "label": "Turnover dossier",
+          "a": [
+            150,
+            7.0,
+            68
+          ],
+          "b": [
+            -160,
+            7.0,
+            62
+          ],
+          "t0": 41.5,
+          "t1": 42.5,
+          "color": "#5fd38a",
+          "kind": "doc"
+        }
+      ],
+      "states": {
+        "spool-1": [
+          [
+            0.0,
+            "pending"
+          ],
+          [
+            7.0,
+            "active"
+          ],
+          [
+            8.4,
+            "hold"
+          ],
+          [
+            12.4,
+            "active"
+          ],
+          [
+            31.0,
+            "ok"
+          ],
+          [
+            34.0,
+            "active"
+          ],
+          [
+            39.0,
+            "ok"
+          ],
+          [
+            41.5,
+            "done"
+          ]
+        ],
+        "ncr-1": [
+          [
+            0.0,
+            "pending"
+          ],
+          [
+            8.4,
+            "hold"
+          ],
+          [
+            12.4,
+            "ok"
+          ]
+        ],
+        "truck-1": [
+          [
+            0.0,
+            "pending"
+          ],
+          [
+            7.0,
+            "active"
+          ],
+          [
+            8.3,
+            "hold"
+          ],
+          [
+            9.0,
+            "pending"
+          ]
+        ],
+        "truck-2": [
+          [
+            0.0,
+            "pending"
+          ],
+          [
+            31.6,
+            "active"
+          ],
+          [
+            34.5,
+            "pending"
+          ]
+        ]
+      }
+    },
+    "exposure": 1.0,
+    "grade": null
+  },
+  "stats": {
+    "objects": 1029,
+    "unique_meshes": 97,
+    "triangles_drawn": 278036,
+    "triangles_stored": 197490,
+    "materials": 69,
+    "textures": 11,
+    "bounds_min": [
+      -283.5,
+      -270.0,
+      -3.0
+    ],
+    "bounds_max": [
+      283.58,
+      290.0,
+      14.71
+    ],
+    "glb_bytes": 2216320
+  },
+  "built_with": "5.2.2 LTS"
+}

@@ -101,6 +101,18 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0
   margin: -34px 0 0 8px; padding: 3px 8px; border-radius: 7px; background: rgba(10, 30, 20, .85);
   border: 1px solid #3ddc84; font: 600 12px ui-monospace, Menlo, monospace; color: #b8ffd5; }
 .twin-gauge .lbl { color: #7fd8a5; margin-right: 6px; font-weight: 400; }
+#twin-banner { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 8px 14px;
+  background: rgba(190, 30, 30, .88); color: #fff; border-radius: 10px; font-weight: 600; box-shadow: 0 4px 18px rgba(0,0,0,.4);
+  animation: twin-pulse 1.6s ease-in-out infinite; pointer-events: none; max-width: min(520px, 80vw); text-align: center; }
+#twin-banner small { display: block; font-weight: 400; opacity: .9; }
+@keyframes twin-pulse { 50% { background: rgba(230, 50, 40, .95); } }
+#tw-card .state { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #111; margin: 2px 0 8px; }
+#tw-card ul.docs { list-style: none; margin: 4px 0 10px; padding: 0; }
+#tw-card ul.docs li { display: grid; grid-template-columns: 18px 1fr auto; gap: 6px; padding: 2px 0; }
+#tw-card ul.docs li small { color: var(--muted); }
+#tw-card ul.docs li.in i { color: #5fd38a; } #tw-card ul.docs li.missing i { color: #ff6b5e; } #tw-card ul.docs li.pending i { color: var(--muted); }
+#tw-card ul.docs i { font-style: normal; text-align: center; }
+#tr-readout .hold { color: #ff7a6b; font-weight: 600; margin-left: 6px; }
 .replay { position: absolute; left: 12px; right: 12px; bottom: 44px; height: 80px; display: grid;
   grid-template-columns: auto auto 1fr; grid-template-rows: auto 1fr; gap: 4px 8px; align-items: center;
   padding: 8px 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
@@ -115,6 +127,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0
 #tr-chart .g { stroke: rgba(255,255,255,.06); vector-effect: non-scaling-stroke; }
 #tr-chart .g.major { stroke: rgba(255,255,255,.16); }
 #tr-chart .ev { stroke: #6cb6ff; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+#tr-chart .ev.hold { stroke: #ff4b3e; stroke-dasharray: none; }
 #tr-chart .head { stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; }
 #tr-chart .ax { position: absolute; font-size: 10px; color: var(--muted); pointer-events: none; }
 #tr-chart .lo { left: 2px; bottom: -2px; } #tr-chart .hi { right: 2px; bottom: -2px; } #tr-chart .top { left: 2px; top: -2px; }

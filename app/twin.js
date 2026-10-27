@@ -7,6 +7,48 @@ import * as THREE from 'three';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const hhmm = (h) => `${String(Math.floor(h)).padStart(2, '0')}:${String(Math.round((h % 1) * 60) % 60).padStart(2, '0')}`;
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** Sim timelines run in days from an epoch date; test replays in hours of the day. */
+function timeFormatter(series) {
+  const epoch = series?.clock?.epoch;
+  if (!epoch) return hhmm;
+  const base = Date.UTC(...epoch.split('-').map((x, i) => +x - (i === 1 ? 1 : 0)));
+  return (t) => {
+    const d = new Date(base + t * 86400e3);
+    return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()} ${hhmm((t % 1) * 24)}`;
+  };
+}
+// Record states on the sim timeline (harness.sim.twin_state) and how they tint their objects.
+const STATES = {
+  pending: { label: 'Not started', color: null, level: 0 },
+  active: { label: 'In progress', color: '#ffb14a', level: 0.22 },
+  ok: { label: 'Released', color: '#3ddc84', level: 0.2 },
+  at_risk: { label: 'At risk', color: '#ffd23f', level: 0.3 },
+  hold: { label: 'On hold', color: '#ff3b2f', level: 0.5 },
+  done: { label: 'Turned over', color: '#4aa8ff', level: 0.18 },
+};
+const TASK = { weld: 'welding', inspect: 'inspecting', carry: 'carrying', talk: 'talking', idle: 'standing by', survey: 'surveying' };
+
+/** Small text pill as a sprite, for document packets travelling between buildings. */
+function labelSprite(text, color) {
+  const c = document.createElement('canvas');
+  const ctx = c.getContext('2d');
+  ctx.font = '600 40px system-ui, sans-serif';
+  const w = Math.ceil(ctx.measureText(text).width) + 56;
+  c.width = w; c.height = 72;
+  ctx.font = '600 40px system-ui, sans-serif';
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.roundRect(2, 2, w - 4, 68, 34); ctx.fill();
+  ctx.fillStyle = '#111';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 28, 37);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  sp.renderOrder = 10;
+  sp.userData.aspect = w / 72;
+  return sp;
+}
 
 /** Twin record id for an object: its own or its nearest ancestor's userData.twin. */
 export function twinIdOf(o) {
@@ -34,6 +76,9 @@ export class Twin {
     this.speed = 0.06;             // hours of data per second of replay
     this.fly = null;
     this.gauges = [];
+    this.sim = null;               // motions, actors, flows, states of the sim timeline
+    this.wall = 0;                 // real seconds, for walking and work animations
+    this.fmt = hhmm;
     this.ray = new THREE.Raycaster();
     this._v = new THREE.Vector3();
     this._down = null;
@@ -99,10 +144,39 @@ export class Twin {
       this.overlay.append(el);
       this.gauges.push({ ...g, el, pos: new THREE.Vector3(...g.position) });
     }
+    this.loadSim(data, root);
     if (data.series?.length) this.setSeries(0);
+    this.playing = !!(this.sim && this.series?.clock);     // a sim world starts running
+    this.renderReplayState();
     $('twin-replay').hidden = !data.series?.length;
     $('twin-panel').hidden = false;
     $('b-twin').classList.add('on');
+  }
+
+  /** Moving material, people and document flows (harness.sim), keyed to the replay time. */
+  loadSim(data, root) {
+    if (!data.motions?.length && !data.actors?.length && !data.flows?.length) return;
+    const V = (p) => new THREE.Vector3(...p);
+    const sim = { motions: [], actors: [], flows: [], states: data.states || {} };
+    for (const m of data.motions || []) {
+      const node = root.getObjectByName(m.node);
+      if (node) sim.motions.push({ ...m, node, keys: m.keys.map(([t, p, yaw]) => ({ t, p: V(p), yaw: THREE.MathUtils.degToRad(yaw) })) });
+    }
+    for (const a of data.actors || []) {
+      const node = root.getObjectByName(a.node);
+      if (!node) continue;
+      const limb = (s) => node.getObjectByName(`${a.node}_${s}`);
+      sim.actors.push({ ...a, node, shift: null, seg: 0, d: 0, dwell: 0, task: null, phase: 0,
+        parts: { armL: limb('arm_l'), armR: limb('arm_r'), legL: limb('leg_l'), legR: limb('leg_r') },
+        shifts: a.shifts.map((s) => ({ ...s, path: s.path.map(V) })) });
+    }
+    for (const f of data.flows || []) {
+      const sprite = labelSprite(f.label, f.color || '#6cb6ff');
+      sprite.visible = false;
+      root.add(sprite);
+      sim.flows.push({ ...f, sprite, a: V(f.a), b: V(f.b) });
+    }
+    this.sim = sim;
   }
 
   clear() {
@@ -110,6 +184,8 @@ export class Twin {
     this.setTint(0, false);
     for (const g of this.gauges) g.el.remove();
     this.gauges = [];
+    this.sim = null;
+    $('twin-banner').hidden = true;
     this.meshes.clear();
     this.data = null;
     this.series = null;
@@ -190,14 +266,17 @@ export class Twin {
   flyTo(id) {
     const meshes = this.meshes.get(id);
     if (!meshes?.length) return;
+    this.root.updateMatrixWorld(true);        // moving objects may have just been placed
     const box = new THREE.Box3();
     for (const m of meshes) box.expandByObject(m);
     const center = box.getCenter(new THREE.Vector3());
     const size = Math.max(box.getSize(new THREE.Vector3()).length(), 1.5);
     const dir = this.camera.position.clone().sub(this.controls.target).normalize();
-    if (dir.y < 0.35) { dir.y = 0.35; dir.normalize(); }
+    // Small things near the ground (a spool in a trench): look down more steeply, from further.
+    const minUp = size < 6 ? 0.6 : 0.35;
+    if (dir.y < minUp) { dir.y = minUp; dir.normalize(); }
     const fov = THREE.MathUtils.degToRad(this.camera.fov);
-    const dist = size / 2 / Math.tan(fov / 2) * 1.15;
+    const dist = Math.max(size / 2 / Math.tan(fov / 2) * 1.15, 9);
     this.fly = { t: 0, from: [this.camera.position.clone(), this.controls.target.clone()],
       to: [center.clone().addScaledVector(dir, dist), center] };
   }
@@ -242,6 +321,7 @@ export class Twin {
     let html = `<h3>${esc(r.title)}</h3>${r.subtitle ? `<p class="sub">${esc(r.subtitle)}</p>` : ''}`;
     const parent = r.parent && this.data.records[r.parent];
     if (parent) html += `<p class="parent">Part of <a href="#" data-go="${esc(r.parent)}">${esc(parent.title)}</a></p>`;
+    html += this.statusHtml(id, r);
     if (r.fields.length) {
       html += '<dl>' + r.fields.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('') + '</dl>';
     }
@@ -269,6 +349,50 @@ export class Twin {
     }
   }
 
+  /** State and document checklist of a record at the playhead (sim worlds). */
+  statusHtml(id, r) {
+    const state = this.stateAt(id);
+    if (!state && !r.docs?.length) return '';
+    let html = '';
+    if (state) {
+      const s = STATES[state] || { label: state, color: '#999' };
+      html += `<span class="state" style="background:${s.color || '#8a8f96'}">${esc(s.label)}</span>`;
+    }
+    if (r.docs?.length) {
+      const t = this.time;
+      const got = r.docs.filter(([, dt]) => dt !== null && dt <= t + 1e-6).length;
+      html += `<h4>Documents <span>${got} / ${r.docs.length}</span></h4><ul class="docs">`;
+      for (const [name, dt] of r.docs) {
+        const cls = dt !== null && dt <= t + 1e-6 ? 'in' : dt === null ? 'missing' : 'pending';
+        const when = cls === 'in' ? this.fmt(dt) : cls === 'missing' ? 'not received' : `due ${this.fmt(dt)}`;
+        html += `<li class="${cls}"><i>${cls === 'in' ? '✓' : cls === 'missing' ? '✗' : '·'}</i><span>${esc(name)}</span><small>${esc(when)}</small></li>`;
+      }
+      html += '</ul>';
+    }
+    return html;
+  }
+
+  stateAt(id, t = this.time) {
+    const keys = this.sim?.states?.[id];
+    if (!keys) return null;
+    let s = keys[0][1];
+    for (const [kt, ks] of keys) { if (kt <= t + 1e-6) s = ks; else break; }
+    return s;
+  }
+
+  /** Re-render the card only when what it shows at the playhead changes (keeps its scroll). */
+  refreshCard() {
+    const id = this.selected || this.data.overview;
+    const r = id && this.data.records[id];
+    if (!r || (!r.docs?.length && !this.sim?.states?.[id])) return;
+    const sig = `${this.stateAt(id)}|${(r.docs || []).filter(([, dt]) => dt !== null && dt <= this.time + 1e-6).length}`;
+    if (sig === this._cardSig) return;
+    this._cardSig = sig;
+    const top = $('tw-card').scrollTop;
+    this.renderCard();
+    $('tw-card').scrollTop = top;
+  }
+
   // ---------------------------------------------------------------- replay
 
   setSeries(i) {
@@ -277,16 +401,19 @@ export class Twin {
     const t0 = s.t[0], t1 = s.t[s.t.length - 1];
     const vmin = Math.min(0, ...s.v), vmax = Math.max(...s.v) * 1.08 || 1;
     this.vRange = s.range || [vmin, vmax];
+    this.fmt = timeFormatter(s);
+    this.speed = s.speed ?? 0.06;
     const X = (t) => ((t - t0) / (t1 - t0)) * 1000;
     const Y = (v) => 100 - ((v - vmin) / (vmax - vmin)) * 92 - 4;
     const pts = s.t.map((t, k) => `${X(t).toFixed(1)},${Y(s.v[k]).toFixed(1)}`).join(' ');
     let grid = '';
-    for (let h = Math.ceil(t0 * 4) / 4; h <= t1; h += 0.25) {
-      grid += `<line x1="${X(h)}" x2="${X(h)}" y1="0" y2="100" class="${h % 1 ? 'g' : 'g major'}"/>`;
+    const [step, major] = s.clock ? [1, 7] : [0.25, 1];      // days and weeks, or quarter hours
+    for (let h = Math.ceil(t0 / step) * step; h <= t1; h += step) {
+      grid += `<line x1="${X(h)}" x2="${X(h)}" y1="0" y2="100" class="${Math.abs(h / major - Math.round(h / major)) > 1e-6 ? 'g' : 'g major'}"/>`;
     }
     let ev = '';
     for (const e of s.events) {
-      ev += `<line x1="${X(e.t)}" x2="${X(e.t)}" y1="0" y2="100" class="ev"><title>${esc(hhmm(e.t))} ${esc(e.label)}</title></line>`;
+      ev += `<line x1="${X(e.t)}" x2="${X(e.t)}" y1="0" y2="100" class="ev${e.kind === 'hold' ? ' hold' : ''}"><title>${esc(this.fmt(e.t))} ${esc(e.label)}</title></line>`;
     }
     $('tr-chart').innerHTML = `<svg viewBox="0 0 1000 100" preserveAspectRatio="none">${grid}${ev}` +
       `<polyline points="0,100 ${pts} 1000,100" class="area"/><polyline points="${pts}" class="line"/>` +
@@ -314,13 +441,123 @@ export class Twin {
     $('tr-head')?.setAttribute('x1', this.X(t));
     $('tr-head')?.setAttribute('x2', this.X(t));
     const last = s.events.filter((e) => e.t <= t + 1e-6).pop();
-    $('tr-readout').innerHTML = `<b>${hhmm(t)}</b> ${Math.round(v).toLocaleString()} ${esc(s.unit)}` +
-      (last ? ` <small>${esc(last.label)}</small>` : '');
+    const hold = s.events.find((e) => e.kind === 'hold' && e.t <= t + 1e-6 && t < (e.until ?? Infinity));
+    $('tr-readout').innerHTML = `<b>${this.fmt(t)}</b> ${Math.round(v).toLocaleString()} ${esc(s.unit)}` +
+      (last ? ` <small>${esc(last.label)}</small>` : '') + (hold ? ` <span class="hold">HOLD</span>` : '');
+    $('twin-banner').hidden = !hold;
+    if (hold) $('twin-banner').innerHTML = `⚠ ${esc(hold.label)}${hold.detail ? `<small>${esc(hold.detail)}</small>` : ''}`;
     const [lo, hi] = this.vRange;
     this.setTint((v - lo) / (hi - lo), true);
     for (const g of this.gauges) {
       const gs = this.data.series.find((x) => x.id === g.series);
       if (gs) g.el.querySelector('.val').textContent = `${this.valueAt(gs, t).toFixed(g.digits)} ${gs.unit}`;
+    }
+    if (this.sim) { this.applySim(t); this.refreshCard(); }
+  }
+
+  /** Place moving material, pick each person's shift, and tint records by state at time t. */
+  applySim(t) {
+    const sim = this.sim;
+    for (const m of sim.motions) {
+      const k = m.keys;
+      m.node.visible = !(m.hide && t < k[0].t - 1e-6) && !(m.until !== null && m.until !== undefined && t > m.until);
+      let p = k[k.length - 1].p, yaw = k[k.length - 1].yaw;
+      if (t <= k[0].t) { p = k[0].p; yaw = k[0].yaw; }
+      else {
+        for (let i = 1; i < k.length; i++) {
+          if (t <= k[i].t) {
+            const f = (t - k[i - 1].t) / Math.max(k[i].t - k[i - 1].t, 1e-9);
+            p = k[i - 1].p.clone().lerp(k[i].p, f);
+            yaw = k[i - 1].yaw + (k[i].yaw - k[i - 1].yaw) * f;
+            break;
+          }
+        }
+      }
+      m.node.position.copy(p);
+      m.node.rotation.set(0, yaw, 0);
+    }
+    for (const a of sim.actors) {
+      const shift = a.shifts.find((s) => s.start <= t && t < s.end) || null;
+      a.node.visible = !!shift;
+      if (shift !== a.shift) {
+        a.shift = shift;
+        a.seg = 0; a.d = 0; a.dwell = 0; a.task = null;
+        if (shift) {
+          a.node.position.copy(shift.path[0]);
+          const task = shift.tasks?.['0'];
+          if (task) { a.dwell = task[0]; a.task = task[1]; }
+        }
+      }
+    }
+    for (const [id, keys] of Object.entries(sim.states)) {
+      let state = keys[0][1];
+      for (const [kt, ks] of keys) { if (kt <= t + 1e-6) state = ks; else break; }
+      const st = STATES[state] || STATES.pending;
+      for (const m of this.meshes.get(id) || []) {
+        m.userData.tint = st.color ? new THREE.Color(st.color) : null;
+        m.userData.tintLevel = st.level;
+        this.paint(m);
+      }
+    }
+    for (const f of sim.flows) f.sprite.visible = t >= f.t0 && t <= f.t1;
+  }
+
+  /** Walk each person along their shift's path in real time; animate limbs; fly the packets. */
+  updateSim(dt) {
+    const sim = this.sim;
+    this.wall += dt;
+    const w = this.wall;
+    const dir = new THREE.Vector3();
+    for (const a of sim.actors) {
+      const s = a.shift;
+      if (!s) continue;
+      const P = s.path, n = P.length, parts = a.parts;
+      let moving = false;
+      if (a.dwell > 0) {
+        a.dwell -= dt;
+        if (a.dwell <= 0) a.task = null;
+      } else if (n > 1 && (s.loop || a.seg < n - 1)) {
+        const from = P[a.seg], to = P[(a.seg + 1) % n];
+        const len = from.distanceTo(to);
+        a.d += a.speed * dt;
+        a.phase += a.speed * dt * 4.2;
+        moving = true;
+        if (a.d >= len) {
+          a.d = 0;
+          a.seg = (a.seg + 1) % n;
+          const task = s.tasks?.[String(a.seg)];
+          if (task) { a.dwell = task[0]; a.task = task[1]; }
+          if (!s.loop && a.seg === n - 1 && !task) { a.task = 'idle'; a.dwell = 1e9; }
+        } else {
+          a.node.position.lerpVectors(from, to, a.d / len);
+          dir.subVectors(to, from);
+          a.node.rotation.y = Math.atan2(-dir.z, dir.x);
+        }
+      }
+      // Limbs: legs and arms swing while walking; tasks pose the arms with a little life in them.
+      const swing = moving ? Math.sin(a.phase) : 0;
+      const k = a.task;
+      let aL = swing * 0.45, aR = -swing * 0.45;
+      if (k === 'weld') { aL = 1.15 + Math.sin(w * 7 + a.phase) * 0.06; aR = 1.25 + Math.sin(w * 5.3) * 0.05; }
+      else if (k === 'inspect') { aL = 0.35 + Math.sin(w * 1.5) * 0.08; aR = 1.5 + Math.sin(w * 2.1) * 0.05; }
+      else if (k === 'carry') { aL = aR = 0.95 + Math.sin(w * 3) * 0.04; }
+      else if (k === 'survey') { aL = 0.9; aR = 0.2 + Math.sin(w * 1.2) * 0.15; }
+      else if (k === 'talk') { aL = Math.sin(w * 2.3 + a.phase) * 0.3; aR = 0.6 + Math.sin(w * 3.1) * 0.25; }
+      else if (k === 'idle') { aL = Math.sin(w * 0.9 + a.phase) * 0.06; aR = -aL; }
+      if (parts.armL) parts.armL.rotation.z = aL;
+      if (parts.armR) parts.armR.rotation.z = aR;
+      if (parts.legL) parts.legL.rotation.z = swing * 0.6;
+      if (parts.legR) parts.legR.rotation.z = -swing * 0.6;
+    }
+    const t = this.time;
+    for (const f of sim.flows) {
+      if (!f.sprite.visible) continue;
+      const u = THREE.MathUtils.clamp((t - f.t0) / Math.max(f.t1 - f.t0, 1e-9), 0, 1);
+      const lift = Math.max(8, f.a.distanceTo(f.b) * 0.12);
+      f.sprite.position.lerpVectors(f.a, f.b, u);
+      f.sprite.position.y += Math.sin(u * Math.PI) * lift + 2.5;
+      const h = f.sprite.position.distanceTo(this.camera.position) * 0.028;   // constant on screen
+      f.sprite.scale.set(h * f.sprite.userData.aspect, h, 1);
     }
   }
 
@@ -361,6 +598,7 @@ export class Twin {
       if (t > s.t[s.t.length - 1]) t = s.t[0];
       this.setTime(t);
     }
+    if (this.sim) this.updateSim(dt);
     const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
     for (const g of this.gauges) {
       this._v.copy(g.pos).project(this.camera);

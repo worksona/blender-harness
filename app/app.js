@@ -281,7 +281,8 @@ const viewer = (() => {
     const groups = new Map();
     root.traverse((o) => {
       if (!o.isMesh || o.isInstancedMesh) return;
-      for (let p = o; p; p = p.parent) if (p.userData?.bob) return;  // floaters move on their own
+      // Floaters, moving material and people move on their own: keep them as separate meshes.
+      for (let p = o; p; p = p.parent) if (p.userData?.bob || p.userData?.motion || p.userData?.actor) return;
       const key = `${o.geometry.uuid}|${o.material.uuid}`;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(o);
