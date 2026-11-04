@@ -10,7 +10,7 @@ from .builder import MeshBuilder
 from .core import (bounds, box, collection, cone, cylinder, hex_of, instance, join, material,
                    mesh, plane, prefab, rgb, sphere)
 from .core import reset as _reset_scene
-from .effects import lamp, lamps_along, plume, reset_effects
+from .effects import fire, lamp, lamps_along, muzzle_flash, plume, reset_effects, snowfall
 from .env import camera, fog, interior, photo_camera, sky, sun
 from .output import export_glb, render, save_blend, stats
 from .terrain import fbm, island_falloff, scatter, slope, terrain
@@ -38,7 +38,7 @@ __all__ = [
     "export_glb", "render", "save_blend", "stats",
     "fbm", "island_falloff", "scatter", "slope", "terrain",
     "bob", "ocean",
-    "lamp", "lamps_along", "plume",
+    "fire", "lamp", "lamps_along", "muzzle_flash", "plume", "snowfall",
     "atmosphere", "solar_position",
     "textures", "blur", "colorize", "contrast", "decal", "fbm_noise", "grime", "height_normal",
     "make_tileable", "photo_patch", "text_atlas", "text_image", "text_mask", "texture", "value_noise",

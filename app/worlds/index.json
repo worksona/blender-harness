@@ -93,6 +93,20 @@
         "aerial"
       ],
       "preview": "worlds/refinery-dusk/preview.jpg"
+    },
+    {
+      "slug": "winter-armour",
+      "title": "Winter Armour",
+      "description": "A tank column crosses a snowfield at blue hour: one tank burning, two firing, snow falling.",
+      "tags": [
+        "military",
+        "winter",
+        "dusk",
+        "fire",
+        "photo-matched",
+        "showcase"
+      ],
+      "preview": "worlds/winter-armour/preview.jpg"
     }
   ]
 }

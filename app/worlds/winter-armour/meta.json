@@ -1,0 +1,250 @@
+{
+  "slug": "winter-armour",
+  "title": "Winter Armour",
+  "description": "A tank column crosses a snowfield at blue hour: one tank burning, two firing, snow falling.",
+  "tags": [
+    "military",
+    "winter",
+    "dusk",
+    "fire",
+    "photo-matched",
+    "showcase"
+  ],
+  "seed": 44,
+  "private": false,
+  "glb": "worlds/winter-armour/world.glb",
+  "preview": "worlds/winter-armour/preview.jpg",
+  "viewer": {
+    "camera": {
+      "position": [
+        -2.0,
+        19.5,
+        19.0
+      ],
+      "target": [
+        1.5,
+        0.0,
+        -18.0
+      ],
+      "fov": 37.3
+    },
+    "sun": {
+      "direction": [
+        -0.8663,
+        -0.0702,
+        0.4945
+      ],
+      "color": "#ff3f05",
+      "strength": 0.0
+    },
+    "sky": {
+      "color": "#3b5177",
+      "ground": "#4a4a44",
+      "strength": 0.96,
+      "glow": null,
+      "physical": true
+    },
+    "fog": {
+      "color": "#6f6f7b",
+      "near": 35.0,
+      "far": 700
+    },
+    "bounds": {
+      "min": [
+        -80.0,
+        -0.5068,
+        -80.0
+      ],
+      "max": [
+        80.0,
+        10.6664,
+        80.0
+      ]
+    },
+    "ocean": null,
+    "atmosphere": {
+      "time": 16.5,
+      "latitude": 54.0,
+      "day": 20,
+      "north": 0.0,
+      "haze": 0.6,
+      "visibility": 700,
+      "exposure": 2.2,
+      "lamps": "on",
+      "elevation": -4.03,
+      "azimuth": 240.28,
+      "ev": 6.011,
+      "lamp_level": 1.0
+    },
+    "lamps": [],
+    "plumes": [
+      {
+        "base": [
+          17.71,
+          3.38,
+          -25.19
+        ],
+        "height": 40,
+        "radius": 3.2,
+        "drift": [
+          0.35,
+          -0.12
+        ],
+        "density": 2.0,
+        "rise": 3.0,
+        "low": "#3a2a22",
+        "high": "#151515",
+        "seed": 3,
+        "glow": 0.4,
+        "albedo": 0.03
+      },
+      {
+        "base": [
+          12.62,
+          1.97,
+          -21.23
+        ],
+        "height": 7,
+        "radius": 0.7,
+        "drift": [
+          0.8,
+          -0.3
+        ],
+        "density": 0.25,
+        "rise": 1.2,
+        "low": "#cfd3d8",
+        "high": "#9aa2ad",
+        "seed": 10,
+        "glow": 0.2,
+        "albedo": 0.7
+      },
+      {
+        "base": [
+          1.5,
+          2.01,
+          -36.71
+        ],
+        "height": 7,
+        "radius": 0.7,
+        "drift": [
+          0.8,
+          -0.3
+        ],
+        "density": 0.25,
+        "rise": 1.2,
+        "low": "#cfd3d8",
+        "high": "#9aa2ad",
+        "seed": 11,
+        "glow": 0.2,
+        "albedo": 0.7
+      }
+    ],
+    "fires": [
+      {
+        "base": [
+          17.71,
+          1.38,
+          -25.19
+        ],
+        "radius": 2.7,
+        "height": 3.8,
+        "power": 90000.0,
+        "color": "#ff3a00",
+        "core": "#ffa424",
+        "seed": 1
+      },
+      {
+        "base": [
+          16.89,
+          2.42,
+          -24.0
+        ],
+        "radius": 0.5,
+        "height": 1.8,
+        "power": 12000.0,
+        "color": "#ff3a00",
+        "core": "#ffa424",
+        "seed": 2
+      },
+      {
+        "base": [
+          11.12,
+          1.97,
+          -21.07
+        ],
+        "dir": [
+          0.995,
+          -0.0,
+          -0.105
+        ],
+        "radius": 0.5,
+        "height": 1.8,
+        "power": 8000.0,
+        "color": "#ff7a1a",
+        "core": "#ffd890",
+        "seed": 0,
+        "period": 6.0
+      },
+      {
+        "base": [
+          2.98,
+          1.98,
+          -36.98
+        ],
+        "dir": [
+          -0.985,
+          0.018,
+          0.174
+        ],
+        "radius": 0.5,
+        "height": 1.8,
+        "power": 8000.0,
+        "color": "#ff7a1a",
+        "core": "#ffd890",
+        "seed": 1,
+        "period": 8.5
+      }
+    ],
+    "snowfall": {
+      "rate": 1.0,
+      "size": 0.03,
+      "speed": 1.0,
+      "wind": [
+        0.6,
+        -0.25
+      ],
+      "area": 70
+    },
+    "interior": null,
+    "twin": null,
+    "bloom": 0.55,
+    "grade": {
+      "gains": [
+        0.8,
+        1.0,
+        1.14
+      ],
+      "saturation": 1.1
+    }
+  },
+  "stats": {
+    "objects": 802,
+    "unique_meshes": 25,
+    "triangles_drawn": 1353422,
+    "triangles_stored": 254496,
+    "materials": 40,
+    "textures": 16,
+    "bounds_min": [
+      -80.0,
+      -80.0,
+      -0.51
+    ],
+    "bounds_max": [
+      80.0,
+      80.0,
+      10.67
+    ],
+    "glb_bytes": 9640336
+  },
+  "built_with": "5.2.2 LTS"
+}

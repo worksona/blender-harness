@@ -189,9 +189,11 @@ export class Lighting {
   }
 
   applyToParts({ lampLevel, gain, exposure, ambient, sunColor }) {
-    const { lamps, plumes, ocean, root } = this.world;
+    const { lamps, plumes, fires, snow, ocean, root } = this.world;
     lamps?.setLevel(lampLevel, gain, exposure);
+    fires?.setLevel(lampLevel, gain, exposure);
     plumes?.setLight({ ambient, sunColor, glow: lampLevel * 0.004 });
+    snow?.setLight({ ambient, sunColor });
     if (ocean) {
       const lum = ambient ? (0.2126 * ambient[0] + 0.7152 * ambient[1] + 0.0722 * ambient[2]) * 3 +
         0.1 * this.sun.intensity : null;

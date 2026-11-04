@@ -328,6 +328,10 @@ def viewer_meta():
         "lamps": [to_gltf(l[:3]) + [l[3], l[4], l[5]] for l in STATE.get("lamps", [])],
         "plumes": [{**p, "base": to_gltf(p["base"]), "drift": [p["drift"][0], -p["drift"][1]]}
                    for p in STATE.get("plumes", [])],
+        "fires": [{**f, "base": to_gltf(f["base"]), **({"dir": to_gltf(f["dir"])} if "dir" in f else {})}
+                  for f in STATE.get("fires", [])],
+        "snowfall": STATE.get("snowfall") and {**STATE["snowfall"],
+                                               "wind": [STATE["snowfall"]["wind"][0], -STATE["snowfall"]["wind"][1]]},
         "interior": STATE.get("interior"),
         "twin": STATE.get("twin"),
     }
