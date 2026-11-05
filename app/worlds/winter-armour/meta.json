@@ -146,9 +146,9 @@
           1.38,
           -25.46
         ],
-        "radius": 3.8,
-        "height": 4.0,
-        "power": 180000.0,
+        "radius": 3.0,
+        "height": 4.4,
+        "power": 120000.0,
         "color": "#e82800",
         "core": "#ff7a00",
         "seed": 1
