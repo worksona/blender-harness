@@ -34,7 +34,7 @@
         -0.0702,
         0.4945
       ],
-      "color": "#ff3f05",
+      "color": "#ff3704",
       "strength": 0.0
     },
     "sky": {
@@ -46,19 +46,19 @@
     },
     "fog": {
       "color": "#6f6f7b",
-      "near": 35.0,
-      "far": 700
+      "near": 22.5,
+      "far": 450
     },
     "bounds": {
       "min": [
-        -80.0,
-        -0.5068,
-        -80.0
+        -70.0,
+        -0.6525,
+        -75.439
       ],
       "max": [
-        80.0,
-        10.6664,
-        80.0
+        70.0,
+        11.1954,
+        70.0
       ]
     },
     "ocean": null,
@@ -67,42 +67,42 @@
       "latitude": 54.0,
       "day": 20,
       "north": 0.0,
-      "haze": 0.6,
-      "visibility": 700,
-      "exposure": 2.2,
+      "haze": 0.7,
+      "visibility": 450,
+      "exposure": 2.6,
       "lamps": "on",
       "elevation": -4.03,
       "azimuth": 240.28,
-      "ev": 6.011,
+      "ev": 6.411,
       "lamp_level": 1.0
     },
     "lamps": [],
     "plumes": [
       {
         "base": [
-          17.71,
-          3.38,
-          -25.19
+          18.23,
+          3.88,
+          -25.46
         ],
-        "height": 40,
-        "radius": 3.2,
+        "height": 45,
+        "radius": 4.2,
         "drift": [
-          0.35,
-          -0.12
+          0.45,
+          -0.1
         ],
-        "density": 2.0,
+        "density": 2.6,
         "rise": 3.0,
         "low": "#3a2a22",
         "high": "#151515",
         "seed": 3,
-        "glow": 0.4,
+        "glow": 0.8,
         "albedo": 0.03
       },
       {
         "base": [
-          12.62,
-          1.97,
-          -21.23
+          13.19,
+          1.92,
+          -21.31
         ],
         "height": 4.5,
         "radius": 0.6,
@@ -120,9 +120,9 @@
       },
       {
         "base": [
-          1.5,
-          2.01,
-          -36.71
+          0.91,
+          1.91,
+          -36.6
         ],
         "height": 4.5,
         "radius": 0.6,
@@ -142,39 +142,39 @@
     "fires": [
       {
         "base": [
-          17.71,
+          18.23,
           1.38,
-          -25.19
+          -25.46
         ],
-        "radius": 2.7,
-        "height": 3.8,
-        "power": 90000.0,
-        "color": "#ff3a00",
-        "core": "#ffa424",
+        "radius": 3.8,
+        "height": 4.0,
+        "power": 180000.0,
+        "color": "#e82800",
+        "core": "#ff7a00",
         "seed": 1
       },
       {
         "base": [
-          16.89,
-          2.42,
-          -24.0
+          17.25,
+          2.29,
+          -24.31
         ],
-        "radius": 0.5,
-        "height": 1.8,
-        "power": 12000.0,
+        "radius": 0.6,
+        "height": 2.0,
+        "power": 15000.0,
         "color": "#ff3a00",
-        "core": "#ffa424",
+        "core": "#ffb030",
         "seed": 2
       },
       {
         "base": [
-          11.12,
-          1.97,
-          -21.07
+          11.7,
+          1.91,
+          -21.15
         ],
         "dir": [
-          0.995,
-          -0.0,
+          0.994,
+          0.009,
           -0.105
         ],
         "radius": 0.5,
@@ -187,13 +187,13 @@
       },
       {
         "base": [
-          2.98,
-          1.98,
-          -36.98
+          2.39,
+          1.88,
+          -36.86
         ],
         "dir": [
           -0.985,
-          0.018,
+          0.022,
           0.174
         ],
         "radius": 0.5,
@@ -220,31 +220,31 @@
     "bloom": 0.55,
     "grade": {
       "gains": [
-        0.8,
-        1.0,
-        1.14
+        0.74,
+        0.98,
+        1.16
       ],
-      "saturation": 1.1
+      "saturation": 1.12
     }
   },
   "stats": {
-    "objects": 802,
-    "unique_meshes": 25,
-    "triangles_drawn": 1353422,
-    "triangles_stored": 254496,
-    "materials": 40,
+    "objects": 5016,
+    "unique_meshes": 30,
+    "triangles_drawn": 1800036,
+    "triangles_stored": 450954,
+    "materials": 42,
     "textures": 16,
     "bounds_min": [
-      -80.0,
-      -80.0,
-      -0.51
+      -70.0,
+      -70.0,
+      -0.65
     ],
     "bounds_max": [
-      80.0,
-      80.0,
-      10.67
+      70.0,
+      75.44,
+      11.2
     ],
-    "glb_bytes": 9640336
+    "glb_bytes": 13306288
   },
   "built_with": "5.2.2 LTS"
 }
