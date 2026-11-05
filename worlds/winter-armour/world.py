@@ -37,18 +37,25 @@ META = {
     "seed": 44,
     "render": {"res": "1600x1000", "samples": 64, "glare": 0.5},
     "viewer": {"bloom": 0.55},
+    # Uncompressed, so the model also loads where the Draco decoder can't be fetched.
+    "export": {"draco": False},
     # Cold blue-cyan twilight grade, as in the reference.
-    "grade": {"gains": [0.8, 1.0, 1.14], "saturation": 1.1},
+    "grade": {"gains": [0.74, 0.98, 1.16], "saturation": 1.12},
 }
 
-FIELD = 160.0      # unique-textured snowfield (m)
+FIELD = 140.0      # unique-textured snowfield (m)
 TEX = 2048
 WIND = (0.55, 0.22)   # smoke drift per metre of rise, toward the east-north-east
 
 
 def height(x, y):
-    h = 0.9 * fbm(x, y, scale=55, octaves=4, seed=3) + 0.22 * fbm(x, y, scale=14, octaves=3, seed=4)
-    return h
+    """Rolling steppe under wind-packed snow: long swells, then hummocks and drift ridges a few
+    metres across. The small bumps are pressed flatter where the tanks stand."""
+    h = 0.9 * fbm(x, y, scale=55, octaves=4, seed=3) + 0.25 * fbm(x, y, scale=14, octaves=3, seed=4)
+    bumps = 0.5 * fbm(x, y, scale=4.0, octaves=3, seed=5) + 0.14 * fbm(x * 1.6, y * 0.7, scale=1.3, octaves=2, seed=6)
+    d2 = min((x - a) ** 2 + (y - b) ** 2 for a, b in _FOOTPRINTS)
+    flat = min(1.0, max(0.0, (math.sqrt(d2) - 3.0) / 3.0))
+    return h + bumps * (0.25 + 0.75 * flat)
 
 
 # (x, y, hull heading deg, turret traverse deg relative to the hull, role)
@@ -68,18 +75,26 @@ TANKS = [
     (20.0, 44.0, 196, -12, ""),
 ]
 WRECK = (16.5, 24.5, 208)
+_FOOTPRINTS = [(x, y) for x, y, *_ in TANKS] + [WRECK[:2]]
 
 
 def ground_matrix(x, y, heading):
-    """Hull matrix sitting on the snow: yaw to the heading, pitch and roll to the ground."""
+    """Hull matrix resting on the snow: a plane fitted under the tracks gives pitch and roll, then
+    the hull rides up on the highest bump so the tracks sit in (not under) the snow."""
     h = math.radians(heading)
     fx, fy = math.cos(h), math.sin(h)
     lx, ly = -fy, fx
-    hf, hb = height(x + 2.6 * fx, y + 2.6 * fy), height(x - 2.6 * fx, y - 2.6 * fy)
-    hl, hr = height(x + 1.3 * lx, y + 1.3 * ly), height(x - 1.3 * lx, y - 1.3 * ly)
-    pitch = -math.atan2(hf - hb, 5.2)
-    roll = math.atan2(hl - hr, 2.6)
-    z = (hf + hb + hl + hr) / 4 - 0.04   # settle a few cm into the snow
+    samples = []
+    for u in np.linspace(-3.0, 3.0, 7):
+        for v in (-1.3, 1.3):
+            samples.append((u, v, height(x + u * fx + v * lx, y + u * fy + v * ly)))
+    A = np.array([[u, v, 1.0] for u, v, _ in samples])
+    zs = np.array([z for *_, z in samples])
+    (a, b, c), *_ = np.linalg.lstsq(A, zs, rcond=None)
+    resid = zs - A @ np.array([a, b, c])
+    pitch = -math.atan(a)
+    roll = math.atan(b)
+    z = c + max(0.0, resid.max()) * 0.6 - 0.05   # ride the bumps, settle a little into the snow
     return Matrix.Translation((x, y, z)) @ Euler((roll, pitch, h), "XYZ").to_matrix().to_4x4()
 
 
@@ -110,7 +125,9 @@ def snow_maps(rng, paths, scorch, craters):
 
     ripples = fbm_noise(N, 96, 3, 61)
     drifts = fbm_noise(N, 8, 5, 62)
-    hgt = ripples * 0.35 + drifts * 1.2
+    grain = fbm_noise(N, 512, 2, 60)          # fine powder grain, a few centimetres across
+    lumps = fbm_noise(N, 40, 4, 59)           # wind-sculpted lumps a metre or two across
+    hgt = ripples * 0.35 + drifts * 1.2 + grain * 0.18 + lumps * 0.8
     rut = np.zeros((N, N), np.float32)
     berm = np.zeros((N, N), np.float32)
     px_per_m = N / S
@@ -160,14 +177,14 @@ def snow_maps(rng, paths, scorch, craters):
     soot = np.maximum(soot, np.clip(1 - d / (wr * 2.4), 0, 1) ** 1.3)
 
     # Colour: fine sparkle variation, compacted grey-blue snow in the ruts with grit, soot, earth.
-    snow = colorize(contrast(ripples * 0.5 + drifts * 0.5, 0.2, 0.8), "#e3e9f1", "#f4f7fb")
+    snow = colorize(contrast(ripples * 0.4 + drifts * 0.4 + grain * 0.2, 0.2, 0.8), "#e3e9f1", "#f6f8fb")
     packed = colorize(fbm_noise(N, 64, 3, 64), "#c8cfd8", "#dbe0e7")
     grit = contrast(fbm_noise(N, 160, 2, 65), 0.66, 0.78) * 0.35
     rut_t = np.clip(-rut, 0, 1)[..., None]
     px = snow * (1 - rut_t * 0.85) + packed * rut_t * 0.85
     px = px * (1 - (grit * rut_t[..., 0])[..., None]) + np.array([0.42, 0.39, 0.35]) * (grit * rut_t[..., 0])[..., None]
     # Dark flecks: dead grass and stubble poking through the snow.
-    fleck = contrast(value_noise(N, 700, 68), 0.86, 0.95) * contrast(fbm_noise(N, 10, 3, 69), 0.4, 0.7)
+    fleck = contrast(value_noise(N, 900, 68), 0.84, 0.95) * contrast(fbm_noise(N, 10, 3, 69), 0.3, 0.6)
     px = px * (1 - fleck[..., None] * 0.7) + np.array([0.33, 0.30, 0.28]) * fleck[..., None] * 0.7
     soot_c = np.array([0.24, 0.22, 0.21])
     st = (soot * 0.8)[..., None]
@@ -180,7 +197,7 @@ def snow_maps(rng, paths, scorch, craters):
     edge = np.clip((np.maximum(np.abs(X), np.abs(Y)) - (S / 2 - 14)) / 12, 0, 1)[..., None]
     px = px * (1 - edge) + np.array([0.93, 0.95, 0.97]) * edge
     col = texture("snowfield", np.clip(px, 0, 1), quality=88)
-    nrm = texture("snowfield_n", height_normal(hgt, 0.9), data=True, quality=90)
+    nrm = texture("snowfield_n", height_normal(hgt, 1.8), data=True, quality=90)
     return col, nrm
 
 
@@ -245,6 +262,27 @@ def conifer_prefab(name, mats, h):
     return prefab(mb.build())
 
 
+def snowflakes(rng):
+    """Falling snow for the Blender render only (the viewer animates its own): tiny flakes filling
+    the view between the camera and the far side of the field."""
+    flake = material("flake", "#ffffff", roughness=0.6, emission="#c8d6ff", emission_strength=0.002)
+    mb = MeshBuilder("Snowflakes")
+    cam, tgt = Vector((-2.0, -19.0, 19.5)), Vector((1.5, 18.0, 0.0))
+    for _ in range(16000):
+        t = rng.random() ** 0.7
+        p = cam + (tgt - cam) * (0.25 + 0.8 * t)
+        spread = 4 + 30 * t
+        p += Vector((rng.uniform(-spread, spread), rng.uniform(-spread * 0.6, spread * 0.6),
+                     rng.uniform(-spread * 0.5, spread * 0.5)))
+        if p.z < height(p.x, p.y) + 0.05:
+            continue
+        mb.box(tuple(p), 0.006 + 0.008 * rng.random(), flake,
+               rotation=(rng.uniform(0, 90), rng.uniform(0, 90), rng.uniform(0, 90)))
+    obj = mb.build(collection="Snowfall")
+    obj["viewer"] = "snowfall"   # the viewer draws its own animated snow
+    obj["backdrop"] = True
+
+
 # ---------------------------------------------------------------- build
 
 def build(ctx):
@@ -275,7 +313,7 @@ def build(ctx):
     w = instance(wreck_h, "Wreck", collection="Tanks")
     w.matrix_world = hm
     # The turret has been lifted off its ring by the blast and sits askew.
-    tm = (hm @ Matrix.Translation((T.TURRET_X - 0.25, 0.35, T.DECK_Z + 0.12)) @
+    tm = (hm @ Matrix.Translation((T.TURRET_X - 0.25, 0.35, T.DECK_Z + 0.14)) @
           Matrix.Rotation(math.radians(38), 4, "Z") @ Matrix.Rotation(math.radians(-7), 4, "X") @
           Matrix.Rotation(math.radians(5), 4, "Y"))
     wt = instance(wreck_t, "WreckTurret", collection="Tanks")
@@ -292,7 +330,7 @@ def build(ctx):
     # -- snowfield
     col, nrm = snow_maps(rng, paths, (wx, wy, 4.2), craters)
     snow_mat = material("snowfield", texture=col, normal=nrm, texture_size=FIELD, roughness=0.62)
-    terrain("Snowfield", size=FIELD, resolution=256, height=height, material=snow_mat, smooth=True,
+    terrain("Snowfield", size=FIELD, resolution=300, height=height, material=snow_mat, smooth=True,
             collection="Ground")
     far_px = colorize(fbm_noise(512, 6, 5, 70), "#e2e8f0", "#f3f6fa")
     far_n = height_normal(fbm_noise(512, 48, 3, 71) * 0.4 + fbm_noise(512, 6, 4, 72), 0.8)
@@ -319,6 +357,21 @@ def build(ctx):
         if any((x - a) ** 2 + (y - b) ** 2 < 20 for a, b in tank_pts):
             return False
         return not any((x - a) ** 2 + (y - b) ** 2 < 3.2 for a, b in path_pts)
+    # Grass and stubble poking through the snow: thousands of small dark tufts.
+    straw = material("straw", "#4b4339", roughness=0.9)
+    tufts = []
+    for k in range(4):
+        mb = MeshBuilder(f"Tuft{k}")
+        for _ in range(rng.randint(5, 9)):
+            a, lean = rng.uniform(0, 2 * math.pi), rng.uniform(0.1, 0.6)
+            top = Vector((math.cos(a) * lean * 0.2, math.sin(a) * lean * 0.2, rng.uniform(0.1, 0.28)))
+            mb.rod((rng.uniform(-0.04, 0.04), rng.uniform(-0.04, 0.04), -0.03), top, 0.008, straw, 3,
+                   radius_b=0.002, caps=False)
+        tufts.append(prefab(mb.build()))
+    for i, (x, y, z) in enumerate(scatter(rng, 4200, (-55, 55, -18, 70), height,
+                                          accept=lambda x, y, z: clear(x, y), min_dist=0.6)):
+        s = rng.uniform(0.7, 1.6)
+        instance(rng.choice(tufts), f"Tuft.{i}", (x, y, z), (0, 0, rng.uniform(0, 360)), s, collection="Tufts")
     for i, (x, y, z) in enumerate(scatter(rng, 300, (-50, 50, -16, 72), height,
                                           accept=lambda x, y, z: clear(x, y), min_dist=2.2)):
         s = rng.uniform(1.0, 2.0)
@@ -371,13 +424,13 @@ def build(ctx):
     deb.build(collection="Tanks")
 
     # -- fire, smoke and gunfire
-    eng = hm @ Vector((-1.4, 0, T.DECK_Z))
-    fire(tuple(eng), radius=2.7, height=3.8, power=90000.0, brightness=0.22, color="#ff3a00",
-         core="#ffa424", seed=1)
-    fire(tuple(tm @ Vector((-0.2, 0.42, 0.95))), radius=0.5, height=1.8, power=12000.0, brightness=0.3, color="#ff3a00", core="#ffa424",
-         seed=2, lights=1)
-    plume(tuple(eng + Vector((0, 0, 2.0))), height=40, radius=3.2, drift=(0.35, 0.12), density=2.0, rise=3.0,
-          low="#3a2a22", high="#151515", glow=0.4, albedo=0.03, seed=3, name="Smoke")
+    eng = hm @ Vector((-2.0, 0, T.DECK_Z + 0.1))
+    fire(tuple(eng), radius=3.0, height=4.4, power=120000.0, brightness=0.3, color="#e82800",
+         core="#ff7a00", seed=1, lights=3)
+    fire(tuple(tm @ Vector((-0.5, 0.5, 0.9))), radius=0.6, height=2.0, power=15000.0, brightness=0.4,
+         color="#ff3a00", core="#ffb030", seed=2, lights=1)
+    plume(tuple(eng + Vector((0, 0, 2.5))), height=45, radius=4.2, drift=(0.45, 0.1), density=2.6, rise=3.0,
+          low="#3a2a22", high="#151515", glow=0.8, albedo=0.03, seed=3, name="Smoke")
     for k, tmx in enumerate(firing):
         mz, d = T.gun_muzzle(tmx)
         muzzle_flash(tuple(mz), tuple(d), length=1.8, radius=0.5, power=8000.0, brightness=0.6, color="#ff7a1a", core="#ffd890",
@@ -386,6 +439,7 @@ def build(ctx):
               low="#cfd3d8", high="#9aa2ad", albedo=0.7, glow=0.2, seed=10 + k, name="GunSmoke")
 
     # -- light and camera
-    atmosphere(time="16:30", latitude=54.0, day=20, haze=0.6, visibility=700, exposure=2.2, lamps="on")
+    atmosphere(time="16:30", latitude=54.0, day=20, haze=0.7, visibility=450, exposure=2.6, lamps="on")
+    snowflakes(rng)
     snowfall(rate=1.0, size=0.03, speed=1.0, wind=(0.6, 0.25), area=70)
     camera((-2.0, -19.0, 19.5), (1.5, 18.0, 0.0), lens=30)

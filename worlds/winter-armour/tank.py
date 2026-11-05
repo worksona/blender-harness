@@ -19,22 +19,24 @@ from harness import MeshBuilder, material, texture
 from harness.builder import _template
 from harness.textures import blur, colorize, contrast, fbm_noise, height_normal, value_noise
 
-TRACK_Y = 1.27          # track centre line, either side
-TRACK_W = 0.52
-LINK_PITCH = 0.165
+TRACK_Y = 1.31          # track centre line, either side
+TRACK_W = 0.56
+LINK_PITCH = 0.16
 LINK_T = 0.08           # link thickness (to the guide-horn base)
-WHEEL_R = 0.40
-WHEEL_X = (-1.96, -0.98, 0.0, 0.98, 1.96)
+WHEEL_R = 0.36
+WHEEL_X = (-2.35, -1.41, -0.47, 0.47, 1.41, 2.35)
 WHEEL_Z = WHEEL_R + LINK_T
-SPROCKET = (-2.80, 0.64, 0.36)   # rear drive sprocket: x, z, pitch radius
-IDLER = (2.82, 0.58, 0.34)
-ROLLERS = ((-1.47, 0.86, 0.10), (0.0, 0.88, 0.10), (1.47, 0.86, 0.10))
-DECK_Z = 1.62
-SPONSON_Z = 1.05
-TURRET_X = 0.55
-GUN_Z = 0.40            # gun axis above the turret ring
-GLACIS_A = (3.08, 0.78)  # glacis bottom (x, z) and top
-GLACIS_B = (2.00, DECK_Z)
+SPROCKET = (-3.12, 0.60, 0.34)   # rear drive sprocket: x, z, pitch radius
+IDLER = (3.16, 0.56, 0.32)
+ROLLERS = ((-1.88, 0.80, 0.09), (0.0, 0.82, 0.09), (1.88, 0.80, 0.09))
+DECK_Z = 1.50
+SPONSON_Z = 1.02
+TURRET_X = 0.35
+GUN_Z = 0.38            # gun axis above the turret ring
+GLACIS_A = (3.50, 0.70)  # glacis bottom (x, z) and top: long and shallow
+GLACIS_B = (2.20, DECK_Z)
+GUN_LEN = 6.4           # muzzle ahead of the turret ring
+REAR_X = -3.40
 
 
 # ---------------------------------------------------------------- materials
@@ -68,8 +70,8 @@ def materials(burnt=False):
         paint_img = texture("tank_paint_burnt", px)
         cast_img = paint_img
     else:
-        paint_img = texture("tank_paint", _paint_pixels("#3d4a3f", "#1d2320", 11))
-        cast_img = texture("tank_cast", _paint_pixels("#3b483d", "#1d2320", 12))
+        paint_img = texture("tank_paint", _paint_pixels("#2f3b33", "#161b18", 11))
+        cast_img = texture("tank_cast", _paint_pixels("#2e3a32", "#161b18", 12))
     rough = texture("tank_rough", 0.5 + 0.35 * fbm_noise(512, 8, 4, 13), data=True)
     plate_n = texture("tank_plate_n", height_normal(fbm_noise(512, 32, 3, 14), 1.2), data=True)
     cast_h = fbm_noise(512, 12, 5, 15) * 0.7 + fbm_noise(512, 64, 2, 16) * 0.3
@@ -298,11 +300,13 @@ def track_link(mb, M, m, horn=True):
 def road_wheel(mb, M, center, side, detail=True):
     """Twin road wheel with rubber tyres, dished cast discs, ribs, hub and bolts."""
     cx, cy, cz = center
-    for k, dy in enumerate((-0.15, 0.15)):
+    for dy in (-0.16, 0.16):
         outer = (dy * side) > 0
         m = Matrix.Translation((cx, cy + dy, cz)) @ AXIS_Y
         if side < 0:
             m = m @ Matrix.Rotation(math.pi, 4, "X")   # face outward on the right side too
+        k = WHEEL_R / 0.40
+        m = m @ Matrix.Diagonal((k, k, 1, 1))           # profile below is drawn for a 0.40 m wheel
         segs = 28 if outer else 18
         # Profile from the inner face to the outer face (z = 0 is the wheel's mid-plane).
         lathe(mb, [(0.08, -0.08), (0.33, -0.08), (0.36, -0.09), (0.395, -0.085), (WHEEL_R, -0.06),
@@ -373,46 +377,76 @@ def finish(mb):
     return mb
 
 
+
+
+def chamfer_box(mb, center, size, mat, ch=0.04, matrix=None):
+    """Box with every edge chamfered by `ch`: the softened-square look of welded armour."""
+    hx, hy, hz = (s / 2 for s in size)
+    c = min(ch, hx * 0.45, hy * 0.45, hz * 0.45)
+    pts = []
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            for sz in (-1, 1):
+                for dx, dy, dz in ((0, c, c), (c, 0, c), (c, c, 0)):
+                    pts.append((center[0] + sx * (hx - dx), center[1] + sy * (hy - dy), center[2] + sz * (hz - dz)))
+    convex(mb, pts, mat, matrix)
+
+
+def mirrored(levels):
+    """[(z, [(x, y), ...]), ...] -> 3D points mirrored across y = 0."""
+    return [(x, sy * y, z) for z, ring in levels for x, y in ring for sy in (-1, 1)]
+
+
 def hull(M, name, burnt=False, rng=None):
     mb = MeshBuilder(name)
     P = M["paint"]
+    S = M["steel"]
     # -- lower tub between the tracks
     tub = []
-    for y in (-1.0, 1.0):
-        for x, z in ((-2.98, 0.40), (2.55, 0.40), (GLACIS_A[0], GLACIS_A[1]), (2.733, SPONSON_Z),
-                     (-3.02, SPONSON_Z), (-3.06, 0.62)):
+    for y in (-1.02, 1.02):
+        for x, z in ((REAR_X + 0.1, 0.42), (3.0, 0.40), (GLACIS_A[0], GLACIS_A[1]), (2.98, SPONSON_Z),
+                     (REAR_X, SPONSON_Z), (REAR_X - 0.02, 0.62)):
             tub.append((x, y, z))
     convex(mb, tub, M["mud"])
-    # -- upper hull over the sponsons: sloped sides, glacis, sloped rear plate
-    upper = []
-    for s in (-1, 1):
-        upper += [(2.733, 1.56 * s, SPONSON_Z), (-3.02, 1.56 * s, SPONSON_Z),
-                  (GLACIS_B[0], 1.30 * s, DECK_Z), (-2.62, 1.30 * s, DECK_Z),
-                  (GLACIS_A[0], 1.0 * s, GLACIS_A[1])]
+    # -- upper hull: long shallow glacis, low flat deck, gently sloped sides with chamfered edges
+    upper = mirrored([
+        (SPONSON_Z, [(REAR_X, 1.70), (2.98, 1.70)]),
+        (DECK_Z - 0.06, [(REAR_X + 0.10, 1.60), (2.29, 1.60)]),
+        (DECK_Z, [(REAR_X + 0.16, 1.53), (GLACIS_B[0], 1.53)]),
+        (GLACIS_A[1], [(GLACIS_A[0], 1.02)]),
+    ])
     convex(mb, upper, P)
-    # Plate seams: weld beads along the glacis and side edges.
+    # Weld beads along the plate joints.
     for s in (-1, 1):
-        for a, b in (((GLACIS_A[0], 1.0 * s, GLACIS_A[1]), (2.733, 1.56 * s, SPONSON_Z)),
-                     ((2.733, 1.56 * s, SPONSON_Z), (GLACIS_B[0], 1.30 * s, DECK_Z)),
-                     ((GLACIS_B[0], 1.30 * s, DECK_Z), (-2.62, 1.30 * s, DECK_Z)),
-                     ((-3.02, 1.56 * s, SPONSON_Z), (-2.62, 1.30 * s, DECK_Z))):
-            mb.rod(a, b, 0.018, P, 5, caps=False)
-    mb.rod((GLACIS_B[0], -1.30, DECK_Z), (GLACIS_B[0], 1.30, DECK_Z), 0.018, P, 5, caps=False)
-    mb.rod((-2.62, -1.30, DECK_Z), (-2.62, 1.30, DECK_Z), 0.018, P, 5, caps=False)
+        mb.rod((2.98, 1.70 * s, SPONSON_Z), (2.29, 1.60 * s, DECK_Z - 0.06), 0.014, P, 5, caps=False)
+        mb.rod((REAR_X, 1.70 * s, SPONSON_Z + 0.005), (2.98, 1.70 * s, SPONSON_Z + 0.005), 0.014, P, 5, caps=False)
+    mb.rod((GLACIS_B[0], -1.5, DECK_Z), (GLACIS_B[0], 1.5, DECK_Z), 0.016, P, 5, caps=False)
 
-    # -- fenders front and rear (the sponson covers the middle) with a turned-down lip
+    # -- fenders front and rear, with mudguards
     for s in (-1, 1):
-        y0, y1 = 0.98 * s, 1.60 * s
-        yc, yw = (y0 + y1) / 2, abs(y1 - y0)
-        for (xa, za), (xb, zb) in ((((2.733, SPONSON_Z + 0.01), (3.36, 0.93))),
-                                   (((-3.02, SPONSON_Z + 0.01), (-3.28, 1.0)))):
+        yc, yw = 1.37 * s, 0.70
+        for (xa, za), (xb, zb) in (((2.98, SPONSON_Z + 0.008), (3.66, 0.84)),
+                                   ((REAR_X, SPONSON_Z + 0.008), (-3.66, 0.98))):
             mid = ((xa + xb) / 2, yc, (za + zb) / 2)
             ln = math.hypot(xb - xa, zb - za)
             ang = math.degrees(math.atan2(zb - za, xb - xa))
-            mb.box(mid, (ln, yw, 0.012), P, rotation=(0, -ang, 0))
-        mb.box((0.0, 1.585 * s, SPONSON_Z - 0.03), (6.0, 0.012, 0.07), P)     # side skirt lip
-        # Mudflap on the front fender
-        mb.box((3.35, yc, 0.86), (0.012, yw, 0.16), M["canvas"])
+            mb.box(mid, (ln, yw, 0.014), P, rotation=(0, -ang, 0))
+        mb.box((3.65, yc, 0.76), (0.014, yw, 0.16), M["canvas"])
+        mb.box((-3.65, yc, 0.9), (0.014, yw, 0.16), M["canvas"])
+
+    # -- armoured side skirts: five bolted panels hiding the upper run of the track
+    for s in (-1, 1):
+        y = 1.735 * s
+        x0, w = -3.10, 6.05 / 5
+        for k in range(5):
+            xa = x0 + k * w + 0.015
+            xb = xa + w - 0.03
+            bottom = 0.66 if 0 < k < 4 else 0.72
+            chamfer_box(mb, ((xa + xb) / 2, y, (bottom + 1.0) / 2), (xb - xa, 0.03, 1.0 - bottom), P, 0.012)
+            for b in range(5):   # bolt row along the top edge
+                bx = xa + 0.1 + b * (xb - xa - 0.2) / 4
+                mb.rod((bx, y, 0.95), (bx, y + 0.025 * s, 0.95), 0.018, P, 6)
+        mb.box((-0.05, 1.71 * s, 1.005), (6.1, 0.06, 0.03), P)   # skirt hanger rail
 
     # -- running gear
     path = track_path()
@@ -420,25 +454,20 @@ def hull(M, name, burnt=False, rng=None):
         y = TRACK_Y * s
         for k, (x, z, tx, tz) in enumerate(path):
             t = Vector((tx, 0, tz))
-            # Outward normal: the path runs counter-clockwise in (x, z), so outward is (tz, -tx).
-            n = Vector((tz, 0, -tx))
-            m = frame((x, y, z), t, n)
-            track_link(mb, M, m, horn=(k % 2 == 0))
+            n = Vector((tz, 0, -tx))   # path is counter-clockwise in (x, z): outward is (tz, -tx)
+            track_link(mb, M, frame((x, y, z), t, n), horn=(k % 2 == 0))
         for x in WHEEL_X:
             road_wheel(mb, M, (x, y, WHEEL_Z), s)
-            # Trailing suspension arm and bump stop.
-            px = x + 0.42
-            mb.beam((px, 0.98 * s, 0.70), (x, (TRACK_Y - 0.3) * s, WHEEL_Z), 0.11, M["mud"], 0.09)
-            mb.rod((px, 0.98 * s, 0.70), (px, 1.08 * s, 0.70), 0.09, M["mud"], 10)
-            mb.box((x - 0.25, 1.04 * s, 0.98), (0.14, 0.1, 0.12), M["mud"])
+            px = x + 0.38
+            mb.beam((px, 0.98 * s, 0.64), (x, (TRACK_Y - 0.32) * s, WHEEL_Z), 0.1, M["mud"], 0.08)
+            mb.rod((px, 0.98 * s, 0.64), (px, 1.06 * s, 0.64), 0.08, M["mud"], 10)
         for x, z, r in ROLLERS:
             m = Matrix.Translation((x, y, z)) @ AXIS_Y
-            lathe(mb, [(0.0, -0.18), (r, -0.18), (r, 0.18), (0.0, 0.18)], m, M["rubber"], 14)
-            mb.rod((x, 1.0 * s, z), (x, (y - 0.18 * s), z), 0.04, M["mud"], 8)
+            lathe(mb, [(0.0, -0.2), (r, -0.2), (r, 0.2), (0.0, 0.2)], m, M["rubber"], 14)
+            mb.rod((x, 1.0 * s, z), (x, (y - 0.2 * s), z), 0.035, M["mud"], 8)
         sprocket(mb, M, s)
         idler(mb, M, s)
-        # Final drive housing behind the sprocket.
-        mb.rod((SPROCKET[0], 0.98 * s, SPROCKET[1]), (SPROCKET[0], (TRACK_Y - 0.34) * s, SPROCKET[1]), 0.24,
+        mb.rod((SPROCKET[0], 0.98 * s, SPROCKET[1]), (SPROCKET[0], (TRACK_Y - 0.36) * s, SPROCKET[1]), 0.22,
                M["mud"], 20)
 
     # -- glacis furniture
@@ -452,227 +481,188 @@ def hull(M, name, burnt=False, rng=None):
     def G(u, y, h=0.0):
         return a + g * u + Vector((0, y, 0)) + n * h
 
-    def Gm(u, y, h=0.0):
-        return frame(G(u, y, h), Vector((0, -1, 0)), n)   # x across the plate, z = plate normal
-
-    # Driver's hatch with two periscopes and hinges.
-    stamp_box(mb, Gm(1.0, 0.42, 0.04), (0.62, 0.55, 0.08), P)
-    stamp_box(mb, Gm(1.0, 0.42, 0.09), (0.56, 0.49, 0.03), P)
-    for dy in (0.27, 0.57):
-        stamp_box(mb, Gm(1.22, dy, 0.13) , (0.13, 0.08, 0.1), P)
-        stamp_box(mb, Gm(1.22, dy, 0.13) @ Matrix.Translation((0, 0.041, 0)), (0.1, 0.004, 0.05), M["glass"])
-    for dy in (0.2, 0.64):
-        mb.rod(G(0.66, dy, 0.06), G(0.66, dy + 0.08, 0.06), 0.03, P, 8)
-    # Hull machine-gun ball mount.
-    mb.sphere(G(0.85, -0.5, 0.0), 0.17, M["cast"], 2, (1, 1, 0.75))
-    mb.rod(G(0.85, -0.5, 0.05), G(0.85, -0.5, 0.05) + (n * 0.6 + g * -0.25).normalized() * 0.55, 0.025,
-           M["dark"], 8)
-    mb.torus(tuple(G(0.85, -0.5, 0.08)), 0.18, 0.025, M["cast"], 20, 5)
+    glen = (b - a).length
+    # Splash board: a low V-shaped ridge that throws water and snow off the glacis.
+    for s in (-1, 1):
+        p0, p1 = G(glen * 0.62, 0.0, 0.05), G(glen * 0.45, 1.45 * s, 0.05)
+        mb.beam(p0, p1, 0.04, P, 0.1)
     # Spare track links bolted across the lower glacis.
-    for yy in (-0.95, -0.62, 0.62, 0.95):
-        track_link(mb, M, frame(G(0.22, yy, 0.05), g, n) @ Matrix.Rotation(math.pi / 2, 4, "Z") @
-                   Matrix.Scale(0.95, 4), horn=False)
-    # Headlights on the fenders: housing, lens, blackout hood.
+    for yy in (-1.2, -0.75, -0.3, 0.3, 0.75, 1.2):
+        track_link(mb, M, frame(G(0.3, yy, 0.05), g, n) @ Matrix.Rotation(math.pi / 2, 4, "Z"), horn=False)
+    # Headlights in boxy guards at the glacis corners, and red convoy lamps.
     for s in (-1, 1):
-        base = Vector((2.95, 1.25 * s, 1.05))
-        mb.rod(base, base + Vector((0, 0, 0.12)), 0.025, M["steel"], 6)
-        hp = base + Vector((0, 0, 0.2))
-        mb.rod(hp + Vector((-0.12, 0, 0)), hp + Vector((0.06, 0, 0)), 0.095, P, 16)
-        mb.rod(hp + Vector((0.06, 0, 0)), hp + Vector((0.075, 0, 0)), 0.08, M["lens"], 16)
-        mb.box(hp + Vector((0.02, 0, 0.1)), (0.2, 0.2, 0.02), P)
-        # Red convoy marker lamps on the front fender edge (lit in the reference).
-        mb.box((3.2, 1.45 * s, 0.98), (0.04, 0.06, 0.05), M["red"])
-    # Tow hooks on the nose.
-    for s in (-1, 1):
-        hp = Vector((3.02, 0.72 * s, 0.62))
-        mb.torus(tuple(hp), 0.09, 0.03, M["steel"], 14, 5)
-        mb.box(hp + Vector((-0.08, 0, 0)), (0.12, 0.06, 0.16), M["mud"])
+        hp = G(glen * 0.8, 1.3 * s, 0.12)
+        chamfer_box(mb, tuple(hp), (0.2, 0.22, 0.16), P, 0.03)
+        mb.rod(hp + Vector((0.09, 0, 0)), hp + Vector((0.115, 0, 0)), 0.07, M["lens"], 14)
+        mb.pipe([hp + Vector((0.02, -0.14, 0.1)), hp + Vector((0.18, -0.14, 0.1)), hp + Vector((0.18, 0.14, 0.1)),
+                 hp + Vector((0.02, 0.14, 0.1))], 0.012, S, 6)
+        mb.box((3.58, 1.62 * s, 0.86), (0.04, 0.06, 0.05), M["red"])
+        tp = Vector((3.42, 0.7 * s, 0.6))   # tow hooks
+        mb.torus(tuple(tp), 0.09, 0.03, S, 14, 5)
+        chamfer_box(mb, tuple(tp + Vector((-0.08, 0, 0))), (0.14, 0.08, 0.18), M["mud"], 0.02)
+    # Driver's hatch on the front deck, with three periscopes.
+    chamfer_box(mb, (1.85, 0.0, DECK_Z + 0.03), (0.55, 0.62, 0.06), P, 0.02)
+    for dy in (-0.2, 0.0, 0.2):
+        chamfer_box(mb, (2.08, dy, DECK_Z + 0.07), (0.1, 0.14, 0.1), P, 0.015)
+        mb.box((2.131, dy, DECK_Z + 0.08), (0.004, 0.1, 0.04), M["glass"])
+    mb.rod((1.62, -0.25, DECK_Z + 0.07), (1.62, 0.25, DECK_Z + 0.07), 0.03, S, 8)
 
-    # -- deck: turret ring, hatches, engine louvres
-    mb.cylinder((TURRET_X, 0, DECK_Z), 1.0, 0.05, P, 48)
-    # Engine access hatch with bolt ring.
-    mb.box((-1.55, 0, DECK_Z + 0.03), (1.05, 0.95, 0.06), P)
-    for k in range(18):
-        a = 2 * math.pi * k / 18
-        mb.rod((-1.55 + 0.47 * math.cos(a) * 1.05, 0.42 * math.sin(a), DECK_Z + 0.06),
-               (-1.55 + 0.47 * math.cos(a) * 1.05, 0.42 * math.sin(a), DECK_Z + 0.08), 0.015, P, 6)
-    # Louvred air intakes either side.
+    # -- deck: turret ring collar, engine deck with grilles, hatches
+    mb.cylinder((TURRET_X, 0, DECK_Z), 1.08, 0.05, P, 48)
+    chamfer_box(mb, (-2.05, 0, DECK_Z + 0.05), (2.3, 2.5, 0.1), P, 0.03)       # raised engine deck
     for s in (-1, 1):
-        mb.box((-1.55, 0.85 * s, DECK_Z + 0.015), (1.4, 0.48, 0.03), M["dark"])
-        for k in range(11):
-            x = -2.2 + k * 0.13
-            mb.box((x, 0.85 * s, DECK_Z + 0.05), (0.03, 0.46, 0.06), P, rotation=(0, 30, 0))
-        mb.box((-1.55, 0.85 * s + 0.25 * s, DECK_Z + 0.05), (1.42, 0.03, 0.08), P)
-        mb.box((-1.55, 0.85 * s - 0.25 * s, DECK_Z + 0.05), (1.42, 0.03, 0.08), P)
-    # Rear plate: radiator grille, exhausts, tail lights, tow pintle.
-    rear_a = Vector((-3.02, 0, SPONSON_Z))
-    rear_b = Vector((-2.62, 0, DECK_Z))
-    rg = (rear_b - rear_a).normalized()
-    rn = Vector((rg.z, 0, -rg.x))
-    if rn.x > 0:
-        rn = -rn
-
-    def R(u, y, h=0.0):
-        return rear_a + rg * u + Vector((0, y, 0)) + rn * h
-    for k in range(9):
-        u = 0.12 + k * 0.06
-        stamp_box(mb, frame(R(u, 0, 0.02), Vector((0, 1, 0)), rn), (1.6, 0.025, 0.04), P)
+        # Air intake grille: a dark well under a row of slats.
+        mb.box((-2.15, 0.78 * s, DECK_Z + 0.09), (1.7, 0.72, 0.03), M["dark"])
+        for k in range(14):
+            mb.box((-2.95 + k * 0.122, 0.78 * s, DECK_Z + 0.115), (0.03, 0.7, 0.04), P)
+        mb.box((-2.15, (0.78 + 0.37) * s, DECK_Z + 0.12), (1.72, 0.03, 0.05), P)
+        mb.box((-2.15, (0.78 - 0.37) * s, DECK_Z + 0.12), (1.72, 0.03, 0.05), P)
+    chamfer_box(mb, (-1.05, 0.0, DECK_Z + 0.11), (0.55, 0.7, 0.04), P, 0.015)    # engine access hatch
+    for dy in (-0.2, 0.2):
+        mb.pipe([(-1.15, dy, DECK_Z + 0.13), (-1.15, dy, DECK_Z + 0.18), (-0.95, dy, DECK_Z + 0.18),
+                 (-0.95, dy, DECK_Z + 0.13)], 0.012, S, 6)
+    # Rear plate: boxed exhaust silencers with slotted guards, tail lights, towing pintle.
     for s in (-1, 1):
-        ex = Vector((-3.0, 0.55 * s, 0.78))
-        mb.rod(ex + Vector((0.2, 0, 0)), ex + Vector((-0.22, 0, -0.08)), 0.085, M["soot"], 14)
-        mb.rod(ex + Vector((-0.22, 0, -0.08)), ex + Vector((-0.25, 0, -0.085)), 0.075, M["dark"], 14)
-        mb.box((-3.065, 1.2 * s, 0.98), (0.05, 0.08, 0.06), M["red"])
-    mb.box((-3.1, 0, 0.55), (0.14, 0.2, 0.18), M["mud"])
-    mb.torus((-3.18, 0, 0.55), 0.07, 0.025, M["steel"], 12, 5)
-    # External fuel drums on brackets at the rear.
+        c = Vector((-3.52, 1.05 * s, 1.18))
+        chamfer_box(mb, tuple(c), (0.28, 0.6, 0.32), M["soot"], 0.04)
+        for k in range(4):
+            mb.box(tuple(c + Vector((-0.15, -0.22 + k * 0.145, 0))), (0.02, 0.03, 0.34), P)
+        mb.rod(c + Vector((0, 0.3 * s, -0.05)), c + Vector((0, 0.42 * s, -0.12)), 0.05, M["dark"], 10)
+        chamfer_box(mb, (-3.43, 1.45 * s, 0.98), (0.08, 0.14, 0.1), P, 0.015)
+        mb.box((-3.475, 1.45 * s, 0.98), (0.01, 0.08, 0.05), M["red"])
+    chamfer_box(mb, (-3.5, 0, 0.62), (0.2, 0.28, 0.2), M["mud"], 0.03)
+    mb.torus((-3.62, 0, 0.62), 0.07, 0.025, S, 12, 5)
+    # Unditching log on the rear deck with chains, and two external fuel drums behind it.
+    mb.rod((-3.1, -1.4, DECK_Z + 0.27), (-3.1, 1.4, DECK_Z + 0.27), 0.15, M["wood"], 14)
+    for dy in (-0.95, 0.95):
+        mb.torus((-3.1, dy, DECK_Z + 0.27), 0.17, 0.012, S, 16, 4)
+    # Stowage boxes on the sponson edges, tow cable along the hull side.
     for s in (-1, 1):
-        c = Vector((-3.32, 0.68 * s, 1.18))
-        mb.rod(c + Vector((0, -0.42, 0)), c + Vector((0, 0.42, 0)), 0.29, P, 24)
-        for dy in (-0.25, 0.25):
-            mb.rod(c + Vector((0, dy - 0.012, 0)), c + Vector((0, dy + 0.012, 0)), 0.3, P, 24)
-        mb.beam(c + Vector((0.28, 0, -0.25)), c + Vector((0.0, 0, -0.32)), 0.06, M["steel"])
-    # Unditching log across the rear deck with chains.
-    mb.rod((-2.45, -1.35, DECK_Z + 0.16), (-2.45, 1.35, DECK_Z + 0.16), 0.15, M["wood"], 14)
-    for dy in (-0.9, 0.9):
-        mb.torus((-2.45, dy, DECK_Z + 0.16), 0.17, 0.012, M["steel"], 16, 4)
-
-    # -- stowage on the sponsons: fuel cells (right), toolbox and tools (left), tow cable
-    for k, x in enumerate((-1.95, -1.15, -0.35)):
-        c = Vector((x, -1.4, SPONSON_Z + 0.42))
-        mb.rod(c + Vector((-0.34, 0, 0)), c + Vector((0.34, 0, 0)), 0.17, P, 20)
-        mb.sphere(c + Vector((0.34, 0, 0)), 0.17, P, 2, (0.25, 1, 1))
-        mb.sphere(c + Vector((-0.34, 0, 0)), 0.17, P, 2, (0.25, 1, 1))
-        for dx in (-0.2, 0.2):   # straps
-            mb.rod(c + Vector((dx - 0.02, 0, 0)), c + Vector((dx + 0.02, 0, 0)), 0.178, M["dark"], 20)
-        mb.box((x, -1.4, SPONSON_Z + 0.17), (0.6, 0.3, 0.06), M["steel"])
-    mb.box((-1.6, 1.38, SPONSON_Z + 0.2), (0.95, 0.32, 0.3), P)          # toolbox
-    mb.box((-1.6, 1.38, SPONSON_Z + 0.36), (0.97, 0.34, 0.03), P)
-    for dx in (-0.3, 0.3):
-        mb.box((-1.6 + dx, 1.54, SPONSON_Z + 0.25), (0.06, 0.02, 0.04), M["steel"])
-    # Shovel and pry bar on the left sponson slope.
-    mb.rod((0.0, 1.43, SPONSON_Z + 0.12), (1.1, 1.43, SPONSON_Z + 0.12), 0.02, M["wood"], 6)
-    mb.box((1.25, 1.43, SPONSON_Z + 0.12), (0.3, 0.2, 0.015), M["steel"], rotation=(80, 0, 0))
-    mb.rod((-0.1, 1.48, SPONSON_Z + 0.06), (1.6, 1.48, SPONSON_Z + 0.06), 0.018, M["steel"], 6)
-    # Tow cable looped along the left upper hull side.
-    side_pts = [(2.1, 1.38, 1.45), (0.4, 1.38, 1.45), (-1.0, 1.4, 1.42), (-2.3, 1.42, 1.38),
-                (-2.5, 1.42, 1.3), (-2.3, 1.43, 1.25), (-0.8, 1.45, 1.27), (0.7, 1.45, 1.3), (2.0, 1.44, 1.32)]
-    mb.tube(side_pts, 0.022, M["steel"], bend_radius=0.07, segments=8, arc_steps=4)
+        for x in (-0.7, 0.5):
+            chamfer_box(mb, (x, 1.42 * s, DECK_Z + 0.12), (0.95, 0.26, 0.24), P, 0.025)
+            mb.box((x, (1.42 + 0.131) * s, DECK_Z + 0.16), (0.1, 0.01, 0.05), S)
+    side_pts = [(2.2, 1.66, 1.22), (0.4, 1.66, 1.24), (-1.5, 1.66, 1.24), (-3.0, 1.66, 1.2), (-3.2, 1.66, 1.12),
+                (-3.0, 1.67, 1.08), (-1.2, 1.67, 1.1), (0.8, 1.67, 1.1), (2.1, 1.67, 1.1)]
+    mb.tube(side_pts, 0.022, S, bend_radius=0.06, segments=8, arc_steps=4)
     for p in (side_pts[0], side_pts[-1]):
-        mb.torus(p, 0.06, 0.018, M["steel"], 10, 4)
-    # Grab handles along the upper hull sides.
-    for s in (-1, 1):
-        for x in (1.2, 0.0, -1.2):
-            y = 1.32 * s
-            mb.pipe([(x - 0.18, y, DECK_Z - 0.05), (x - 0.18, y + 0.06 * s, DECK_Z - 0.02),
-                     (x + 0.18, y + 0.06 * s, DECK_Z - 0.02), (x + 0.18, y, DECK_Z - 0.05)], 0.012, M["steel"], 6)
+        mb.torus(p, 0.06, 0.018, S, 10, 4)
 
-    # -- snow dusting in the corners where it lodges (not on the burnt-out wreck: the fire melted it)
+    # -- snow dusting where it lodges (not on the burnt-out wreck: the fire melted it)
     if not burnt and rng is not None:
         for s in (-1, 1):
-            for x0, x1 in ((-2.9, -2.1), (-0.2, 0.9), (1.4, 2.5)):     # along the sponson/hull angle
-                x = rng.uniform(x0, x1)
-                mb.sphere((x, 1.5 * s, SPONSON_Z + 0.01), 1.0, M["snow"], 2,
-                          (rng.uniform(0.25, 0.45), 0.07, 0.025))
-            mb.sphere((3.05, 1.3 * s, 0.975), 1.0, M["snow"], 2, (0.2, 0.2, 0.02))   # front fender
-            mb.sphere((-3.15, 1.3 * s, 1.0), 1.0, M["snow"], 2, (0.12, 0.2, 0.015))   # rear fender
-        for x, y in ((-2.0, 0.85), (-1.1, -0.85), (-2.55, 0.3)):                    # deck corners
-            mb.sphere((x, y, DECK_Z + 0.04), 1.0, M["snow"], 2, (0.22, 0.14, 0.02))
+            for x0, x1 in ((-2.9, -2.1), (-0.4, 0.8), (1.3, 2.4)):
+                mb.sphere((rng.uniform(x0, x1), 1.66 * s, SPONSON_Z + 0.005), 1.0, M["snow"], 2,
+                          (rng.uniform(0.3, 0.5), 0.05, 0.02))
+            mb.sphere((-1.5, 1.2 * s, DECK_Z + 0.105), 1.0, M["snow"], 2, (0.6, 0.06, 0.012))
     return finish(mb)
 
 
 # ---------------------------------------------------------------- turret
 
+TURRET_PLAN = [   # (z, [(x, y), ...]) half-plan, mirrored across y: a low angular welded turret
+    (0.00, [(1.30, 0.45), (0.85, 1.08), (-0.95, 1.12), (-1.55, 0.90)]),
+    (0.10, [(1.55, 0.50), (0.95, 1.24), (-1.00, 1.28), (-1.72, 1.00)]),
+    (0.56, [(1.32, 0.46), (0.82, 1.12), (-0.98, 1.17), (-1.70, 0.95)]),
+    (0.66, [(1.14, 0.41), (0.73, 1.00), (-0.95, 1.05), (-1.63, 0.86)]),
+    (0.70, [(1.02, 0.36), (0.66, 0.92), (-0.90, 0.97), (-1.56, 0.79)]),
+]
+ROOF = 0.70
+
+
 def turret(M, name, burnt=False, rng=None, hatch_open=False):
     mb = MeshBuilder(name)
-    C, P = M["cast"], M["paint"]
-    rings = [
-        _superellipse(0.0, 1.06, 1.12, 1.04, 2.6),
-        _superellipse(0.12, 1.20, 1.36, 1.15, 2.6),
-        _superellipse(0.30, 1.22, 1.44, 1.16, 2.5),
-        _superellipse(0.48, 1.14, 1.40, 1.10, 2.4),
-        _superellipse(0.64, 0.98, 1.30, 0.98, 2.3),
-        _superellipse(0.75, 0.80, 1.17, 0.84, 2.2),
-        _superellipse(0.80, 0.62, 1.04, 0.72, 2.2),
-    ]
-    loft(mb, rings, C, cap0=True, cap1=True)
-    top = 0.80
-    # Casting parting line around the waist.
-    mb.tube([p for p in _superellipse(0.30, 1.235, 1.455, 1.175, 2.5, 56)] + [_superellipse(0.30, 1.235, 1.455, 1.175, 2.5, 56)[0]],
-            0.012, C, segments=5, arc_steps=1, caps=False)
-
-    # Mantlet: a rounded shield across the turret front, with the gun sleeve.
-    mx = 1.1
-    lathe(mb, [(0.0, -0.62), (0.26, -0.62), (0.31, -0.55), (0.31, 0.55), (0.26, 0.62), (0.0, 0.62)],
-          Matrix.Translation((mx, 0, GUN_Z)) @ AXIS_Y, C, 28)
-    mb.box((mx + 0.12, 0, GUN_Z), (0.25, 1.05, 0.5), C)
-    mb.rod((mx + 0.25, 0, GUN_Z), (mx + 0.7, 0, GUN_Z), 0.15, C, 24, radius_b=0.125)
-    # Barrel: tapering tube, a reinforcing collar, muzzle swell and a dark bore.
-    L = 5.6
-    mb.rod((mx + 0.7, 0, GUN_Z), (L - 0.3, 0, GUN_Z), 0.078, P, 20, radius_b=0.062, caps=False)
-    mb.rod((mx + 1.9, 0, GUN_Z), (mx + 2.0, 0, GUN_Z), 0.085, P, 20)
-    lathe(mb, [(0.062, 0.0), (0.085, 0.06), (0.088, 0.26), (0.08, 0.3), (0.045, 0.3), (0.045, 0.28)],
-          Matrix.Translation((L - 0.3, 0, GUN_Z)) @ Matrix.Rotation(math.pi / 2, 4, "Y"), P, 20)
-    mb.rod((L - 0.02, 0, GUN_Z), (L - 0.05, 0, GUN_Z), 0.046, M["dark"], 16)
-    # Coaxial MG port and the gunner's sight aperture.
-    mb.rod((mx + 0.25, 0.3, GUN_Z + 0.02), (mx + 0.42, 0.3, GUN_Z + 0.02), 0.03, M["dark"], 8)
-    mb.rod((mx + 0.22, -0.3, GUN_Z + 0.08), (mx + 0.3, -0.3, GUN_Z + 0.08), 0.04, M["glass"], 10)
-
-    # Commander's cupola with vision blocks and a domed hatch.
-    cx, cy = -0.35, 0.42
-    m = Matrix.Translation((cx, cy, top - 0.03))
-    lathe(mb, [(0.0, 0.0), (0.38, 0.0), (0.38, 0.06), (0.35, 0.08), (0.35, 0.24), (0.37, 0.26),
-               (0.37, 0.3), (0.0, 0.3)], m, C, 32)
-    for k in range(6):
-        a = 2 * math.pi * k / 6 + 0.3
-        mm = frame((cx + 0.355 * math.cos(a), cy + 0.355 * math.sin(a), top + 0.13),
-                   Vector((-math.sin(a), math.cos(a), 0)), Vector((math.cos(a), math.sin(a), 0)))
-        stamp_box(mb, mm, (0.13, 0.05, 0.035), M["glass"])
-    hatch_m = Matrix.Translation((cx, cy, top + 0.27))
-    if hatch_open:   # burnt wreck: hatch flung open and standing up
-        hatch_m = (Matrix.Translation((cx - 0.33, cy, top + 0.3)) @ Matrix.Rotation(math.radians(-100), 4, "Y")
-                   @ Matrix.Translation((0.33, 0, 0)))
-    lathe(mb, [(0.0, 0.0), (0.33, 0.0), (0.33, 0.04), (0.25, 0.09), (0.0, 0.11)], hatch_m, C, 28,
-          cap0=True)
-    mb.pipe([hatch_m @ Vector(p) for p in ((-0.12, 0, 0.1), (-0.12, 0, 0.15), (0.12, 0, 0.15), (0.12, 0, 0.1))],
-            0.012, M["steel"], 6)
-    # Loader's hatch, periscopes, ventilator, lifting eyes, antenna.
-    lh = Vector((-0.15, -0.42, top))
-    if hatch_open:
-        mb.cylinder((lh.x, lh.y, top), 0.3, 0.02, M["dark"], 24)
-        mb.box((lh.x - 0.05, lh.y - 0.33, top + 0.3), (0.55, 0.05, 0.6), C)
-    else:
-        mb.cylinder((lh.x, lh.y, top - 0.01), 0.3, 0.05, C, 28)
-        mb.pipe([(lh.x - 0.1, lh.y, top + 0.04), (lh.x - 0.1, lh.y, top + 0.09), (lh.x + 0.1, lh.y, top + 0.09),
-                 (lh.x + 0.1, lh.y, top + 0.04)], 0.012, M["steel"], 6)
-    for x, y in ((0.25, 0.35), (0.25, -0.35), (-0.6, -0.65)):
-        mb.box((x, y, top + 0.06), (0.16, 0.12, 0.13), C)
-        mb.box((x + 0.081, y, top + 0.08), (0.004, 0.09, 0.05), M["glass"])
-        mb.box((x, y, top + 0.135), (0.2, 0.15, 0.025), C)
-    mb.cylinder((0.45, 0.0, top), 0.13, 0.06, C, 16)
-    mb.dome((0.45, 0.0, top + 0.06), 0.17, 0.08, C, 16, 3)
-    for x, y in ((0.6, 0.62), (0.6, -0.62), (-0.85, 0.6), (-0.85, -0.6)):
-        mb.torus((x, y, top + 0.04), 0.05, 0.015, M["steel"], 10, 4)
-    mb.cylinder((-0.95, -0.25, top - 0.02), 0.05, 0.1, M["steel"], 10)
-    if not burnt:
-        mb.rod((-0.95, -0.25, top + 0.06), (-1.15, -0.25, top + 2.6), 0.007, M["dark"], 4, radius_b=0.003)
-    # Grab rails around the turret sides.
+    P, S, D = M["paint"], M["steel"], M["dark"]
+    convex(mb, mirrored(TURRET_PLAN), M["cast"])
+    # Weld seam where the side plates meet the roof.
+    ring = [(x, y, ROOF - 0.04) for x, y in TURRET_PLAN[3][1]]
     for s in (-1, 1):
-        pts = [(0.75, 1.02 * s, 0.53), (0.75, 1.1 * s, 0.53), (-0.9, 1.25 * s, 0.53), (-0.9, 1.17 * s, 0.53)]
-        mb.pipe(pts, 0.016, M["steel"], 6)
-    # Rear stowage bin on the bustle.
-    mb.box((-1.55, 0, 0.42), (0.36, 1.5, 0.42), P)
-    mb.box((-1.55, 0, 0.645), (0.39, 1.53, 0.03), P)
-    for dy in (-0.5, 0.5):
-        mb.beam((-1.4, dy, 0.25), (-1.3, dy, 0.25), 0.05, M["steel"])
+        pts = [(x, s * y, z) for x, y, z in ring]
+        mb.pipe(pts, 0.012, P, 5, elbows=False)
+
+    # Mantlet: a chamfered armour block carrying the gun, coax MG and sight aperture.
+    chamfer_box(mb, (1.68, 0, GUN_Z), (0.38, 0.8, 0.5), M["cast"], 0.06)
+    mb.rod((1.86, 0, GUN_Z), (2.35, 0, GUN_Z), 0.15, P, 10, radius_b=0.12)   # faceted gun sleeve
+    mb.rod((1.86, 0.28, GUN_Z + 0.03), (1.95, 0.28, GUN_Z + 0.03), 0.03, D, 8)
+    mb.box((1.875, -0.27, GUN_Z + 0.12), (0.02, 0.14, 0.08), M["glass"])
+    # Long barrel: taper, thermal-sleeve straps, fume extractor, slotted box muzzle brake.
+    L = GUN_LEN
+    mb.rod((2.35, 0, GUN_Z), (L - 0.45, 0, GUN_Z), 0.078, P, 20, radius_b=0.064, caps=False)
+    for x in (2.9, 4.6, 5.3):
+        mb.rod((x, 0, GUN_Z), (x + 0.04, 0, GUN_Z), 0.083 - (x - 2.35) * 0.004, P, 20)
+    lathe(mb, [(0.074, 0.0), (0.11, 0.08), (0.112, 0.6), (0.075, 0.7)],
+          Matrix.Translation((3.5, 0, GUN_Z)) @ Matrix.Rotation(math.pi / 2, 4, "Y"), P, 20)
+    chamfer_box(mb, (L - 0.22, 0, GUN_Z), (0.44, 0.22, 0.17), P, 0.03)
+    for dx in (-0.1, 0.08):
+        for s in (-1, 1):
+            mb.box((L - 0.22 + dx, 0.111 * s, GUN_Z), (0.08, 0.004, 0.11), D)
+    mb.rod((L + 0.001, 0, GUN_Z), (L - 0.03, 0, GUN_Z), 0.05, D, 16)
+
+    # Commander's cupola: a low octagonal drum with periscopes and a roof MG.
+    cx, cy = -0.5, 0.5
+    lathe(mb, [(0.0, 0.0), (0.38, 0.0), (0.38, 0.17), (0.34, 0.2), (0.0, 0.2)],
+          Matrix.Translation((cx, cy, ROOF - 0.01)) @ Matrix.Rotation(math.pi / 8, 4, "Z"), M["cast"], 8, smooth=False)
+    for k in range(8):
+        a = 2 * math.pi * k / 8
+        mm = frame((cx + 0.355 * math.cos(a), cy + 0.355 * math.sin(a), ROOF + 0.1),
+                   Vector((-math.sin(a), math.cos(a), 0)), Vector((math.cos(a), math.sin(a), 0)))
+        stamp_box(mb, mm, (0.12, 0.05, 0.035), M["glass"])
+    if hatch_open:
+        mb.box((cx - 0.35, cy, ROOF + 0.48), (0.04, 0.5, 0.5), P)
+        mb.cylinder((cx, cy, ROOF + 0.19), 0.28, 0.02, D, 16)
+    else:
+        lathe(mb, [(0.0, 0.0), (0.3, 0.0), (0.28, 0.05), (0.0, 0.06)],
+              Matrix.Translation((cx, cy, ROOF + 0.19)), P, 8, smooth=False, cap0=True)
+        # Roof machine gun on a pintle.
+        mb.rod((cx + 0.2, cy - 0.22, ROOF + 0.2), (cx + 0.2, cy - 0.22, ROOF + 0.42), 0.025, S, 6)
+        chamfer_box(mb, (cx + 0.3, cy - 0.22, ROOF + 0.46), (0.36, 0.08, 0.1), D, 0.015)
+        mb.rod((cx + 0.48, cy - 0.22, ROOF + 0.47), (cx + 1.25, cy - 0.22, ROOF + 0.47), 0.018, D, 6)
+        chamfer_box(mb, (cx + 0.3, cy - 0.12, ROOF + 0.4), (0.18, 0.1, 0.14), P, 0.01)
+    # Loader's hatch, gunner's sight box, ventilator, lifting eyes.
+    lx, ly = -0.35, -0.5
+    if hatch_open:
+        mb.box((lx, ly, ROOF + 0.01), (0.55, 0.55, 0.02), D)
+        mb.box((lx, ly - 0.3, ROOF + 0.28), (0.55, 0.04, 0.55), P)
+    else:
+        chamfer_box(mb, (lx, ly, ROOF + 0.02), (0.58, 0.58, 0.05), P, 0.015)
+        mb.pipe([(lx - 0.12, ly, ROOF + 0.04), (lx - 0.12, ly, ROOF + 0.1), (lx + 0.12, ly, ROOF + 0.1),
+                 (lx + 0.12, ly, ROOF + 0.04)], 0.012, S, 6)
+    chamfer_box(mb, (0.62, -0.5, ROOF + 0.09), (0.36, 0.22, 0.18), M["cast"], 0.03)
+    mb.box((0.801, -0.5, ROOF + 0.11), (0.004, 0.16, 0.08), M["glass"])
+    chamfer_box(mb, (0.15, 0.25, ROOF + 0.03), (0.3, 0.3, 0.06), P, 0.02)
+    for x, y in ((0.75, 0.75), (0.75, -0.75), (-1.3, 0.75), (-1.3, -0.75)):
+        mb.torus((x, y, ROOF + 0.04), 0.05, 0.015, S, 10, 4)
+    # Smoke grenade dischargers on the front cheeks: three angled tubes a side.
+    for s in (-1, 1):
+        base = Vector((0.95, 1.12 * s, 0.5))
+        for k in range(3):
+            p0 = base + Vector((-0.12 * k, 0.03 * k * s, 0.0))
+            d = Vector((0.75, 0.45 * s, 0.5)).normalized()
+            mb.rod(p0, p0 + d * 0.22, 0.04, P, 10)
+            mb.rod(p0 + d * 0.22, p0 + d * 0.225, 0.033, D, 10)
+        chamfer_box(mb, tuple(base + Vector((-0.12, 0.0, -0.06))), (0.38, 0.1, 0.06), P, 0.01)
+    # Side stowage bins and a rail basket round the bustle.
+    for s in (-1, 1):
+        chamfer_box(mb, (-0.75, 1.24 * s, 0.38), (1.1, 0.16, 0.38), P, 0.025)
+        for x in (-1.15, -0.35):
+            mb.box((x, 1.325 * s, 0.38), (0.06, 0.01, 0.06), S)
+    rail = [(-1.6, 0.95, 0.62), (-2.05, 0.95, 0.62), (-2.05, -0.95, 0.62), (-1.6, -0.95, 0.62)]
+    mb.pipe(rail, 0.018, S, 6)
+    mb.pipe([(x, y, z - 0.38) for x, y, z in rail], 0.018, S, 6)
+    for x, y, z in rail:
+        mb.rod((x, y, z), (x, y, z - 0.38), 0.016, S, 6)
+    for k in range(5):
+        y = -0.8 + k * 0.4
+        mb.rod((-2.05, y, 0.24), (-2.05, y, 0.62), 0.012, S, 5)
     if not burnt:
-        mb.box((-1.55, 0.0, 0.67), (0.34, 1.4, 0.05), M["canvas"])    # rolled tarp on the bin
-        mb.rod((-1.48, -0.7, 0.75), (-1.48, 0.7, 0.75), 0.11, M["canvas"], 14)
-        if rng is not None:   # snow lodged against the cupola and bin
-            mb.sphere((-0.35, 0.0, top + 0.005), 1.0, M["snow"], 2, (0.25, 0.12, 0.015))
-            mb.sphere((-1.1, 0.3, top - 0.03), 1.0, M["snow"], 2, (0.12, 0.3, 0.02))
+        chamfer_box(mb, (-1.85, 0.4, 0.4), (0.38, 0.6, 0.34), M["canvas"], 0.06)
+        mb.rod((-1.85, -0.85, 0.42), (-1.85, -0.05, 0.42), 0.15, M["canvas"], 12)
+        chamfer_box(mb, (-1.85, -0.45, 0.32), (0.3, 0.5, 0.18), P, 0.02)
+        for y in (-0.55, -0.85):   # two whip antennas
+            mb.cylinder((-1.3, y, ROOF - 0.02), 0.045, 0.1, S, 10)
+            mb.rod((-1.3, y, ROOF + 0.06), (-1.45, y, ROOF + 2.4), 0.007, D, 4, radius_b=0.003)
     return finish(mb)
 
 
 def gun_muzzle(turret_matrix):
     """World position and direction of the muzzle for a turret object's matrix_world."""
-    return turret_matrix @ Vector((5.6, 0, GUN_Z)), (turret_matrix.to_3x3() @ Vector((1, 0, 0))).normalized()
+    return turret_matrix @ Vector((GUN_LEN, 0, GUN_Z)), (turret_matrix.to_3x3() @ Vector((1, 0, 0))).normalized()
