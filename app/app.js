@@ -11,7 +11,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { createSkyDome } from './sky.js';
 import { Floaters, Ocean } from './ocean.js';
-import { Lamps, Plumes } from './effects.js';
+import { Fires, Lamps, Plumes, Snowfall } from './effects.js';
 import { Lighting } from './lighting.js';
 import { Twin, twinIdOf } from './twin.js';
 
@@ -100,6 +100,8 @@ const viewer = (() => {
   let floaters = null;
   let lamps = null;
   let plumes = null;
+  let fires = null;
+  let snow = null;
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
@@ -178,6 +180,8 @@ const viewer = (() => {
     lightPanel.tick();
     lighting.update(camera);
     plumes?.update(t);
+    fires?.update(t);
+    snow?.update(t, camera, controls.target, renderer.domElement.height);
     lamps?.update(controls.target);
     if (ocean) {
       floaters?.update(t);
@@ -196,7 +200,7 @@ const viewer = (() => {
     const min = new THREE.Vector3(...v.bounds.min), max = new THREE.Vector3(...v.bounds.max);
     shadowFit.worldRadius = Math.max(max.clone().sub(min).length() / 2, 1);
     shadowFit.radius = 0;
-    lighting.setWorld({ meta, root: current.root, ocean, lamps, plumes });
+    lighting.setWorld({ meta, root: current.root, ocean, lamps, plumes, fires, snow });
     lightPanel.load(params);
 
     applyGrade(v.grade);
@@ -236,6 +240,10 @@ const viewer = (() => {
       if (plumes) { scene.remove(plumes.mesh); dispose(plumes.mesh); plumes = null; }
       if (meta.viewer.lamps?.length) { lamps = new Lamps(meta.viewer.lamps); scene.add(lamps.group); }
       if (meta.viewer.plumes?.length) { plumes = new Plumes(meta.viewer.plumes); scene.add(plumes.mesh); }
+      if (fires) { scene.remove(fires.group); dispose(fires.group); fires = null; }
+      if (snow) { scene.remove(snow.points); dispose(snow.points); snow = null; }
+      if (meta.viewer.fires?.length) { fires = new Fires(meta.viewer.fires); scene.add(fires.group); }
+      if (meta.viewer.snowfall) { snow = new Snowfall(meta.viewer.snowfall); scene.add(snow.points); }
       if (meta.viewer.ocean) {
         const v = meta.viewer;
         ocean = new Ocean(v.ocean, { sunStrength: v.sun.strength, sunElevation: v.sun.direction[1],
